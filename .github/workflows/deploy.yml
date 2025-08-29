@@ -72,15 +72,7 @@ jobs:
       - name: Build Angular app
         run: |
           npm run build -- --configuration=production --base-href="/cabbingov2/"
-
-      - name: Fix GitHub Pages SPA routing
-        run: |
-          # Copy index.html to 404.html for SPA routing
-          cp dist/cabbingov2/browser/index.html dist/cabbingov2/browser/404.html
           
-          # Create .nojekyll file to prevent GitHub from processing files starting with _
-          touch dist/cabbingov2/browser/.nojekyll
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'
