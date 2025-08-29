@@ -28,7 +28,7 @@ jobs:
       run: npm ci
       
     - name: Build Angular app
-      run: npm run build -- --base-href="/cabbingov2/"
+      run: npm run build -- --configuration=production --base-href="/cabbingov2/" --prerender=false
       env:
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
