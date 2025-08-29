@@ -29,8 +29,7 @@ jobs:
 
       - name: Create environment files from templates  
         run: |
-          cp src/app/environment.template.ts src/app/environment.ts
-          cp src/app/environment.prod.template.ts src/app/environment.prod.ts
+          cp src/app/environment.prod.ts src/app/environment.ts
 
       - name: Replace Firebase config with secrets
         env:
@@ -60,14 +59,6 @@ jobs:
           sed -i "s/YOUR_FIREBASE_MESSAGING_SENDER_ID/$NG_APP_FIREBASE_MESSAGING_SENDER_ID/g" src/app/environment.prod.ts
           sed -i "s/YOUR_FIREBASE_APP_ID/$NG_APP_FIREBASE_APP_ID/g" src/app/environment.prod.ts
           sed -i "s/production: false/production: true/g" src/app/environment.prod.ts
-
-      # Optional: fail fast if DB URL is missing or clearly wrong
-      - name: Sanity-check Firebase DB URL (masked)
-        run: |
-          if [ -z "${{ secrets.NG_APP_FIREBASE_DATABASE_URL }}" ]; then
-            echo "NG_APP_FIREBASE_DATABASE_URL is empty"; exit 1;
-          fi
-          echo "DB URL present"
 
       - name: Build Angular app
         run: |
