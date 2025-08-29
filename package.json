@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:prod": "ng build --configuration production --base-href='/Cabbingo-V2/'",
+    "build:prod": "ng build --configuration production --base-href='/cabbingov2/'",
     "deploy": "gh-pages -d dist/cabbingov2/browser",
     "build-and-deploy": "npm run build:prod && npm run deploy",
     "watch": "ng build --watch --configuration development",
