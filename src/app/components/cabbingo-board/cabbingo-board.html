@@ -1,0 +1,46 @@
+<div class="page-wrap">
+    <div class="banner"></div>
+    <div class="content">
+        <div class="row teams">
+            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.TeamDumb)"
+                [ngClass]=" currentTeam === teamEnum.TeamDumb ? 'btn btn-outline-success': ''">Team 1</button>
+            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.TeamWon)"
+                [ngClass]=" currentTeam === teamEnum.TeamWon ? 'btn btn-outline-success': ''">Team 2</button>
+        </div>
+        <div class="row board">
+            <div class="tiles column col-auto">
+                @for(row of board; track row){
+                <div class="row tile-row">
+                    @for(tile of row; track tile){
+                    <button class="btn tile" (click)="onTileClick(tile)" [class.completed]="tile.completed">
+                        <p class="tile-text">{{ tile.title }}</p>
+                        <img class="tile-image" [src]="tile.src" [alt]="tile.alt || ''" />
+                        <div class="progress" style="height: 10px; margin-top:80px; z-index:100;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
+                                [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"
+                                [attr.aria-valuemax]="tile.itemsRequired">/////////////////////
+                            </div>
+                        </div>
+                    </button>
+                    }
+                </div>
+                }
+            </div>
+            <div class="infoArea col-auto">
+                <div class="infobox d-flex flex-column justify-content-between align-items-center">
+                    @if(selectedTile){
+                    <div class="mt-5">{{selectedTile.description}}</div>
+                    <div><img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" /></div>
+                    <div class="mt-2">{{selectedTile.itemsObtained}} / {{selectedTile.itemsRequired}} Obtained</div>
+                    }
+                    @else{<p>Click on a tile!</p>}
+                </div>
+                <div class="infobox">
+                    <p>Da Rulez</p>
+                </div>
+                <div class="button">Complete Tile</div>
+            </div>
+        </div>
+    </div>
+</div>

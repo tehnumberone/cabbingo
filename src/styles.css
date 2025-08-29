@@ -1,0 +1,306 @@
+/* You can add global styles to this file, and also import other style files */
+/* Fonts */
+@font-face {
+  font-family: Runescape;
+  src: url("assets/RuneScape-Plain-12.otf") format("opentype");
+}
+
+@font-face {
+  font-family: Runescape-Bold;
+  font-weight: bold;
+  src: url("assets/RuneScape-Bold-12.otf") format("opentype");
+}
+
+@font-face {
+  font-family: Runescape-Quill;
+  src: url("assets/RuneScape-Quill.otf") format("opentype");
+}
+
+/* Fonts end */
+
+/* Site background */
+.page-wrap {
+  background: url(https://www.runescape.com/img/rsp777/bg2.jpg) repeat-y center top;
+  margin: 0 auto;
+  overflow-y: hidden;
+  padding: 0 50px;
+  padding-bottom: 75px;
+  width: 1198px;
+  background-size: contain;
+}
+
+body {
+  background: black;
+  color: white;
+  font-family: 'Runescape-Bold';
+  text-shadow: black 2px 2px;
+  font-size: 16px;
+  margin: 0;
+  overflow: auto;
+}
+
+.banner {
+  /* background: url(https://www.runescape.com/img/rsp777/title2/rslogo3.png) no-repeat center; */
+  background: url(assets/Untitled_Artwork2.png) no-repeat center;
+  background-size: contain;
+  display: block;
+  height: 190px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  min-height: 135px;
+  text-align: center;
+}
+
+/* Site background end */
+
+/* Content background */
+.content {
+  background: url(assets/backdrop-body.png) repeat-y top center;
+  padding: 30px 63px;
+  position: relative;
+}
+
+.content:before,
+.content:after {
+  background: url(assets/Backdrop-top2.png) no-repeat center top;
+  content: '';
+  height: 20px;
+  left: 0;
+  position: absolute;
+  top: -10px;
+  width: 100%;
+}
+
+.content:after {
+  background: url(assets/Backdrop-bottom2.png) no-repeat center bottom;
+  bottom: -10px;
+  top: auto;
+}
+
+/* Content background end */
+
+/* UI elements */
+.button {
+  background: url(assets/button.png) no-repeat top center;
+  position: relative;
+  width: 243px;
+  height: 54px;
+  font-family: 'Runescape-Bold';
+  font-size: 27px;
+  align-content: center;
+  text-align: center;
+}
+
+.teams {
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+.board {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+/* UI elements end */
+
+/* Tiles */
+
+.tile-text {
+  color: #FF9933;
+  position: absolute;
+  font-size: 16px;
+  height: 16px;
+}
+
+.bossImage {
+  width: 125px;
+  height: 100px;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: top;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.tile {
+  width: 125px;
+  height: 100px;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: top;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  text-align: center;
+  background: url(assets/tile-background.png) no-repeat top center;
+}
+
+.tile-image,
+.tile-image-1-item,
+.tile-image-2-items1,
+.tile-image-2-items2,
+.tile-image-3-items1,
+.tile-image-3-items2,
+.tile-image-3-items3,
+.tile-image-4-items1,
+.tile-image-4-items2,
+.tile-image-4-items3,
+.tile-image-4-items4,
+.tile-image-5-items1,
+.tile-image-5-items2,
+.tile-image-5-items3,
+.tile-image-5-items4,
+.tile-image-5-items5 {
+  margin-top: 25px;
+  position: absolute;
+  height: 60px;
+  object-fit: contain;
+  filter: drop-shadow(6px 6px 2mm rgb(0, 0, 0));
+}
+
+/* 2 items */
+.tile-image-2-items1 {
+  margin-left: -28px;
+  z-index: 2;
+}
+
+.tile-image-2-items2 {
+  margin-left: 28px;
+  z-index: 1;
+}
+
+/* 3 items */
+.tile-image-3-items1 {
+  margin-left: -70px;
+  z-index: 3;
+}
+
+.tile-image-3-items2 {
+  margin-left: 0px;
+  z-index: 2;
+}
+
+.tile-image-3-items3 {
+  margin-left: 70px;
+  z-index: 1;
+}
+
+/* 4 items */
+.tile-image-4-items1 {
+  margin-left: -62.5px;
+  z-index: 4;
+}
+
+.tile-image-4-items2 {
+  margin-left: -31.25px;
+  z-index: 3;
+}
+
+.tile-image-4-items3 {
+  margin-left: 31.25px;
+  z-index: 2;
+}
+
+.tile-image-4-items4 {
+  margin-left: 62.5px;
+  z-index: 1;
+}
+
+/* 5 items */
+.tile-image-5-items1 {
+  margin-left: -50px;
+  z-index: 5;
+}
+
+.tile-image-5-items2 {
+  margin-left: -25px;
+  z-index: 4;
+}
+
+.tile-image-5-items3 {
+  margin-left: 0px;
+  z-index: 3;
+}
+
+.tile-image-5-items4 {
+  margin-left: 25px;
+  z-index: 2;
+}
+
+.tile-image-5-items5 {
+  margin-left: 50px;
+  z-index: 1;
+}
+
+/* Tile orientation */
+.tile-row {
+  justify-content: space-evenly;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.tiles {
+  top: 5px;
+  background: url(assets/tiles-body.png) repeat-y top center;
+  width: 705px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  position: relative;
+  align-items: center;
+  align-content: center;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.tiles:before,
+.tiles:after {
+  background: url(assets/tiles-top.png) no-repeat center top;
+  content: '';
+  height: 5px;
+  left: 0;
+  position: absolute;
+  top: -5px;
+  width: 100%;
+}
+
+.tiles:after {
+  background: url(assets/tiles-bottom.png) no-repeat center bottom;
+  bottom: -5px;
+  top: auto;
+}
+
+/* Tiles end*/
+
+/* infobox area */
+.infoArea {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  display: flex;
+}
+
+.infobox {
+  width: 250px;
+  height: 240px;
+  align-content: center;
+  text-align: center;
+  background: url(assets/infobox.png) no-repeat top center;
+  background-size: contain;
+  margin-bottom: 20px;
+}
+
+/* infobox area end */
+
+.btn {
+  --bs-btn-color: var(white) !important;
+  color: white !important;
+}
+
+.btn:hover {
+  color: #198754 !important;
+}
