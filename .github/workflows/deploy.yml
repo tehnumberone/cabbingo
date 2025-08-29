@@ -77,7 +77,7 @@ jobs:
 
       - name: Build Angular app
         run: |
-          npm run build -- --configuration=production --base-href="/cabbingov2/"
+          npm run build -- --base-href="/cabbingov2/"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
