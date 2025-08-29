@@ -27,8 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Write environment files from secrets
-      - name: Create Angular environment files
+      - name: Create environment files from templates  
+        run: |
+          cp src/app/environment.template.ts src/app/environment.ts
+          cp src/app/environment.prod.template.ts src/app/environment.prod.ts
+
+      - name: Replace Firebase config with secrets
         env:
           NG_APP_FIREBASE_API_KEY: ${{ secrets.NG_APP_FIREBASE_API_KEY }}
           NG_APP_FIREBASE_AUTH_DOMAIN: ${{ secrets.NG_APP_FIREBASE_AUTH_DOMAIN }}
@@ -38,37 +42,24 @@ jobs:
           NG_APP_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NG_APP_FIREBASE_MESSAGING_SENDER_ID }}
           NG_APP_FIREBASE_APP_ID: ${{ secrets.NG_APP_FIREBASE_APP_ID }}
         run: |
-          # Create environment.ts (dev version)
-          cat > src/app/environment.ts << 'EOF'
-          export const environment = {
-            production: false,
-            firebaseConfig: {
-              apiKey: "${{ secrets.NG_APP_FIREBASE_API_KEY }}",
-              authDomain: "${{ secrets.NG_APP_FIREBASE_AUTH_DOMAIN }}",
-              databaseURL: "${{ secrets.NG_APP_FIREBASE_DATABASE_URL }}",
-              projectId: "${{ secrets.NG_APP_FIREBASE_PROJECT_ID }}",
-              storageBucket: "${{ secrets.NG_APP_FIREBASE_STORAGE_BUCKET }}",
-              messagingSenderId: "${{ secrets.NG_APP_FIREBASE_MESSAGING_SENDER_ID }}",
-              appId: "${{ secrets.NG_APP_FIREBASE_APP_ID }}"
-            }
-          };
-          EOF
+          # Replace placeholders in both files
+          sed -i "s/YOUR_FIREBASE_API_KEY/$NG_APP_FIREBASE_API_KEY/g" src/app/environment.ts
+          sed -i "s/YOUR_FIREBASE_AUTH_DOMAIN/$NG_APP_FIREBASE_AUTH_DOMAIN/g" src/app/environment.ts
+          sed -i "s|YOUR_FIREBASE_DATABASE_URL|$NG_APP_FIREBASE_DATABASE_URL|g" src/app/environment.ts
+          sed -i "s/YOUR_FIREBASE_PROJECT_ID/$NG_APP_FIREBASE_PROJECT_ID/g" src/app/environment.ts
+          sed -i "s/YOUR_FIREBASE_STORAGE_BUCKET/$NG_APP_FIREBASE_STORAGE_BUCKET/g" src/app/environment.ts
+          sed -i "s/YOUR_FIREBASE_MESSAGING_SENDER_ID/$NG_APP_FIREBASE_MESSAGING_SENDER_ID/g" src/app/environment.ts
+          sed -i "s/YOUR_FIREBASE_APP_ID/$NG_APP_FIREBASE_APP_ID/g" src/app/environment.ts
           
-          # Create environment.prod.ts (production version)
-          cat > src/app/environment.prod.ts << 'EOF'
-          export const environment = {
-            production: true,
-            firebaseConfig: {
-              apiKey: "${{ secrets.NG_APP_FIREBASE_API_KEY }}",
-              authDomain: "${{ secrets.NG_APP_FIREBASE_AUTH_DOMAIN }}",
-              databaseURL: "${{ secrets.NG_APP_FIREBASE_DATABASE_URL }}",
-              projectId: "${{ secrets.NG_APP_FIREBASE_PROJECT_ID }}",
-              storageBucket: "${{ secrets.NG_APP_FIREBASE_STORAGE_BUCKET }}",
-              messagingSenderId: "${{ secrets.NG_APP_FIREBASE_MESSAGING_SENDER_ID }}",
-              appId: "${{ secrets.NG_APP_FIREBASE_APP_ID }}"
-            }
-          };
-          EOF
+          # Also replace in prod file and set production: true
+          sed -i "s/YOUR_FIREBASE_API_KEY/$NG_APP_FIREBASE_API_KEY/g" src/app/environment.prod.ts
+          sed -i "s/YOUR_FIREBASE_AUTH_DOMAIN/$NG_APP_FIREBASE_AUTH_DOMAIN/g" src/app/environment.prod.ts
+          sed -i "s|YOUR_FIREBASE_DATABASE_URL|$NG_APP_FIREBASE_DATABASE_URL|g" src/app/environment.prod.ts
+          sed -i "s/YOUR_FIREBASE_PROJECT_ID/$NG_APP_FIREBASE_PROJECT_ID/g" src/app/environment.prod.ts
+          sed -i "s/YOUR_FIREBASE_STORAGE_BUCKET/$NG_APP_FIREBASE_STORAGE_BUCKET/g" src/app/environment.prod.ts
+          sed -i "s/YOUR_FIREBASE_MESSAGING_SENDER_ID/$NG_APP_FIREBASE_MESSAGING_SENDER_ID/g" src/app/environment.prod.ts
+          sed -i "s/YOUR_FIREBASE_APP_ID/$NG_APP_FIREBASE_APP_ID/g" src/app/environment.prod.ts
+          sed -i "s/production: false/production: true/g" src/app/environment.prod.ts
 
       # Optional: fail fast if DB URL is missing or clearly wrong
       - name: Sanity-check Firebase DB URL (masked)
