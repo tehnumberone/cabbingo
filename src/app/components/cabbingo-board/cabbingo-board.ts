@@ -101,14 +101,20 @@ export class CabbingoBoard implements OnInit {
   }
 
   generateBoard(tiles: Tile[]): void {
+    this.board = []; // Clear the board before generating
+    let tileIndex = 0;
+
     for (let row = 0; row < 5; row++) {
       this.board[row] = [];
       for (let col = 0; col < 5; col++) {
-        const tileIndex = col % tiles.length;
+        if (tileIndex >= tiles.length) {
+          return; // Stop filling the board if we run out of tiles
+        }
         this.board[row][col] = {
           ...tiles[tileIndex],
           id: row * 5 + col + 1 // Unique ID for each tile
         };
+        tileIndex++;
       }
     }
   }
