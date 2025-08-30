@@ -43,10 +43,10 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: '.'
+          path: './dist/cabbingov2/browser'
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
         if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist/cabbingov2/browser
+          publish_dir: ./dist/cabbingov2/browser/
