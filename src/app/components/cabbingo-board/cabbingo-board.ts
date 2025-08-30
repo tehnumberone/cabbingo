@@ -3,6 +3,8 @@ import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
 import { isPlatformBrowser } from '@angular/common';
 import { NgClass } from "../../../../node_modules/@angular/common";
+import { MockService } from '../../services/mock-service';
+import { environment as env } from '../../environment.prod';
 
 enum team {
   TeamDumb = 0,
@@ -19,71 +21,24 @@ export class CabbingoBoard implements OnInit {
   teamEnum: typeof team = team;
   currentTeam: team = team.TeamDumb;
   selectedTile: Tile | null = null;
-  tiles: Tile[] = [
-    {
-      id: 1,
-      title: 'Draconic Visage',
-      src: '../../assets/draconic-visage.png',
-      bossSrc: '../../assets/King_Black_Dragon.png',
-      alt: 'Draconic Visage',
-      description: 'Obtain a Draconic Visage from a King Black Dragon',
-      itemsRequired: 1,
-      itemsObtained: 1
-    },
-    {
-      id: 2,
-      title: 'Any Scroll',
-      src: '../../assets/dex-scroll.png',
-      bossSrc: '../../assets/kbd.png',
-      alt: 'Dex Scroll',
-      description: 'Obtain any scroll from the Chamber of Xeric',
-      itemsRequired: 1,
-      itemsObtained: 1
-    },
-    {
-      id: 3,
-      title: 'Any torva piece',
-      src: '../../assets/torva-helm.png',
-      bossSrc: '../../assets/kbd.png',
-      alt: 'Torva Helm',
-      description: 'Obtain any piece of Torva from Nex',
-      itemsRequired: 1,
-      itemsObtained: 1
-    },
-    {
-      id: 4,
-      title: 'Any megarare',
-      src: '../../assets/twisted-bow.png',
-      bossSrc: '../../assets/kbd.png',
-      alt: 'Twisted Bow',
-      description: 'Obtain any megarare drop from any raid',
-      itemsRequired: 1,
-      itemsObtained: 1
-    },
-    {
-      id: 5,
-      title: '5 Venator Shards',
-      src: '../../assets/venator-shard.webp',
-      bossSrc: '../../assets/kbd.png',
-      alt: 'Venator Shard',
-      description: 'Obtain 5 Venator Shards from the Phantom Muspah',
-      itemsRequired: 5,
-      itemsObtained: 1
-    }
-  ];
-  tiles2: Tile[] = [];
-
   // Create a 5x5 board by repeating the tile patterns
   board: Tile[][] = [];
 
   constructor(private databaseService: DatabaseService,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) {
+    @Inject(PLATFORM_ID) private platformId: Object) {
   }
+
   ngOnInit(): void {
-    // Only load Firebase data in the browser
-    if (isPlatformBrowser(this.platformId)) {
-      this.loadTilesFromFirebase();
+    if (env.production === false) {
+      const mockService = new MockService();
+      this.board = mockService.board;
+      this.generateBoard(this.board[this.currentTeam]);
+    }
+    else {
+      // Only load Firebase data in the browser
+      if (isPlatformBrowser(this.platformId)) {
+        this.loadTilesFromFirebase();
+      }
     }
   }
 
@@ -123,13 +78,29 @@ export class CabbingoBoard implements OnInit {
     this.selectedTile = tile;
   }
 
-  completeTile(tile: Tile): void {
-    tile.completed = true;
-  }
-
   switchTeam(selectedTeam: team): void {
     console.log('team dumbass picked: ' + selectedTeam);
     this.currentTeam = selectedTeam;
-    this.loadTilesFromFirebase();
+
+    if (env.production === false) {
+      const mockService = new MockService();
+      this.board = mockService.board;
+      this.generateBoard(this.board[this.currentTeam]);
+    }
+    else {
+      this.loadTilesFromFirebase();
+    }
+  }
+
+  getTotalPoints(): number {
+    let totalPoints = 0;
+    for (const row of this.board) {
+      for (const tile of row) {
+        if (tile.itemsObtained >= tile.itemsRequired) {
+          totalPoints += tile.points || 0;
+        }
+      }
+    }
+    return totalPoints;
   }
 }
