@@ -15,7 +15,7 @@
                     <button class="btn tile" (click)="onTileClick(tile)" [class.completed]="tile.completed">
                         <p class="tile-text">{{ tile.title }}</p>
                         <img class="tile-image" [src]="tile.src" [alt]="tile.alt || ''" />
-                        <div class="progress" style="height: 10px; margin-top:80px; z-index:100;">
+                        <div class="progress" style="height: 10px; margin-top:80px;">
                             <div class="progress-bar bg-success" role="progressbar"
                                 [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
                                 [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"

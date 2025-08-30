@@ -112,6 +112,7 @@ body {
   position: absolute;
   font-size: 16px;
   height: 16px;
+  white-space: normal;
 }
 
 .bossImage {
@@ -159,7 +160,8 @@ body {
   position: absolute;
   height: 60px;
   object-fit: contain;
-  filter: drop-shadow(6px 6px 2mm rgb(0, 0, 0));
+  filter: drop-shadow(6px 6px 2mm rgb(0, 0, 0)); 
+  z-index:-10
 }
 
 /* 2 items */
