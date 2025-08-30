@@ -7,7 +7,10 @@ on:
     branches: [ main ]
 
 permissions:
+  contents: read
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
@@ -30,17 +33,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create environment files from templates  
-        run: |
-          cp src/app/environment.prod.ts src/app/environment.ts
-
       - name: Build Angular app
         run: |
           npm run build -- --configuration=production --base-href="/cabbingov2/"
           
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/main'
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist/cabbingov2/browser
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
