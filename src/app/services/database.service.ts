@@ -26,20 +26,17 @@ export class DatabaseService {
         const data = snapshot.val();
         if (data) {
           // Convert your Firebase structure to component format
-          console.log(data);
           const teams: any = [];
           for (const team in data) {
             const tilesArray: Tile[] = [];
             for (const key in data[team]) {
               if (data[team].hasOwnProperty(key)) {
                 const item = data[team][key];
-                console.log(item);
                 tilesArray.push(item);
               }
             }
             teams.push(tilesArray);
           }
-          console.log(teams);
           observer.next(teams);
         } else {
           observer.next([]);

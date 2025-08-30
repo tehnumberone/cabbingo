@@ -6,7 +6,7 @@ export interface Tile {
   itemsObtained: number;
   src: string;
   bossSrc: string;
+  points: number;
   alt?: string;
   description?: string;
-  completed?: boolean;
 }
