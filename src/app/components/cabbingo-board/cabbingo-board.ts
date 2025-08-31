@@ -79,7 +79,6 @@ export class CabbingoBoard implements OnInit {
   }
 
   switchTeam(selectedTeam: team): void {
-    console.log('team dumbass picked: ' + selectedTeam);
     this.currentTeam = selectedTeam;
 
     if (env.production === false) {

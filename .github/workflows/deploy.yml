@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Move env files
+        run: |
+          cp src/app/environment.prod.ts src/app/environment.ts
+
       - name: Build Angular app
         run: |
           npm run build -- --configuration=production --base-href="/cabbingov2/"
