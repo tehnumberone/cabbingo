@@ -32,7 +32,7 @@ jobs:
 
       - name: Move env files
         run: |
-          cp src/app/environment.prod.ts src/app/environment.ts
+          cp src/app/environments/environment.prod.ts src/app/environments/environment.ts
 
       - name: Build Angular app
         run: |
