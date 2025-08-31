@@ -4,7 +4,7 @@ import { DatabaseService } from '../../services/database.service';
 import { isPlatformBrowser } from '@angular/common';
 import { NgClass } from "../../../../node_modules/@angular/common";
 import { MockService } from '../../services/mock-service';
-import { environment as env } from '../../environment.prod';
+import { environment as env } from '../../environments/environment.prod';
 
 enum team {
   TeamDumb = 0,
