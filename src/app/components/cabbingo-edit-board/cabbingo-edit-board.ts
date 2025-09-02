@@ -6,10 +6,11 @@ import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
 import { MockService } from '../../services/mock-service';
 import { Teams } from '../../models/teamEnum';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cabbingo-edit-board',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './cabbingo-edit-board.html',
   styleUrl: './cabbingo-edit-board.css',
 })

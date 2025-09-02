@@ -6,10 +6,11 @@ import { NgClass } from "../../../../node_modules/@angular/common";
 import { MockService } from '../../services/mock-service';
 import { environment as env } from '../../environments/environment.prod';
 import { Teams } from '../../models/teamEnum';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass],
+  imports: [NgClass, RouterModule],
   templateUrl: './cabbingo-board.html',
   changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: '../../../styles.css'
