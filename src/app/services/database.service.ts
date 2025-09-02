@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { Database, ref, push, set, remove, onValue } from '@angular/fire/database';
+import { Database, ref, push, set, remove, onValue, get } from '@angular/fire/database';
 import { Observable, of } from 'rxjs';
 import { Tile } from '../models/tile';
 
@@ -55,5 +55,16 @@ export class DatabaseService {
   updateTile(teamNumber: number, tile: Tile, index : number) {
     const tileRef = ref(this.database, `Boards/Team ${teamNumber+1}/${index}`);
     return set(tileRef, tile);
+  }
+
+  getPassword(teamNumber: number){
+    const passRef = ref(this.database, `LoginCredentials/Team ${teamNumber+1}`);
+    return get(passRef).then((snapshot: any) => {
+      if (snapshot.exists()) {
+        return snapshot.val() as string;
+      } else {
+        throw new Error('No password found');
+      }
+    });
   }
 }

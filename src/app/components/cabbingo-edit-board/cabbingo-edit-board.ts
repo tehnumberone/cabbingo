@@ -55,11 +55,13 @@ export class CabbingoEditBoard {
   }
 
   validatePassword() {
-    if (this.selectedTeam === 0 && env.passwordTeam1 === this.team1Password) {
-      return this.loginForTeam(0);
-    } else if (this.selectedTeam === 1 && env.passwordTeam2 === this.team2Password) {
-      return this.loginForTeam(1);
-    } else return false;
+    this.databaseService.getPassword(this.selectedTeam).then((password) => {
+      if (this.selectedTeam === 0 && password === this.team1Password) {
+        return this.loginForTeam(this.selectedTeam);
+      } else if (this.selectedTeam === 1 && password === this.team2Password) {
+        return this.loginForTeam(this.selectedTeam);
+      } else return false;
+    });
   }
 
   loginForTeam(teamNumber: number) {
@@ -71,10 +73,8 @@ export class CabbingoEditBoard {
   }
 
   saveTile(tile: Tile, index: number) {
-    this.databaseService
-      .updateTile(this.selectedTeam, tile, index)
-      .catch((error) => {
-        console.error('Error saving tile:', error);
-      });
+    this.databaseService.updateTile(this.selectedTeam, tile, index).catch((error) => {
+      console.error('Error saving tile:', error);
+    });
   }
 }
