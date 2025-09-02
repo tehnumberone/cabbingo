@@ -3,7 +3,7 @@ import { CabbingoEditBoard } from './components/cabbingo-edit-board/cabbingo-edi
 import { CabbingoBoard } from './components/cabbingo-board/cabbingo-board';
 
 export const routes: Routes = [
-    { path: 'edit-board', component: CabbingoEditBoard , redirectTo: '/edit-board', pathMatch: 'full' },
-    { path: 'board', component: CabbingoBoard, redirectTo: '/board', pathMatch: 'full' },
+    { path: 'edit-board', component: CabbingoEditBoard },
+    { path: 'board', component: CabbingoBoard },
     { path: '**', redirectTo: '/board', pathMatch: 'full' }
 ];
