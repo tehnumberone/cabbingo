@@ -1,7 +1,5 @@
 export const environment = {
     production: true,
-    passwordTeam1: 'PLACEHOLDER_PASSWORD',
-    passwordTeam2: 'PLACEHOLDER_PASSWORD',
     firebaseConfig: {
         apiKey: 'FIREBASE_API_KEY',
         authDomain: 'FIREBASE_AUTH_DOMAIN',
