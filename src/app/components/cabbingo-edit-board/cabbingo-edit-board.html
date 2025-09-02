@@ -1,0 +1,84 @@
+<div class="page-wrap">
+  <div class="banner"></div>
+  <div class="content">
+    <div class="d-flex justify-content-center" style="height:664px">
+      @if(!authenticated.authenticated){
+      <form style="width:500px;">
+        <div class="col-12">
+          <label for="teamSelect" class="form-label">Choose your team</label>
+          <select id="teamSelect" class="form-control" [(ngModel)]="selectedTeam" [ngModelOptions]="{standalone: true}"
+            (change)="onTeamSelect(selectedTeam)">
+            <option [value]="-1" disabled selected>Select Team</option>
+            <option [value]="0">Team 1</option>
+            <option [value]="1">Team 2</option>
+          </select>
+        </div>
+        <br>
+        <div class="col-12">
+          @if(selectedTeam === 0){
+          <label for="team1Password">Team 1 Password:</label>
+          <input class="form-control" type="password" id="team1Password" name="team1Password"
+            [(ngModel)]="team1Password" />
+          }
+          @if(selectedTeam === 1){
+          <label for="team2Password">Team 2 Password:</label>
+          <input class="form-control" type="password" id="team2Password" name="team2Password"
+            [(ngModel)]="team2Password" />
+          }
+        </div>
+        <br />
+        <button class="btn btn-primary" type="submit" (click)="validatePassword()">Log in</button>
+      </form>
+      } @else {
+      <div style="width:900px;">
+        <h2 class="col-12">Welcome Team {{ authenticated.team+1 }}!</h2>
+        <p class="col-12">This is where you can edit your board!</p>
+        <div style="max-height: 600px; overflow-y: auto;">
+          <table class="table table-dark table-bordered">
+            <thead >
+              <tr class="sticky-top">
+                <th>Tile title</th>
+                <th>Image</th>
+                <th>Boss image</th>
+                <th>Points</th>
+                <th>Description</th>
+                <th>Required</th>
+                <th>Obtained</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if(board.length === 0){<tr><td colspan="8">No tiles available</td></tr>}
+              @else{
+              @for(tile of board; track tile; let i = $index){
+              <tr>
+                <td>
+                  {{tile.title}}
+                </td>
+                <td>
+                  <div>
+                    <img class="tile-image" [src]="tile.src" />
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <img class="tile-image" [src]="tile.bossSrc" />
+                  </div>
+                </td>
+                <td>{{ tile.points }}</td>
+                <td>{{ tile.description }}</td>
+                <td>{{ tile.itemsRequired }}</td>
+                <td><input class="form-control" [(ngModel)]="tile.itemsObtained" type="number" min="0" [max]="tile.itemsRequired"/></td>
+                <td>
+                  <button class="btn btn-primary col-12" (click)="saveTile(tile, i)">Save</button>
+                </td>
+              </tr>
+              }}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</div>

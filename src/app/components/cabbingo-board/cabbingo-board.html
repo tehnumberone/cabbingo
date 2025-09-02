@@ -2,10 +2,10 @@
     <div class="banner"></div>
     <div class="content">
         <div class="row teams">
-            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.TeamDumb)"
-                [ngClass]=" currentTeam === teamEnum.TeamDumb ? 'btn selected-team': ''">Team 1</button>
-            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.TeamWon)"
-                [ngClass]=" currentTeam === teamEnum.TeamWon ? 'btn selected-team': ''">Team 2</button>
+            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
+                [ngClass]=" currentTeam === teamEnum.Team1 ? 'btn selected-team': ''">Team 1</button>
+            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team2)"
+                [ngClass]=" currentTeam === teamEnum.Team2 ? 'btn selected-team': ''">Team 2</button>
         </div>
         <div class="row board">
             <div class="tiles column col-auto">

@@ -51,4 +51,9 @@ export class DatabaseService {
       };
     });
   }
+
+  updateTile(teamNumber: number, tile: Tile, index : number) {
+    const tileRef = ref(this.database, `Boards/Team ${teamNumber+1}/${index}`);
+    return set(tileRef, tile);
+  }
 }

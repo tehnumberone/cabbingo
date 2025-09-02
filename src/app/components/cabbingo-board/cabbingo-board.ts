@@ -5,11 +5,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { NgClass } from "../../../../node_modules/@angular/common";
 import { MockService } from '../../services/mock-service';
 import { environment as env } from '../../environments/environment.prod';
+import { Teams } from '../../models/teamEnum';
 
-enum team {
-  TeamDumb = 0,
-  TeamWon = 1
-}
 @Component({
   selector: 'app-cabbingo-board',
   imports: [NgClass],
@@ -18,8 +15,8 @@ enum team {
   styleUrl: '../../../styles.css'
 })
 export class CabbingoBoard implements OnInit {
-  teamEnum: typeof team = team;
-  currentTeam: team = team.TeamDumb;
+  teamEnum: typeof Teams = Teams;
+  currentTeam: Teams = Teams.Team1;
   selectedTile: Tile | null = null;
   // Create a 5x5 board by repeating the tile patterns
   board: Tile[][] = [];
@@ -78,7 +75,7 @@ export class CabbingoBoard implements OnInit {
     this.selectedTile = tile;
   }
 
-  switchTeam(selectedTeam: team): void {
+  switchTeam(selectedTeam: Teams): void {
     this.currentTeam = selectedTeam;
 
     if (env.production === false) {
