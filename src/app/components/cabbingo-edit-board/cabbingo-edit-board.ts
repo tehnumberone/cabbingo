@@ -6,33 +6,27 @@ import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
 import { MockService } from '../../services/mock-service';
 import { Teams } from '../../models/teamEnum';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cabbingo-edit-board',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './cabbingo-edit-board.html',
   styleUrl: './cabbingo-edit-board.css',
 })
 export class CabbingoEditBoard {
   selectedTeam = -1;
+  boardSize: number = 6;
   team1Password = '';
   team2Password = '';
   authenticated = { team: 0, authenticated: false };
-  board: Tile[] = [];
+  board: Tile[][] = [[]];
 
   constructor(
     private databaseService: DatabaseService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    if (env.production === false) {
-      const mockService = new MockService();
-      this.board = mockService.board[0];
-    } else if (this.selectedTeam >= 0) {
-      // Only load Firebase data in the browser
-      if (isPlatformBrowser(this.platformId)) {
-        this.loadTilesFromFirebase();
-      }
-    }
+    
   }
 
   onTeamSelect(teamNumber: any) {
@@ -44,7 +38,7 @@ export class CabbingoEditBoard {
     this.databaseService.getTiles().subscribe({
       next: (firebaseTeams) => {
         if (firebaseTeams && firebaseTeams.length > 0) {
-          this.board = firebaseTeams[this.selectedTeam];
+          this.generateBoard(firebaseTeams[this.selectedTeam]);
         }
       },
       error: (error) => {
@@ -67,6 +61,7 @@ export class CabbingoEditBoard {
     } else if (teamNumber === Teams.Team2) {
       this.authenticated = { team: 1, authenticated: true };
     }
+    this.generateTableArray();
   }
 
   saveTile(tile: Tile, index: number) {
@@ -75,5 +70,37 @@ export class CabbingoEditBoard {
       .catch((error) => {
         console.error('Error saving tile:', error);
       });
+  }
+
+  generateBoard(tiles: Tile[]): void {
+    this.board = []; // Clear the board before generating
+    let tileIndex = 0;
+
+    for (let row = 0; row < this.boardSize; row++) {
+      this.board[row] = [];
+      for (let col = 0; col < this.boardSize; col++) {
+        if (tileIndex >= tiles.length) {
+          return; // Stop filling the board if we run out of tiles
+        }
+        this.board[row][col] = {
+          ...tiles[tileIndex],
+          id: row * this.boardSize + col + 1, // Unique ID for each tile
+        };
+        tileIndex++;
+      }
+    }
+  }
+
+  generateTableArray() {
+    if (env.production === false) {
+      const mockService = new MockService();
+      this.board = mockService.board;
+      this.generateBoard(this.board[this.selectedTeam]);
+    } else {
+      // Only load Firebase data in the browser
+      if (isPlatformBrowser(this.platformId)) {
+        this.loadTilesFromFirebase();
+      }
+    }
   }
 }

@@ -2,17 +2,18 @@ import { ChangeDetectionStrategy, Component, Inject, OnInit, PLATFORM_ID } from 
 import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
 import { isPlatformBrowser } from '@angular/common';
-import { NgClass } from "../../../../node_modules/@angular/common";
+import { NgClass } from '../../../../node_modules/@angular/common';
 import { MockService } from '../../services/mock-service';
 import { environment as env } from '../../environments/environment.prod';
 import { Teams } from '../../models/teamEnum';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass],
+  imports: [NgClass,RouterModule],
   templateUrl: './cabbingo-board.html',
   changeDetection: ChangeDetectionStrategy.Default,
-  styleUrl: '../../../styles.css'
+  styleUrl: '../../../styles.css',
 })
 export class CabbingoBoard implements OnInit {
   teamEnum: typeof Teams = Teams;
@@ -20,18 +21,19 @@ export class CabbingoBoard implements OnInit {
   selectedTile: Tile | null = null;
   // Create a 5x5 board by repeating the tile patterns
   board: Tile[][] = [];
+  boardSize: number = 6;
 
-  constructor(private databaseService: DatabaseService,
-    @Inject(PLATFORM_ID) private platformId: Object) {
-  }
+  constructor(
+    private databaseService: DatabaseService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit(): void {
     if (env.production === false) {
       const mockService = new MockService();
       this.board = mockService.board;
       this.generateBoard(this.board[this.currentTeam]);
-    }
-    else {
+    } else {
       // Only load Firebase data in the browser
       if (isPlatformBrowser(this.platformId)) {
         this.loadTilesFromFirebase();
@@ -48,7 +50,7 @@ export class CabbingoBoard implements OnInit {
       },
       error: (error) => {
         console.error('Error loading tiles:', error);
-      }
+      },
     });
   }
 
@@ -56,15 +58,15 @@ export class CabbingoBoard implements OnInit {
     this.board = []; // Clear the board before generating
     let tileIndex = 0;
 
-    for (let row = 0; row < 5; row++) {
+    for (let row = 0; row < this.boardSize; row++) {
       this.board[row] = [];
-      for (let col = 0; col < 5; col++) {
+      for (let col = 0; col < this.boardSize; col++) {
         if (tileIndex >= tiles.length) {
           return; // Stop filling the board if we run out of tiles
         }
         this.board[row][col] = {
           ...tiles[tileIndex],
-          id: row * 5 + col + 1 // Unique ID for each tile
+          id: row * this.boardSize + col + 1, // Unique ID for each tile
         };
         tileIndex++;
       }
@@ -76,15 +78,16 @@ export class CabbingoBoard implements OnInit {
   }
 
   switchTeam(selectedTeam: Teams): void {
-    this.currentTeam = selectedTeam;
-
-    if (env.production === false) {
-      const mockService = new MockService();
-      this.board = mockService.board;
-      this.generateBoard(this.board[this.currentTeam]);
-    }
-    else {
-      this.loadTilesFromFirebase();
+    if (this.currentTeam !== selectedTeam) {
+      this.currentTeam = selectedTeam;
+      this.selectedTile = null;
+      if (env.production === false) {
+        const mockService = new MockService();
+        this.board = mockService.board;
+        this.generateBoard(this.board[this.currentTeam]);
+      } else {
+        this.loadTilesFromFirebase();
+      }
     }
   }
 

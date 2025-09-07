@@ -9,4 +9,5 @@ export interface Tile {
   points: number;
   alt?: string;
   description?: string;
+  rules:string[]
 }

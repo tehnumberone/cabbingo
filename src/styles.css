@@ -16,16 +16,29 @@
   src: url("assets/RuneScape-Quill.otf") format("opentype");
 }
 
+.osrs-border {
+  border: 1px solid rgb(66, 67, 65);
+  outline: 1px solid rgb(14, 14, 12);
+  background-color: rgb(57, 50, 40);
+  background: url(assets/tiles-backdrop.png) repeat top center;
+  background-size: 700px;
+}
+
+.osrs-border-thick {
+  border: 3px solid rgb(66, 67, 65);
+  outline: 6px solid rgb(14, 14, 12);
+  background-color: rgb(57, 50, 40);
+  background: url(assets/tiles-backdrop.png) repeat top center;
+  background-size: 700px;
+  width: fit-content;
+}
 /* Fonts end */
 
 /* Site background */
 .page-wrap {
-  background: url(https://www.runescape.com/img/rsp777/bg2.jpg) repeat-y center top;
+  background: url(assets/bg2_upscaled.jpg) repeat-y center top;
   margin: 0 auto;
   overflow: auto;
-  padding: 0 50px;
-  padding-bottom: 19px;
-  width: 1198px;
   background-size: contain;
 }
 
@@ -33,7 +46,7 @@ body {
   background: black;
   color: white;
   font-family: 'Runescape-Bold';
-  text-shadow: black 2px 2px;
+  text-shadow: black 2px 2px 2px;
   font-size: 16px;
   margin: 0;
   overflow: auto;
@@ -51,32 +64,6 @@ body {
 }
 
 /* Site background end */
-
-/* Content background */
-.content {
-  background: url(assets/backdrop-body.png) repeat-y top center;
-  padding: 30px 63px;
-  position: relative;
-}
-
-.content:before,
-.content:after {
-  background: url(assets/Backdrop-top2.png) no-repeat center top;
-  content: '';
-  height: 20px;
-  left: 0;
-  position: absolute;
-  top: -10px;
-  width: 100%;
-}
-
-.content:after {
-  background: url(assets/Backdrop-bottom2.png) no-repeat center bottom;
-  bottom: -10px;
-  top: auto;
-}
-
-/* Content background end */
 
 /* UI elements */
 .button {
@@ -100,8 +87,8 @@ body {
   flex-wrap: nowrap;
   justify-content: flex-end;
   margin-top: 30px;
-  max-height: 580px;
-  height: 580px;
+  max-height: auto;
+  height: 650px;
 }
 
 /* UI elements end */
@@ -128,7 +115,9 @@ body {
   word-break: break-word;
   z-index: 1;
   line-height: normal;
+  text-shadow: black 2px 2px 2px;
 }
+
 
 .tile {
   width: 125px;
@@ -141,7 +130,21 @@ body {
   text-align: center;
   background: url(assets/tile-background.png) no-repeat top center;
 }
+.row-tile,
+.column-tile{
+  background-color: rgb(72, 62, 51);
+  text-align: center;
+  border-radius: 4px;
+  height:auto;
+  width:125px;
+  border: 1px solid rgb(14, 14, 12);
+}
 
+.row-tile{
+  flex-direction: column;
+  justify-content: center;
+  width:45px;
+}
 .tile:hover {
   filter: drop-shadow(0px 0px .5mm gold);
 }
@@ -155,17 +158,9 @@ body {
 }
 
 /* Tile orientation */
-.tile-row {
-  justify-content: start;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  padding-left: 8px;
-}
-
 .tiles {
   top: 5px;
-  background: url(assets/tiles-body.png) repeat-y top center;
-  width: 705px;
+  width: auto;
   padding-top: 10px;
   padding-bottom: 10px;
   position: relative;
@@ -173,23 +168,6 @@ body {
   align-content: center;
   flex-direction: column;
   justify-content: space-evenly;
-}
-
-.tiles:before,
-.tiles:after {
-  background: url(assets/tiles-top.png) no-repeat center top;
-  content: '';
-  height: 5px;
-  left: 0;
-  position: absolute;
-  top: -5px;
-  width: 100%;
-}
-
-.tiles:after {
-  background: url(assets/tiles-bottom.png) no-repeat center bottom;
-  bottom: -5px;
-  top: auto;
 }
 
 /* Tiles end*/
@@ -205,11 +183,12 @@ body {
 
 .infobox {
   width: 250px;
-  height: 240px;
-  align-content: center;
+  height: auto;
+  min-height:240px;
+  max-height:auto;
+  align-content: top;
   text-align: center;
-  background: url(assets/infobox.png) no-repeat top center;
-  background-size: contain;
+  margin-top:5px;
   margin-bottom: 20px;
 }
 
@@ -218,6 +197,7 @@ body {
 .btn {
   --bs-btn-color: var(white) !important;
   color: white !important;
+  text-shadow: black 2px 2px 2px;
 }
 
 .btn:hover {
@@ -226,4 +206,38 @@ body {
 
 .selected-team {
   filter: drop-shadow(0px 0px 1mm gold);
+}
+
+.progress{
+  --bs-progress-bg: rgb(57, 50, 40);
+  background-color: var(--bs-progress-bg);
+}
+
+.osrs-table , td , tfoot, thead, tbody, tr,th{
+  --bs-table-color: #fff;
+  --bs-table-bg: #212529;
+  --bs-table-border-color: #4d5154;
+  --bs-table-striped-bg: #2c3034;
+  --bs-table-striped-color: #fff;
+  --bs-table-active-bg: #373b3e;
+  --bs-table-active-color: #fff;
+  --bs-table-hover-bg: #323539;
+  --bs-table-hover-color: #fff;
+  border: 1px solid rgb(14, 14, 12);
+  --bs-table-bg: rgb(57, 50, 40);
+  background-color: var(--bs-table-bg);
+}
+
+.custom-btn {
+  background-color: rgb(72, 62, 51);
+  text-align: center;
+  border-radius: 4px;
+  height:auto;
+  min-width:40px;
+  border: 2px solid rgb(14, 14, 12);
+}
+.custom-btn:hover {
+  border: 2px solid rgb(14, 14, 12);
+  background-color: rgb(100, 85, 70);
+  color: gold !important;
 }
