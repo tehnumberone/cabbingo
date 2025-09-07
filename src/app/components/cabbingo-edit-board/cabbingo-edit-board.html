@@ -21,8 +21,10 @@
             @if(selectedTeam === 1){
             <label for="password">Team 2 Password:</label>
           }
-            <input class="form-control" type="password" id="password" name="password"
+            @if(selectedTeam !== -1){
+              <input class="form-control" type="password" id="password" name="password" placeholder="Enter password"
               [(ngModel)]="password" />
+            }
           </div>
           <br />
           <div class="d-flex justify-content-between">
