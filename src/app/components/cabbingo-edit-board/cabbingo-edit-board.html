@@ -17,15 +17,12 @@
           <br>
           <div class="col-12">
             @if(selectedTeam === 0){
-            <label for="team1Password">Team 1 Password:</label>
-            <input class="form-control" type="password" id="team1Password" name="team1Password"
-              [(ngModel)]="team1Password" />
-            }
+            <label for="password">Team 1 Password:</label>}
             @if(selectedTeam === 1){
-            <label for="team2Password">Team 2 Password:</label>
-            <input class="form-control" type="password" id="team2Password" name="team2Password"
-              [(ngModel)]="team2Password" />
-            }
+            <label for="password">Team 2 Password:</label>
+          }
+            <input class="form-control" type="password" id="password" name="password"
+              [(ngModel)]="password" />
           </div>
           <br />
           <div class="d-flex justify-content-between">

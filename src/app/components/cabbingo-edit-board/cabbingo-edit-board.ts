@@ -7,6 +7,7 @@ import { DatabaseService } from '../../services/database.service';
 import { MockService } from '../../services/mock-service';
 import { Teams } from '../../models/teamEnum';
 import { RouterModule } from '@angular/router';
+import { DataSnapshot } from 'firebase/database';
 
 @Component({
   selector: 'app-cabbingo-edit-board',
@@ -17,17 +18,14 @@ import { RouterModule } from '@angular/router';
 export class CabbingoEditBoard {
   selectedTeam = -1;
   boardSize: number = 6;
-  team1Password = '';
-  team2Password = '';
+  password = '';
   authenticated = { team: 0, authenticated: false };
   board: Tile[][] = [[]];
 
   constructor(
     private databaseService: DatabaseService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {
-    
-  }
+  ) {}
 
   onTeamSelect(teamNumber: any) {
     this.selectedTeam = parseInt(teamNumber);
@@ -48,11 +46,22 @@ export class CabbingoEditBoard {
   }
 
   validatePassword() {
-    if (this.selectedTeam === 0 && env.passwordTeam1 === this.team1Password) {
-      return this.loginForTeam(0);
-    } else if (this.selectedTeam === 1 && env.passwordTeam2 === this.team2Password) {
-      return this.loginForTeam(1);
-    } else return false;
+    if (env.production === true && this.selectedTeam !== -1) {
+      this.databaseService.getPassword(this.selectedTeam).then((passwordFromDb: DataSnapshot) => {
+        let passwordValue = passwordFromDb.val() ? JSON.stringify(passwordFromDb.val()) : '';
+        console.log(passwordValue);
+        if (this.selectedTeam === 0 && passwordValue === JSON.stringify(this.password)) {
+          return this.loginForTeam(0);
+        } else if (
+          this.selectedTeam === 1 &&
+          passwordValue === JSON.stringify(this.password)
+        ) {
+        return this.loginForTeam(1);
+      }
+      });
+    } else if(env.production === false){
+      return this.loginForTeam(this.selectedTeam);
+    }
   }
 
   loginForTeam(teamNumber: number) {
@@ -65,11 +74,9 @@ export class CabbingoEditBoard {
   }
 
   saveTile(tile: Tile, index: number) {
-    this.databaseService
-      .updateTile(this.selectedTeam, tile, index)
-      .catch((error) => {
-        console.error('Error saving tile:', error);
-      });
+    this.databaseService.updateTile(this.selectedTeam, tile, index).catch((error) => {
+      console.error('Error saving tile:', error);
+    });
   }
 
   generateBoard(tiles: Tile[]): void {
