@@ -29,7 +29,7 @@
           <br />
           <div class="d-flex justify-content-between">
             <button class="btn custom-btn" type="submit" (click)="validatePassword()">Log in</button>
-            <button class="btn custom-btn" [routerLink]="['/board']">Return to board</button>
+            <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
           </div>
         </form>
         } @else {
@@ -37,7 +37,7 @@
           <div class="d-flex flex-row justify-content-between">
           <h2>Welcome Team {{ authenticated.team+1 }}!</h2>
           <p>This is where you can edit your board!</p>
-            <button class="btn custom-btn" [routerLink]="['/board']">Return to board</button>
+            <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
           </div>
           <div style="max-height: 600px; overflow: auto;" class="mt-4">
             <table class="table osrs-table table-bordered">

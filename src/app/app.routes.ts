@@ -4,6 +4,6 @@ import { CabbingoBoard } from './components/cabbingo-board/cabbingo-board';
 
 export const routes: Routes = [
     { path: 'edit-board', component: CabbingoEditBoard },
-    { path: 'board', component: CabbingoBoard },
-    { path: '', redirectTo: '/board', pathMatch: 'full' }
+    { path: '', component: CabbingoBoard },
+    { path: '', redirectTo: '', pathMatch: 'full' }
 ];

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "cabbingov2": {
+    "cabbingo": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -57,10 +57,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "cabbingov2:build:production"
+              "buildTarget": "cabbingo:build:production"
             },
             "development": {
-              "buildTarget": "cabbingov2:build:development"
+              "buildTarget": "cabbingo:build:development"
             }
           },
           "defaultConfiguration": "development"

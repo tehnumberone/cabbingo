@@ -1,16 +1,16 @@
 {
-  "name": "cabbingov2",
+  "name": "cabbingo",
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:prod": "ng build --configuration production --base-href='/cabbingov2/'",
-    "deploy": "gh-pages -d dist/cabbingov2/browser",
+    "build:prod": "ng build --configuration production --base-href='/cabbingo/'",
+    "deploy": "gh-pages -d dist/cabbingo/browser",
     "build-and-deploy": "npm run build:prod && npm run deploy",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:cabbingov2": "node dist/cabbingov2/server/server.mjs"
+    "serve:ssr:cabbingo": "node dist/cabbingo/server/server.mjs"
   },
   "prettier": {
     "printWidth": 100,
