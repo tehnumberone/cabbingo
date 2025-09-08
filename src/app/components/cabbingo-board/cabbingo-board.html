@@ -41,8 +41,9 @@
                     </div>
                     }
                 </div>
-                <div class="infoArea col-auto">
-                    <div class="infobox osrs-border d-flex flex-column justify-content-center align-items-center">
+                <div class="infoArea d-flex justify-content-between col-auto">
+                    <div>
+                    <div class="infobox osrs-border d-flex flex-column justify-content-between align-items-center">
                         @if(selectedTile){
                         <div>{{selectedTile.description}}</div>
                         <div><img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" /></div>
@@ -61,8 +62,9 @@
                         {{i+1}}. {{rule}}<br>
                         }
                     </div>
-                    <div>
-                        <button class="btn button disabled">Total points: {{getTotalPoints()}}</button>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn button disabled float-bottom">Total points: {{getTotalPoints()}}</button>
                     </div>
                 </div>
             </div>
