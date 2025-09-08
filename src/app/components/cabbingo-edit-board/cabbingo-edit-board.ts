@@ -49,7 +49,6 @@ export class CabbingoEditBoard {
     if (env.production === true && this.selectedTeam !== -1) {
       this.databaseService.getPassword(this.selectedTeam).then((passwordFromDb: DataSnapshot) => {
         let passwordValue = passwordFromDb.val() ? JSON.stringify(passwordFromDb.val()) : '';
-        console.log(passwordValue);
         if (this.selectedTeam === 0 && passwordValue === JSON.stringify(this.password)) {
           return this.loginForTeam(0);
         } else if (

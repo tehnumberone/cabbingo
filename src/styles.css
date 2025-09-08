@@ -37,9 +37,13 @@
 /* Site background */
 .page-wrap {
   background: url(assets/bg2_upscaled.jpg) repeat-y center top;
-  margin: 0 auto;
   overflow: auto;
   background-size: contain;
+}
+
+main{
+  min-width:max-content;  
+  min-height:max-content;
 }
 
 body {
@@ -49,7 +53,6 @@ body {
   text-shadow: black 2px 2px 2px;
   font-size: 16px;
   margin: 0;
-  overflow: auto;
 }
 
 .banner {
