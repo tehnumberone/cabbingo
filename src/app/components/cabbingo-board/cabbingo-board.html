@@ -59,7 +59,12 @@
                     <div class="infobox osrs-border">
                         <p>Da Rulez</p>
                         @for(rule of selectedTile?.rules; track rule; let i = $index){
-                        {{i+1}}. {{rule}}<br>
+                        @if(!rule.includes('Excluded:')){
+                           {{rule}}<br>
+                        }
+                        @else{
+                            <strong style="text-decoration: underline;">{{rule}}</strong><br>
+                        }
                         }
                     </div>
                     </div>
