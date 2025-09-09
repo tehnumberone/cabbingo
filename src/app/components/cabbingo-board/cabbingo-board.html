@@ -43,12 +43,12 @@
                 </div>
                 <div class="infoArea d-flex justify-content-between col-auto">
                     <div>
-                    <div class="infobox osrs-border d-flex flex-column justify-content-between align-items-center">
+                    <div class="infobox osrs-border d-flex flex-column justify-content-between align-items-center" style="min-height:300px;">
                         @if(selectedTile){
                         <div>{{selectedTile.description}}</div>
                         <div><img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" /></div>
                         <div class="d-flex flex-column align-items-center">
-                            <div class="d-flex flex-row">Points: <p class="mx-2" style="color:rgb(8, 255, 8);">
+                            <div class="d-flex flex-row pt-3">Points: <p class="mx-2" style="color:rgb(8, 255, 8);">
                                     {{selectedTile.points}}</p>
                             </div>
                             <div>{{selectedTile.itemsObtained}} / {{selectedTile.itemsRequired}} Obtained </div>

@@ -100,12 +100,13 @@ body {
 
 .bossImage {
   height: 125px;
+  filter: drop-shadow(5px 6px 6px #000000);
 }
 
 .tile-image {
   height: 55px;
   object-fit: contain;
-  filter: drop-shadow(6px 6px 2mm rgb(0, 0, 0));
+  filter: drop-shadow(3px 4px 2px #000000);
   z-index: 0
 }
 
