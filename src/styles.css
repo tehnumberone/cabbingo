@@ -59,10 +59,7 @@ body {
   background: url(assets/Logo.png) no-repeat center;
   background-size: contain;
   display: block;
-  height: 190px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  min-height: 135px;
+  height: 180px;
   text-align: center;
 }
 
@@ -125,15 +122,22 @@ body {
 
 .tile {
   width: 125px;
-  height: 100px;
-  flex-direction: column;
+  height: 105px;
   flex-wrap: nowrap;
-  display: flex;
-  align-content: center;
-  align-items: center;
-  text-align: center;
-  background: url(assets/tile-background.png) no-repeat top center;
+  justify-content: space-between;
+  border: 1px solid rgb(46, 43, 35);
+  outline: 1px solid rgb(86, 75, 61);
+  background-color: rgb(72, 62, 51);
+  /* background: url(assets/tile-background.png) no-repeat top center; */
 }
+
+.tile:focus-visible,
+.tile:active,
+.tile:hover {
+  background-color: rgb(100, 85, 70);
+  color: gold !important;
+}
+
 .row-tile,
 .column-tile{
   background-color: rgb(72, 62, 51);
@@ -141,7 +145,8 @@ body {
   border-radius: 4px;
   height:auto;
   width:125px;
-  border: 1px solid rgb(14, 14, 12);
+  border: 1px solid rgb(66, 67, 65);
+  outline: 1px solid rgb(14, 14, 12);
 }
 
 .row-tile{
@@ -240,6 +245,9 @@ body {
   min-width:40px;
   border: 2px solid rgb(14, 14, 12);
 }
+
+.custom-btn:focus-visible,
+.custom-btn:active,
 .custom-btn:hover {
   border: 2px solid rgb(14, 14, 12);
   background-color: rgb(100, 85, 70);
