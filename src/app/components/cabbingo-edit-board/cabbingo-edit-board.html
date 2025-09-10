@@ -58,7 +58,7 @@
                   <td colspan="8">No tiles available</td>
                 </tr>}
                 @else{
-                  @for(row of board; track row; let rowIndex = $index){
+                  @for(row of board; track row;){
                   @for(tile of row; track tile; let i = $index){
                 <tr>
                   <td>
@@ -80,7 +80,7 @@
                   <td><input class="form-control" [(ngModel)]="tile.itemsObtained" type="number" min="0"
                       [max]="tile.itemsRequired" /></td>
                   <td>
-                    <button class="btn custom-btn col-12" (click)="saveTile(tile, i)">Save</button>
+                    <button class="btn custom-btn col-12" (click)="saveTile(tile, tile.id-1)">Save</button>
                   </td>
                 </tr>
                 }}}
