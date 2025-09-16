@@ -1,39 +1,46 @@
-<div class="page-wrap ">
-    <a class="btn button position-fixed mt-1 end-0 top-0 me-5" [routerLink]="['/edit-board']">Log in as captain</a>
+<div class="page-wrap">
+    <a class="btn button position-fixed mt-1 end-0 top-0 me-5" [routerLink]="['/edit-board']" style="z-index: 1;">Log in
+        as captain</a>
     <div class="banner d-flex justify-content-end"></div>
     <div class="d-flex justify-content-center">
         <div class="osrs-border-thick px-4 py-2">
             <div class="row teams mb-2">
                 <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
-                    [ngClass]=" currentTeam === teamEnum.Team1 ? 'btn selected-team': ''">Team 1</button>
+                    [ngClass]="currentTeam === teamEnum.Team1 ? 'btn selected-team' : ''">
+                    Team 1
+                </button>
                 <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team2)"
-                    [ngClass]=" currentTeam === teamEnum.Team2 ? 'btn selected-team': ''">Team 2</button>
+                    [ngClass]="currentTeam === teamEnum.Team2 ? 'btn selected-team' : ''">
+                    Team 2
+                </button>
             </div>
             <div class="gap-2 d-flex justify-content-center">
                 <div class="tiles osrs-border column col-auto">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="d-flex align-items-center mx-2 me-0 row-tile ">.</div>
-                        @for(column of [].constructor(boardSize); track
-                        column; let i = $index){
-                        <div class="column-tile">Column {{i + 1}}</div>}
+                        <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
+                        @for(column of [].constructor(boardSize); track i; let i = $index){
+                        <div class="column-tile">Column {{ i + 1 }}</div>
+                        }
                     </div>
                     @for(row of board; track row; let rowIndex = $index){
-                    <div class="d-flex justify-content-left px-2 py-1 gap-2 ">
-                        <div class="d-flex align-items-center row-tile">Row {{rowIndex + 1}}</div>
-                        @for(tile of row; track tile){
+                    <div class="d-flex justify-content-left px-2 py-1 gap-2">
+                        <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
+                        @for(tile of row; track tile.id){
                         <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
-                        'tile-selected': tile === selectedTile , 'tile-completed': tile.itemsObtained >= tile.itemsRequired
-                    }">
+                'tile-selected': tile === selectedTile,
+                'tile-completed': tile.itemsObtained >= tile.itemsRequired
+              }">
                             <div>
                                 @if(!(tile.itemsObtained >= tile.itemsRequired)){
-                                <div class="progress" style="height: 5px;">
+                                <div class="progress" style="height: 5px">
                                     <div class="progress-bar bg-success" role="progressbar"
                                         [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
                                         [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"
                                         [attr.aria-valuemax]="tile.itemsRequired">
-                                        <div style="width: 110px;"></div>
+                                        <div style="width: 110px"></div>
                                     </div>
-                                </div>}
+                                </div>
+                                }
                                 <img class="tile-image p-1" [src]="tile.src" [alt]="tile.alt" />
                                 <p class="tile-text">{{ tile.title }}</p>
                             </div>
@@ -45,34 +52,49 @@
                 <div class="infoArea d-flex justify-content-between col-auto">
                     <div>
                         <div class="infobox osrs-border d-flex flex-column justify-content-between align-items-center"
-                            style="min-height:300px;">
+                            style="min-height: 300px">
                             @if(selectedTile){
-                            <div>{{selectedTile.description}}</div>
-                            <div><img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" />
+                            <div>{{ selectedTile.description }}</div>
+                            <div>
+                                <img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" />
                             </div>
                             <div class="d-flex flex-column align-items-center">
-                                <div class="d-flex flex-row pt-3">Points: <p class="mx-2" style="color:rgb(8, 255, 8);">
-                                        {{selectedTile.points}}</p>
+                                <div class="d-flex flex-row pt-3">
+                                    Points:
+                                    <p class="mx-2" style="color: rgb(8, 255, 8)">
+                                        {{ selectedTile.points }}
+                                    </p>
                                 </div>
-                                <div>{{selectedTile.itemsObtained}} / {{selectedTile.itemsRequired}} Obtained </div>
+                                <div>
+                                    {{ selectedTile.itemsObtained }} / {{ selectedTile.itemsRequired }} Obtained
+                                </div>
                             </div>
+                            } @else{
+                            <p>Click on a tile!</p>
                             }
-                            @else{<p>Click on a tile!</p>}
                         </div>
-                        <div class="infobox osrs-border">
-                            <p>Da Rulez</p>
-                            @for(rule of selectedTile?.rules; track rule; let i = $index){
-                            @if(!rule.includes('Excluded:')){
-                            {{rule}}<br>
-                            }
-                            @else{
-                            <strong style="text-decoration: underline;">{{rule}}</strong><br>
-                            }
-                            }
+                        <div
+                            class="d-flex flex-column infobox osrs-border-brighter justify-content-center align-items-center">
+                            <p style="color:#FF9933;">Da Rulez</p>
+                            <div class="rulesbox custom-scrollbar overflow-y-scroll osrs-border-darker">
+                                @for(rule of selectedTile?.rules; track rule; let i = $index){
+                                @if(rule.includes('Excluded') || rule.includes('Allowed')){
+                                {{ rule }}
+                                } @else if(rule.includes('-')){
+                                <strong style="color: #E40303;">{{ rule.replace('-', '') }}</strong>
+                                } @else if(rule.includes('+')){
+                                <strong style="color: #0CD90D;">{{ rule.replace('+', '') }}</strong>
+                                } @else{
+                                 <strong style="color:#FF9933;">{{ rule }}</strong>
+                                }
+                                <br />}
+                            </div>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <button class="btn button disabled float-bottom">Total points: {{getTotalPoints()}}</button>
+                        <button class="btn button disabled float-bottom">
+                            Total points: {{ getTotalPoints() }}
+                        </button>
                     </div>
                 </div>
             </div>

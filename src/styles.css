@@ -1,5 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
 /* Fonts */
+::-webkit-scrollbar-button:single-button {
+    background-color: rgb(64, 64, 64);
+
+    display: block;
+    background-size: 10px;
+    background-repeat: no-repeat;
+}
 @font-face {
   font-family: Runescape;
   src: url("assets/RuneScape-Plain-12.otf") format("opentype");
@@ -23,7 +30,18 @@
   background: url(assets/tiles-backdrop.png) repeat top center;
   background-size: 700px;
 }
-
+.osrs-border-brighter {
+  border: 1px solid rgb(66, 67, 65);
+  outline: 1px solid rgb(14, 14, 12);
+  background-color: rgb(62, 53, 41);
+  background-size: 700px;
+}
+.osrs-border-darker {
+  border: 1px solid rgb(66, 67, 65);
+  outline: 1px solid rgb(14, 14, 12);
+  background-color: rgb(51, 43, 33);
+  background-size: 700px;
+}
 .osrs-border-thick {
   border: 3px solid rgb(66, 67, 65);
   outline: 6px solid rgb(14, 14, 12);
@@ -189,18 +207,21 @@ body {
   align-items: center;
   display: flex;
 }
-
+.rulesbox,
 .infobox {
   width: 250px;
-  height: auto;
   min-height:240px;
-  max-height:auto;
-  align-content: top;
   text-align: center;
   margin-top:5px;
-  margin-bottom: 20px;
+  padding-left:8px;
+  padding-right:8px;
 }
-
+.rulesbox{
+  text-align: left;
+  height:300px;
+  padding-left:8px;
+  padding-right:8px;
+}
 /* infobox area end */
 
 .btn {
@@ -252,4 +273,12 @@ body {
   border: 2px solid rgb(14, 14, 12);
   background-color: rgb(100, 85, 70);
   color: gold !important;
+}
+
+.custom-scrollbar {
+  height:300px;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(114, 98, 72) #27221B; /* thumb color, track color */
+  scroll-behavior: smooth;
 }
