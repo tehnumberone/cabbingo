@@ -19,12 +19,22 @@
                     <div class="d-flex align-items-center gap-2">
                         <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
                         @for(column of [].constructor(boardSize); track i; let i = $index){
-                        <div class="column-tile">Column {{ i + 1 }}</div>
+                        @if(getTotalPoints() > 0 && calculateColumnBonuses(i) > 0){
+                        <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }} <i class="bi bi-check-circle-fill"></i></div>
+                        }
+                        @else{
+                        <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
+                        }
                         }
                     </div>
                     @for(row of board; track row; let rowIndex = $index){
                     <div class="d-flex justify-content-left px-2 py-1 gap-2">
+                        @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
+                        <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i class="bi bi-check-circle-fill"></i></div>
+                        }
+                        @else{
                         <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
+                        }
                         @for(tile of row; track tile.id){
                         <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
                 'tile-selected': tile === selectedTile,

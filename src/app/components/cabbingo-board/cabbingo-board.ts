@@ -10,7 +10,7 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass,RouterModule],
+  imports: [NgClass, RouterModule],
   templateUrl: './cabbingo-board.html',
   changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: '../../../styles.css',
@@ -22,11 +22,13 @@ export class CabbingoBoard implements OnInit {
   // Create a 5x5 board by repeating the tile patterns
   board: Tile[][] = [];
   boardSize: number = 6;
+  columnBonus = 5;
+  rowBonus = 5;
 
   constructor(
     private databaseService: DatabaseService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     if (env.production === false) {
@@ -93,13 +95,73 @@ export class CabbingoBoard implements OnInit {
 
   getTotalPoints(): number {
     let totalPoints = 0;
-    for (const row of this.board) {
+
+    // Calculate row points and row bonuses
+    for (let rowIndex = 0; rowIndex < this.board.length; rowIndex++) {
+      const row = this.board[rowIndex];
+      let isRowComplete = true;
+
       for (const tile of row) {
         if (tile.itemsObtained >= tile.itemsRequired) {
           totalPoints += tile.points || 0;
+        } else {
+          isRowComplete = false;
         }
       }
+
+      if (isRowComplete) {
+        totalPoints += 5;
+      }
     }
+    totalPoints += this.calculateColumnBonuses();
+
+
     return totalPoints;
+  }
+
+  calculateColumnBonuses(columnIndex?: number): number {
+    let columnBonusPoints = 0;
+
+    const columnsToCheck = columnIndex !== undefined ? [columnIndex] : Array.from({ length: this.boardSize }, (_, i) => i);
+
+    for (const colIndex of columnsToCheck) {
+      let isColumnComplete = true;
+
+      for (let rowIndex = 0; rowIndex < this.board.length; rowIndex++) {
+        const tile = this.board[rowIndex][colIndex];
+        if (!tile || tile.itemsObtained < tile.itemsRequired) {
+          isColumnComplete = false;
+          break;
+        }
+      }
+
+      if (isColumnComplete) {
+        columnBonusPoints += this.columnBonus;
+      }
+    }
+    return columnBonusPoints;
+  }
+
+  calculateRowBonuses(rowIndex?: number): number {
+    let rowBonusPoints = 0;
+
+    const rowsToCheck = rowIndex !== undefined ? [rowIndex] : Array.from({ length: this.board.length }, (_, i) => i);
+
+    for (const rowIdx of rowsToCheck) {
+      let isRowComplete = true;
+
+      for (const tile of this.board[rowIdx]) {
+        if (!tile || tile.itemsObtained < tile.itemsRequired) {
+          isRowComplete = false;
+          break;
+        }
+      }
+
+      if (isRowComplete) {
+        rowBonusPoints += this.rowBonus;
+      }
+    }
+    console.log('Row bonuses:', rowBonusPoints);
+    return rowBonusPoints;
   }
 }
