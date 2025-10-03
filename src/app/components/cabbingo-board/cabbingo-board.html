@@ -2,134 +2,133 @@
     <a class="btn button position-fixed mt-1 end-0 top-0 me-5" [routerLink]="['/edit-board']" style="z-index: 1;">Log in
         as captain</a>
     <div class="banner d-flex justify-content-end"></div>
-    <div class="d-flex justify-content-center">
-        <div class="osrs-border-thick px-4 py-2">
-            <div class="row teams mb-2">
-                <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
-                    [ngClass]="currentTeam === teamEnum.Team1 ? 'btn selected-team' : ''">
-                    Team 1
-                </button>
-                <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team2)"
-                    [ngClass]="currentTeam === teamEnum.Team2 ? 'btn selected-team' : ''">
-                    Team 2
-                </button>
-            </div>
-            <div class="gap-2 d-flex justify-content-center">
-                <div class="tiles osrs-border column col-auto">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
-                        @for(column of [].constructor(boardSize); track i; let i = $index){
-                        @if(getTotalPoints() > 0 && calculateColumnBonuses(i) > 0){
-                        <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }} <i
-                                class="bi bi-check-circle-fill"></i></div>
-                        }
-                        @else{
-                        <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
-                        }
-                        }
-                    </div>
-                    @for(row of board; track row; let rowIndex = $index){
-                    <div class="d-flex justify-content-left px-2 py-1 gap-2">
-                        @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
-                        <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
-                                class="bi bi-check-circle-fill"></i></div>
-                        }
-                        @else{
-                        <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
-                        }
-                        @for(tile of row; track tile.id){
-                        <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
+    <div class="osrs-border-thick px-4 py-2">
+        <div class="row teams mb-2">
+            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
+                [ngClass]="currentTeam === teamEnum.Team1 ? 'btn selected-team' : ''">
+                Team 1
+            </button>
+            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team2)"
+                [ngClass]="currentTeam === teamEnum.Team2 ? 'btn selected-team' : ''">
+                Team 2
+            </button>
+        </div>
+        <div class="gap-2 d-flex justify-content-center">
+            <div class="tiles osrs-border column col-auto">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
+                    @for(column of [].constructor(boardSize); track i; let i = $index){
+                    @if(getTotalPoints() > 0 && calculateColumnBonuses(i) > 0){
+                    <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }} <i
+                            class="bi bi-check-circle-fill"></i></div>
+                    }
+                    @else{
+                    <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
+                    }
+                    }
+                </div>
+                @for(row of board; track row; let rowIndex = $index){
+                <div class="d-flex justify-content-left px-2 py-1 gap-2">
+                    @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
+                    <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
+                            class="bi bi-check-circle-fill"></i></div>
+                    }
+                    @else{
+                    <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
+                    }
+                    @for(tile of row; track tile.id){
+                    <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
                 'tile-selected': tile === selectedTile,
                 'tile-completed': tile.itemsObtained >= tile.itemsRequired
               }">
-                            <div>
-                                @if(!(tile.itemsObtained >= tile.itemsRequired)){
-                                <div class="progress" style="height: 5px">
-                                    <div class="progress-bar bg-success" role="progressbar"
-                                        [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
-                                        [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"
-                                        [attr.aria-valuemax]="tile.itemsRequired">
-                                        <div style="width: 110px"></div>
-                                    </div>
+                        <div>
+                            @if(!(tile.itemsObtained >= tile.itemsRequired)){
+                            <div class="progress" style="height: 5px">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                    [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
+                                    [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"
+                                    [attr.aria-valuemax]="tile.itemsRequired">
+                                    <div style="width: 110px"></div>
                                 </div>
-                                }
-                                <img class="tile-image p-1" [src]="tile.src" [alt]="tile.alt" />
-                                <p class="tile-text">{{ tile.title }}</p>
                             </div>
-                        </button>
-                        }
-                    </div>
+                            }
+                            <img class="tile-image p-1" [src]="tile.src" [alt]="tile.alt" />
+                            <p class="tile-text">{{ tile.title }}</p>
+                        </div>
+                    </button>
                     }
                 </div>
-                <div class="infoArea d-flex justify-content-between col-auto">
-                    <div>
-                        <div class="infobox osrs-border d-flex flex-column justify-content-between align-items-center"
-                            style="min-height: 300px">
-                            @if(selectedTile){
-                            <div>{{ selectedTile.description }}</div>
+                }
+            </div>
+            <div class="infoArea d-flex justify-content-between col-auto">
+                <div>
+                    <div class="infobox osrs-border d-flex flex-column justify-content-between align-items-center"
+                        style="min-height: 300px">
+                        @if(selectedTile){
+                        <div>{{ selectedTile.description }}</div>
+                        <div>
+                            <img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" />
+                        </div>
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="d-flex flex-row pt-3">
+                                Points:
+                                <p class="mx-2" style="color: rgb(8, 255, 8)">
+                                    {{ selectedTile.points }}
+                                </p>
+                            </div>
                             <div>
-                                <img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" />
+                                {{ selectedTile.itemsObtained }} / {{ selectedTile.itemsRequired }} Obtained
                             </div>
-                            <div class="d-flex flex-column align-items-center">
-                                <div class="d-flex flex-row pt-3">
-                                    Points:
-                                    <p class="mx-2" style="color: rgb(8, 255, 8)">
-                                        {{ selectedTile.points }}
-                                    </p>
-                                </div>
-                                <div>
-                                    {{ selectedTile.itemsObtained }} / {{ selectedTile.itemsRequired }} Obtained
-                                </div>
-                            </div>
-                            } @else{
-                            <p>Click on a tile!</p>
-                            }
                         </div>
-                        <div
-                            class="d-flex flex-column infobox osrs-border-brighter justify-content-center align-items-center">
-                            <div class="d-flex d-row justify-content-center gap-2">
-                                <button class="btn row-tile" style="width:115px; height:40px;"
-                                    [ngClass]="{'rules-btn-selected': bingoRulesOpened, 'rules-btn': !bingoRulesOpened}"
-                                    (click)="bingoRulesOpened = true;">
-                                    <p style="color:#FF9933; width:auto">Bingo Rulez</p>
-                                </button>
-                                <button class="btn row-tile" style="width:115px; height:40px;"
-                                    [ngClass]="{'rules-btn-selected': !bingoRulesOpened, 'rules-btn': bingoRulesOpened}"
-                                    (click)="bingoRulesOpened = false;">
-                                    <p style="color:#FF9933; width:auto">Tile Rulez</p>
-                                </button>
-                            </div>
+                        } @else{
+                        <p>Click on a tile!</p>
+                        }
+                    </div>
+                    <div
+                        class="d-flex flex-column infobox osrs-border-brighter justify-content-center align-items-center">
+                        <div class="d-flex d-row justify-content-center gap-2 py-1 m-0">
+                            <button class="btn row-tile" style="width:115px; height:40px;"
+                                [ngClass]="{'rules-btn-selected': bingoRulesOpened, 'rules-btn': !bingoRulesOpened}"
+                                (click)="bingoRulesOpened = true;">
+                                <p style="color:#FF9933; width:auto">Bingo Rulez</p>
+                            </button>
+                            <button class="btn row-tile" style="width:115px; height:40px;"
+                                [ngClass]="{'rules-btn-selected': !bingoRulesOpened, 'rules-btn': bingoRulesOpened}"
+                                (click)="bingoRulesOpened = false;">
+                                <p style="color:#FF9933; width:auto">Tile Rulez</p>
+                            </button>
+                        </div>
 
-                            <div class="rulesbox custom-scrollbar overflow-y-scroll osrs-border-darker">
-                                @if(!bingoRulesOpened){
-                                @for(rule of selectedTile?.rules; track rule; let i = $index){
-                                @if(rule.includes('Excluded') || rule.includes('Allowed')){
-                                {{ rule }}
-                                } @else if(rule.includes('-')){
-                                <strong style="color: #E40303;">{{ rule.replace('-', '') }}</strong>
-                                } @else if(rule.includes('+')){
-                                <strong style="color: #0CD90D;">{{ rule.replace('+', '') }}</strong>
-                                } @else{
-                                <strong style="color:#FF9933;">{{ rule }}</strong>
-                                }
-                                <br />}}
-                                @else {
-                                <ul class="px-2">
-                                    <li>Multiple accounts are allowed, but only one can be logged in at once.</li>
-                                    <li>The EXP tile will only be counted for ONE account. If you are playing with multiple.</li>
-                                    <li>Complete a full row or column to earn a {{ rowBonus }} point bonus!</li>
-                                    <li>Tiles can be completed in any order.</li>
-                                    <li style="color:#0CD90D;">Good luck and have fun!</li>
-                                </ul>
+                        <div class="rulesbox custom-scrollbar overflow-y-scroll osrs-border-darker">
+                            @if(!bingoRulesOpened){
+                            @for(rule of selectedTile?.rules; track rule; let i = $index){
+                            @if(rule.includes('Excluded') || rule.includes('Allowed')){
+                            {{ rule }}
+                            } @else if(rule.includes('-')){
+                            <strong style="color: #E40303;">{{ rule.replace('-', '') }}</strong>
+                            } @else if(rule.includes('+')){
+                            <strong style="color: #0CD90D;">{{ rule.replace('+', '') }}</strong>
+                            } @else{
+                            <strong style="color:#FF9933;">{{ rule }}</strong>
                             }
-                            </div>
+                            <br />}}
+                            @else {
+                            <ul class="px-2">
+                                <li>Multiple accounts are allowed, but only one can be logged in at once.</li>
+                                <li>The EXP tile will only be counted for ONE account. If you are playing with multiple.
+                                </li>
+                                <li>Complete a full row or column to earn a {{ rowBonus }} point bonus!</li>
+                                <li>Tiles can be completed in any order.</li>
+                                <li style="color:#0CD90D;">Good luck and have fun!</li>
+                            </ul>
+                            }
                         </div>
                     </div>
-                    <div class="mt-2">
-                        <button class="btn button disabled float-bottom">
-                            Total points: {{ getTotalPoints() }}
-                        </button>
-                    </div>
+                </div>
+                <div class="mt-2">
+                    <button class="btn button disabled float-bottom">
+                        Total points: {{ getTotalPoints() }}
+                    </button>
                 </div>
             </div>
         </div>

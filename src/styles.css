@@ -50,18 +50,32 @@
   background-size: 700px;
   width: fit-content;
 }
+
+/* Center the main board container without affecting inner layout */
+.page-wrap > .osrs-border-thick {
+  margin-left: auto;
+  margin-right: auto;
+}
 /* Fonts end */
 
 /* Site background */
+html, body {
+  width: 100%;
+}
+
 .page-wrap {
   background: url(assets/bg2_upscaled.jpg) repeat-y center top;
   overflow: auto;
-  background-size: contain;
+  background-size: 100%; 
+  min-width: 90vw;
+  min-width: 90dvw; /* mobile address bar aware */
+  min-height: 100vh;
+  min-height: 100dvh; /* mobile address bar aware */
 }
 
 main{
-  min-width:max-content;  
-  min-height:max-content;
+  width: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -146,7 +160,6 @@ body {
   border: 1px solid rgb(46, 43, 35);
   outline: 1px solid rgb(86, 75, 61);
   background-color: rgb(72, 62, 51);
-  /* background: url(assets/tile-background.png) no-repeat top center; */
 }
 
 .tile:focus-visible,
@@ -183,10 +196,6 @@ body {
 
 .tile-completed {
   background: url(assets/tile-background-completed.png) no-repeat top center;
-}
-
-.rules-btn{
-  
 }
 
 .rules-btn-selected {
