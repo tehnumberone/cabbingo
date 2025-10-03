@@ -155,7 +155,7 @@ body {
   background-color: rgb(100, 85, 70);
   color: gold !important;
 }
-
+.rules-btn,
 .row-tile,
 .column-tile{
   background-color: rgb(72, 62, 51);
@@ -166,12 +166,13 @@ body {
   border: 1px solid rgb(66, 67, 65);
   outline: 1px solid rgb(14, 14, 12);
 }
-
+.rules-btn,
 .row-tile{
   flex-direction: column;
   justify-content: center;
   width:45px;
 }
+
 .tile:hover {
   filter: drop-shadow(0px 0px .5mm gold);
 }
@@ -182,6 +183,20 @@ body {
 
 .tile-completed {
   background: url(assets/tile-background-completed.png) no-repeat top center;
+}
+
+.rules-btn{
+  
+}
+
+.rules-btn-selected {
+  border: gold 2px solid;
+}
+.rules-btn:focus-visible,
+.rules-btn:active,
+.rules-btn:hover {
+  background-color: rgb(100, 85, 70);
+  color: gold !important;
 }
 
 /* Tile orientation */

@@ -24,6 +24,7 @@ export class CabbingoBoard implements OnInit {
   boardSize: number = 6;
   columnBonus = 5;
   rowBonus = 5;
+  bingoRulesOpened: boolean = true;
 
   constructor(
     private databaseService: DatabaseService,
