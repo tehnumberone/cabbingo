@@ -73,7 +73,6 @@ export class CabbingoEditBoard {
   }
 
   saveTile(tile: Tile, index: number) {
-    console.log('Saving tile at index:', index, 'for team:', this.selectedTeam);
     this.databaseService.updateTile(this.selectedTeam, tile, index).catch((error) => {
       console.error('Error saving tile:', error);
     });

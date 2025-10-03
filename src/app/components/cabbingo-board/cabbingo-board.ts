@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, OnChanges, OnInit, PLATFORM_ID } from '@angular/core';
 import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
 import { isPlatformBrowser } from '@angular/common';
@@ -18,7 +18,7 @@ import { RouterModule } from '@angular/router';
 export class CabbingoBoard implements OnInit {
   teamEnum: typeof Teams = Teams;
   currentTeam: Teams = Teams.Team1;
-  selectedTile: Tile | null = null;
+  selectedTile: Tile | undefined = undefined;
   // Create a 5x5 board by repeating the tile patterns
   board: Tile[][] = [];
   boardSize: number = 6;
@@ -49,6 +49,9 @@ export class CabbingoBoard implements OnInit {
       next: (firebaseTeams) => {
         if (firebaseTeams && firebaseTeams.length > 0) {
           this.generateBoard(firebaseTeams[this.currentTeam]);
+          if (this.selectedTile) {
+            this.selectedTile = this.board[this.currentTeam][this.selectedTile?.id! - 1];
+          }
         }
       },
       error: (error) => {
@@ -83,7 +86,7 @@ export class CabbingoBoard implements OnInit {
   switchTeam(selectedTeam: Teams): void {
     if (this.currentTeam !== selectedTeam) {
       this.currentTeam = selectedTeam;
-      this.selectedTile = null;
+      this.selectedTile = undefined;
       if (env.production === false) {
         const mockService = new MockService();
         this.board = mockService.board;
@@ -162,7 +165,6 @@ export class CabbingoBoard implements OnInit {
         rowBonusPoints += this.rowBonus;
       }
     }
-    console.log('Row bonuses:', rowBonusPoints);
     return rowBonusPoints;
   }
 }

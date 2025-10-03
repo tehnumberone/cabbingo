@@ -195,7 +195,11 @@ body {
 }
 
 .tile-completed {
-  background: url(assets/tile-background-completed.png) no-repeat top center;
+  background: #364732;
+}
+
+.tile-completed:hover {
+  background: #475e42;
 }
 
 .rules-btn-selected {
