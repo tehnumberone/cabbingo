@@ -2,7 +2,7 @@
   <div class="banner"></div>
   <div class="d-flex justify-content-center">
     <div class="osrs-border-thick px-5 py-4 mb-5" style="height:695px">
-      <div class="d-flex justify-content-center" >
+      <div class="d-flex justify-content-center">
         @if(!authenticated.authenticated){
         <form style="width:500px;">
           <div class="col-12">
@@ -10,8 +10,8 @@
             <select id="teamSelect" class="form-control" [(ngModel)]="selectedTeam"
               [ngModelOptions]="{standalone: true}" (change)="onTeamSelect(selectedTeam)">
               <option [value]="-1" disabled selected>Select Team</option>
-              <option [value]="0">Team 1</option>
-              <option [value]="1">Team 2</option>
+              <option [value]="0">{{teamNames[0]}}</option>
+              <option [value]="1">{{teamNames[1]}}</option>
             </select>
           </div>
           <br>
@@ -20,9 +20,9 @@
             <label for="password">Team 1 Password:</label>}
             @if(selectedTeam === 1){
             <label for="password">Team 2 Password:</label>
-          }
+            }
             @if(selectedTeam !== -1){
-              <input class="form-control" type="password" id="password" name="password" placeholder="Enter password"
+            <input class="form-control" type="password" id="password" name="password" placeholder="Enter password"
               [(ngModel)]="password" />
             }
           </div>
@@ -35,8 +35,8 @@
         } @else {
         <div>
           <div class="d-flex flex-row justify-content-between">
-          <h2>Welcome Team {{ authenticated.team+1 }}!</h2>
-          <p>This is where you can edit your board!</p>
+            <h2>Welcome {{teamNames[authenticated.team]}}!</h2>
+            <p>This is where you can edit your board!</p>
             <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
           </div>
           <div style="max-height: 600px;" class="mt-2 overflow-auto">
@@ -58,8 +58,8 @@
                   <td colspan="8">No tiles available</td>
                 </tr>}
                 @else{
-                  @for(row of board; track row;){
-                  @for(tile of row; track tile; let i = $index){
+                @for(row of board; track row;){
+                @for(tile of row; track tile; let i = $index){
                 <tr>
                   <td>
                     {{tile.title}}

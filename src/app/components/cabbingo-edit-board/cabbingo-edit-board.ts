@@ -1,5 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { environment as env } from '../../environments/environment.prod';
 import { Tile } from '../../models/tile';
@@ -15,17 +15,24 @@ import { DataSnapshot } from 'firebase/database';
   templateUrl: './cabbingo-edit-board.html',
   styleUrl: './cabbingo-edit-board.css',
 })
-export class CabbingoEditBoard {
+export class CabbingoEditBoard implements OnInit {
   selectedTeam = -1;
   boardSize: number = 6;
   password = '';
   authenticated = { team: 0, authenticated: false };
   board: Tile[][] = [[]];
+  teamNames = ['Team 1', 'Team 2'];
 
   constructor(
     private databaseService: DatabaseService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) { }
+  ngOnInit(): void {
+    this.databaseService.getTeamNames().then((namesFromDb) => {
+      this.teamNames[0] = namesFromDb[0] || 'Team 1';
+      this.teamNames[1] = namesFromDb[1] || 'Team 2';
+    });
+  }
 
   onTeamSelect(teamNumber: any) {
     this.selectedTeam = parseInt(teamNumber);
@@ -47,18 +54,18 @@ export class CabbingoEditBoard {
 
   validatePassword() {
     if (env.production === true && this.selectedTeam !== -1) {
-      this.databaseService.getPassword(this.selectedTeam).then((passwordFromDb: DataSnapshot) => {
-        let passwordValue = passwordFromDb.val() ? JSON.stringify(passwordFromDb.val()) : '';
+      this.databaseService.getTeamCredentials(this.selectedTeam).then((credentialsFromDb: DataSnapshot) => {
+        let passwordValue = credentialsFromDb.val() ? JSON.stringify(credentialsFromDb.val().password) : '';
         if (this.selectedTeam === 0 && passwordValue === JSON.stringify(this.password)) {
           return this.loginForTeam(0);
         } else if (
           this.selectedTeam === 1 &&
           passwordValue === JSON.stringify(this.password)
         ) {
-        return this.loginForTeam(1);
-      }
+          return this.loginForTeam(1);
+        }
       });
-    } else if(env.production === false){
+    } else if (env.production === false) {
       return this.loginForTeam(this.selectedTeam);
     }
   }

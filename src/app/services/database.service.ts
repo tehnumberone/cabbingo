@@ -57,8 +57,32 @@ export class DatabaseService {
     return set(tileRef, tile);
   }
 
-  getPassword(teamNumber: number): any {
+  getTeamCredentials(teamNumber: number): any {
     const tileRef = ref(this.database, `LoginCredentials/Team ${teamNumber + 1}`);
     return get(tileRef);
+  }
+
+  async getTeamNames(): Promise<string[]> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return [];
+    }
+
+    const names: string[] = [];
+    let teamNumber = 1;
+
+    while (true) {
+      const nameRef = ref(this.database, `LoginCredentials/Team ${teamNumber}/name`);
+      const snapshot = await get(nameRef);
+
+      if (!snapshot.exists()) {
+        break;
+      }
+
+      const name = snapshot.val();
+      names.push(typeof name === 'string' ? name : String(name));
+      teamNumber++;
+    }
+
+    return names;
   }
 }

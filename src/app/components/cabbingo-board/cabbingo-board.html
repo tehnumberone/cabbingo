@@ -6,11 +6,11 @@
         <div class="row teams mb-2">
             <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
                 [ngClass]="currentTeam === teamEnum.Team1 ? 'btn selected-team' : ''">
-                Team 1
+                {{teamNames[0]}}
             </button>
             <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team2)"
                 [ngClass]="currentTeam === teamEnum.Team2 ? 'btn selected-team' : ''">
-                Team 2
+                {{teamNames[1]}}
             </button>
         </div>
         <div class="gap-2 d-flex justify-content-center">

@@ -25,6 +25,7 @@ export class CabbingoBoard implements OnInit {
   columnBonus = 5;
   rowBonus = 5;
   bingoRulesOpened: boolean = true;
+  teamNames = ['Team 1', 'Team 2'];
 
   constructor(
     private databaseService: DatabaseService,
@@ -39,6 +40,10 @@ export class CabbingoBoard implements OnInit {
     } else {
       // Only load Firebase data in the browser
       if (isPlatformBrowser(this.platformId)) {
+        this.databaseService.getTeamNames().then((namesFromDb) => {
+          this.teamNames[0] = namesFromDb[0] || 'Team 1';
+          this.teamNames[1] = namesFromDb[1] || 'Team 2';
+        });
         this.loadTilesFromFirebase();
       }
     }
