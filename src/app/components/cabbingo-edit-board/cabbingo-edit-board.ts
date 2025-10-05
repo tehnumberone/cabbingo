@@ -22,6 +22,7 @@ export class CabbingoEditBoard implements OnInit {
   authenticated = { team: 0, authenticated: false };
   board: Tile[][] = [[]];
   teamNames = ['Team 1', 'Team 2'];
+  errorMessage: string = '';
 
   constructor(
     private databaseService: DatabaseService,
@@ -57,12 +58,17 @@ export class CabbingoEditBoard implements OnInit {
       this.databaseService.getTeamCredentials(this.selectedTeam).then((credentialsFromDb: DataSnapshot) => {
         let passwordValue = credentialsFromDb.val() ? JSON.stringify(credentialsFromDb.val().password) : '';
         if (this.selectedTeam === 0 && passwordValue === JSON.stringify(this.password)) {
+          this.errorMessage = "";
           return this.loginForTeam(0);
         } else if (
           this.selectedTeam === 1 &&
           passwordValue === JSON.stringify(this.password)
         ) {
+          this.errorMessage = "";
           return this.loginForTeam(1);
+        }
+        else {
+          this.errorMessage = "Incorrect password. Please try again.";
         }
       });
     } else if (env.production === false) {

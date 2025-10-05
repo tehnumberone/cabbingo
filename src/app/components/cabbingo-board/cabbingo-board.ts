@@ -86,6 +86,7 @@ export class CabbingoBoard implements OnInit {
 
   onTileClick(tile: Tile): void {
     this.selectedTile = tile;
+    this.bingoRulesOpened = false;
   }
 
   switchTeam(selectedTeam: Teams): void {

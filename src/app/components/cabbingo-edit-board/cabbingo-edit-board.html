@@ -22,11 +22,13 @@
             <label for="password">Team 2 Password:</label>
             }
             @if(selectedTeam !== -1){
-            <input class="form-control" type="password" id="password" name="password" placeholder="Enter password"
+            <input class="form-control" type="password" id="password" name="password" placeholder="Enter password" [ngClass]="{'is-invalid': errorMessage !== ''}"
               [(ngModel)]="password" />
             }
           </div>
-          <br />
+          @if(errorMessage !== ''){
+          <div class="text-danger mt-2">{{ errorMessage }}</div>
+          }@else {<br />}
           <div class="d-flex justify-content-between">
             <button class="btn custom-btn" type="submit" (click)="validatePassword()">Log in</button>
             <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
