@@ -1,7 +1,11 @@
 <div class="page-wrap">
-    <a class="btn button position-fixed mt-1 end-0 top-0 me-5" [routerLink]="['/edit-board']" style="z-index: 1;">Log in
-        as captain</a>
-    <div class="banner d-flex justify-content-end"></div>
+    <div class="w-100">
+        <div class="d-flex justify-content-center align-items-center w-100 banner">
+            <a class="btn button login-btn" [routerLink]="['/edit-board']">
+                Log in as captain
+            </a>
+        </div>
+    </div>
     <div class="osrs-border-thick px-4 py-2">
         <div class="row teams mb-2">
             <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
@@ -115,7 +119,8 @@
                             @else {
                             <ul class="px-2">
                                 <li>Multiple accounts are allowed, but only one can be logged in at once.</li>
-                                <li>The EXP tile will only be counted for ONE account. If you are playing with multiple.
+                                <li>The EXP tile will only be counted for ONE account. If you are playing with
+                                    multiple.
                                 </li>
                                 <li>Complete a full row or column to earn a {{ rowBonus }} point bonus!</li>
                                 <li>Tiles can be completed in any order.</li>

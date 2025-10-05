@@ -93,6 +93,7 @@ export class CabbingoBoard implements OnInit {
     if (this.currentTeam !== selectedTeam) {
       this.currentTeam = selectedTeam;
       this.selectedTile = undefined;
+    this.bingoRulesOpened = true;
       if (env.production === false) {
         const mockService = new MockService();
         this.board = mockService.board;

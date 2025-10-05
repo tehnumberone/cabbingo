@@ -91,6 +91,7 @@ body {
   background: url(assets/Logo.png) no-repeat center;
   background-size: contain;
   display: block;
+  position: relative; /* anchor for absolutely positioned children */
   height: 180px;
   text-align: center;
 }
@@ -309,4 +310,22 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgb(114, 98, 72) #27221B; /* thumb color, track color */
   scroll-behavior: smooth;
+}
+
+/* Pinned login button (top-right, safe-area aware) */
+.login-btn {
+  position: absolute; /* inside .banner */
+  top: 8px;
+  right: 8px;
+  z-index: 1050;
+}
+
+/* On very small screens, slightly reduce the button to avoid covering the center logo */
+@media (max-width: 420px) {
+  .login-btn {
+    transform: scale(0.85);
+    transform-origin: top right;
+    right: 6px;
+    top: 6px;
+  }
 }
