@@ -1,9 +1,9 @@
 <div class="page-wrap">
   <div class="banner"></div>
   <div class="d-flex justify-content-center">
-    <div class="osrs-border-thick px-5 py-4 mb-5" style="height:695px">
+    <div class="osrs-border-thick px-5 py-4 mb-5 d-flex flex-column justify-content-between" style="height:auto">
       <div class="d-flex justify-content-center">
-        @if(!authenticated.authenticated){
+        @if(!sessionService.session.authenticated){
         <form style="width:500px;">
           <div class="col-12">
             <label for="teamSelect" class="form-label">Choose your team</label>
@@ -22,24 +22,20 @@
             <label for="password">Team 2 Password:</label>
             }
             @if(selectedTeam !== -1){
-            <input class="form-control" type="password" id="password" name="password" placeholder="Enter password" [ngClass]="{'is-invalid': errorMessage !== ''}"
-              [(ngModel)]="password" />
+            <input class="form-control" type="password" id="password" name="password" placeholder="Enter password"
+              [ngClass]="{'is-invalid': errorMessage !== ''}" [(ngModel)]="password" />
             }
-          </div>
-          @if(errorMessage !== ''){
-          <div class="text-danger mt-2">{{ errorMessage }}</div>
-          }@else {<br />}
-          <div class="d-flex justify-content-between">
-            <button class="btn custom-btn" type="submit" (click)="validatePassword()">Log in</button>
-            <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
           </div>
         </form>
         } @else {
         <div>
           <div class="d-flex flex-row justify-content-between">
-            <h2>Welcome {{teamNames[authenticated.team]}}!</h2>
+            <h2>Welcome {{teamNames[sessionService.session.team]}}!</h2>
             <p>This is where you can edit your board!</p>
-            <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
+            <div class="d-flex flex-row gap-4">
+              <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
+              <button class="btn custom-btn" (click)="logout()" type="submit">Log out</button>
+            </div>
           </div>
           <div style="max-height: 600px;" class="mt-2 overflow-auto">
             <table class="table osrs-table table-bordered">
@@ -91,6 +87,16 @@
           </div>
         </div>
         }
+      </div>
+      <div>
+        @if(!sessionService.session.authenticated){
+        @if(errorMessage.length > 0){
+        <div class="text-danger mt-2">{{ errorMessage }}</div>
+        }@else {<br />}
+        <div class="d-flex justify-content-between">
+          <button class="btn custom-btn" type="submit" (click)="login()">Log in</button>
+          <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
+        </div>}
       </div>
     </div>
   </div>

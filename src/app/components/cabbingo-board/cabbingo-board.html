@@ -46,7 +46,6 @@
                 'tile-completed': tile.itemsObtained >= tile.itemsRequired
               }">
                         <div>
-                            @if(!(tile.itemsObtained >= tile.itemsRequired)){
                             <div class="progress" style="height: 5px">
                                 <div class="progress-bar bg-success" role="progressbar"
                                     [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
@@ -55,7 +54,6 @@
                                     <div style="width: 110px"></div>
                                 </div>
                             </div>
-                            }
                             <img class="tile-image p-1" [src]="tile.src" [alt]="tile.alt" />
                             <p class="tile-text">{{ tile.title }}</p>
                         </div>
@@ -80,7 +78,8 @@
                                     {{ selectedTile.points }}
                                 </p>
                             </div>
-                            <div>
+                            <div
+                                [style.color]="selectedTile.itemsObtained >= selectedTile.itemsRequired ? 'rgb(8, 255, 8)' : null">
                                 {{ selectedTile.itemsObtained }} / {{ selectedTile.itemsRequired }} Obtained
                             </div>
                         </div>

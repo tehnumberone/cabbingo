@@ -19,7 +19,6 @@ export class CabbingoBoard implements OnInit {
   teamEnum: typeof Teams = Teams;
   currentTeam: Teams = Teams.Team1;
   selectedTile: Tile | undefined = undefined;
-  // Create a 5x5 board by repeating the tile patterns
   board: Tile[][] = [];
   boardSize: number = 6;
   columnBonus = 5;
@@ -93,7 +92,7 @@ export class CabbingoBoard implements OnInit {
     if (this.currentTeam !== selectedTeam) {
       this.currentTeam = selectedTeam;
       this.selectedTile = undefined;
-    this.bingoRulesOpened = true;
+      this.bingoRulesOpened = true;
       if (env.production === false) {
         const mockService = new MockService();
         this.board = mockService.board;
