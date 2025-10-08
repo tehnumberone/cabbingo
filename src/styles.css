@@ -36,6 +36,7 @@
   background-color: rgb(62, 53, 41);
   background-size: 700px;
 }
+
 .osrs-border-darker {
   border: 1px solid rgb(66, 67, 65);
   outline: 1px solid rgb(14, 14, 12);
@@ -49,6 +50,7 @@
   background: url(assets/tiles-backdrop.png) repeat top center;
   background-size: 700px;
   width: fit-content;
+  min-width: 1175px;
 }
 
 /* Center the main board container without affecting inner layout */

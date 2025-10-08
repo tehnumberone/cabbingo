@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, Inject, OnChanges, OnInit, PLATFORM_ID } from '@angular/core';
 import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
-import { isPlatformBrowser } from '@angular/common';
+import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { MockService } from '../../services/mock-service';
 import { environment as env } from '../../environments/environment.prod';
 import { Teams } from '../../models/teamEnum';
 import { RouterModule } from '@angular/router';
+import { TempleOSService } from '../../services/templeos-service';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass, RouterModule],
+  imports: [NgClass, RouterModule, DecimalPipe],
   templateUrl: './cabbingo-board.html',
   changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: '../../../styles.css',
@@ -26,12 +27,27 @@ export class CabbingoBoard implements OnInit {
   bingoRulesOpened: boolean = true;
   teamNames = ['Team 1', 'Team 2'];
 
+  team1Exp: string = '0';
+  team2Exp: string = '0';
+  team1Mvp: string = '';
+  team2Mvp: string = '';
+  teams: any[] = [];
+
   constructor(
     private databaseService: DatabaseService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private templeOSService: TempleOSService
   ) { }
 
   ngOnInit(): void {
+    this.templeOSService.getCompetition('32578').subscribe((data) => {
+      const teamsObj = data.data.teams as Record<string, any>;
+      const teamsArr = Object.keys(teamsObj)
+        .filter(k => !Number.isNaN(Number(k)))
+        .sort((a, b) => Number(a) - Number(b))
+        .map(k => teamsObj[k]);
+      this.teams = teamsArr;
+    });
     if (env.production === false) {
       const mockService = new MockService();
       this.board = mockService.board;

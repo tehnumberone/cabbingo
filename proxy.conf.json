@@ -1,0 +1,11 @@
+{
+    "/templeosrs": {
+        "target": "https://templeosrs.com",
+        "secure": true,
+        "changeOrigin": true,
+        "logLevel": "debug",
+        "pathRewrite": {
+            "^/templeosrs": ""
+        }
+    }
+}

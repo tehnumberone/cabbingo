@@ -6,7 +6,7 @@
             </a>
         </div>
     </div>
-    <div class="osrs-border-thick px-4 py-2">
+    <div class="osrs-border-thick px-4 py-2 mb-4">
         <div class="row teams mb-2">
             <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
                 [ngClass]="currentTeam === teamEnum.Team1 ? 'btn selected-team' : ''">
@@ -136,6 +136,24 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="osrs-border-thick px-4 py-2 mb-4 d-flex flex-column justify-content-between">
+        <h3 class="d-flex justify-content-center">Team Stats</h3>
+        <div class=" d-flex flex-row justify-content-between d-flex justify-content-center gap-3">
+            <div class="osrs-border p-3 col-5">
+            <h3 class="d-flex justify-content-center">Members</h3>
+            @for(member of teams[currentTeam].members; track member; let i = $index){
+            <div style="color:#FF9933;">{{i + 1}}. {{ member }}</div>
+            }
+        </div>
+        <div class="osrs-border p-3 col-7">
+            @let team = teams[currentTeam];
+            Total Exp {{ team.name }}: {{ (+team.gain || 0) | number:'1.0-0' }}
+            <br>
+            Team MVP {{ team.name }}: {{ team.mvp || 'Not found' }}
+            <br>
+        </div>
         </div>
     </div>
 </div>
