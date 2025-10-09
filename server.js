@@ -8,32 +8,6 @@ const prodFile = "environment.prod.ts"; // For production deployment
 
 const content = `${process.env.FIREBASE_DETAILS}`;
 
-// server.js
-const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-
-const app = express();
-const dist = path.join(__dirname, 'dist', 'your-app'); // adjust
-
-// Proxy first
-app.use(
-  '/templeosrs',
-  createProxyMiddleware({
-    target: 'https://templeosrs.com',
-    changeOrigin: true,            // send Host: templeosrs.com
-    secure: true,
-    logLevel: 'debug',
-    pathRewrite: { '^/templeosrs': '' }
-  })
-);
-
-// Then serve your Angular bundle
-app.use(express.static(dist));
-app.get('*', (_, res) => res.sendFile(path.join(dist, 'index.html')));
-
-const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`App running on http://localhost:${port}`));
-
 fs.access(dir, fs.constants.F_OK, (err) => {
     if (err) {
         // Directory doesn't exist
