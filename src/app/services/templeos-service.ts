@@ -8,7 +8,7 @@ import { Observable } from "rxjs";
 export class TempleOSService {
 
     // Uses local SSR proxy to avoid browser cors block
-    private apiUrl = '/templeosrs/api/';
+    private apiUrl = 'https://steep-unit-c896.tehnumberone87.workers.dev/templeosrs/api/';
 
     constructor(private http: HttpClient) { }
 
