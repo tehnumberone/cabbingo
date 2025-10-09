@@ -45,6 +45,16 @@ export class CabbingoBoard implements OnInit {
       donations.sort((a: any, b: any) => b.amount - a.amount);
       this.donations = donations;
     });
+    this.templeOSService.getCompetition('32578').subscribe((data) => {
+      const teamsObj = data.data.teams as Record<string, any>;
+      const teamsArr = Object.keys(teamsObj)
+        .filter(k => !Number.isNaN(Number(k)))
+        .sort((a, b) => Number(a) - Number(b))
+        .map(k => teamsObj[k]);
+      this.teams = teamsArr;
+      this.participants = data.data.participants;
+      this.info = data.data.info;
+    });
     this.subscription = interval(60000).subscribe(() => this.templeOSService.getCompetition('32578').subscribe((data) => {
       const teamsObj = data.data.teams as Record<string, any>;
       const teamsArr = Object.keys(teamsObj)
