@@ -9,7 +9,6 @@ import { Teams } from '../../models/teamEnum';
 import { RouterModule } from '@angular/router';
 import { TempleOSService } from '../../services/templeos-service';
 import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
-import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-cabbingo-board',
@@ -32,7 +31,6 @@ export class CabbingoBoard implements OnInit {
   participants: any[] = [];
   info: any = {};
   donations: any[] = [];
-  subscription!: Subscription;
 
   constructor(
     private databaseService: DatabaseService,
@@ -45,7 +43,8 @@ export class CabbingoBoard implements OnInit {
       donations.sort((a: any, b: any) => b.amount - a.amount);
       this.donations = donations;
     });
-    this.subscription = interval(1000).subscribe(() => this.templeOSService.getCompetition('32578').subscribe((data) => {
+    this.templeOSService.getCompetition('32578').subscribe((data) => {
+      console.log(data);
       const teamsObj = data.data.teams as Record<string, any>;
       const teamsArr = Object.keys(teamsObj)
         .filter(k => !Number.isNaN(Number(k)))
@@ -54,8 +53,7 @@ export class CabbingoBoard implements OnInit {
       this.teams = teamsArr;
       this.participants = data.data.participants;
       this.info = data.data.info;
-    }));
-
+    });
     if (env.production === false) {
       const mockService = new MockService();
       this.board = mockService.board;
