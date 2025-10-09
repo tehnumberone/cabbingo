@@ -46,9 +46,10 @@
                 'tile-completed': tile.itemsObtained >= tile.itemsRequired
               }">
                         <div>
-                            <div class="progress" style="height: 5px">
+                            <div class="progress" style="height: 5px"
+                                [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null">
                                 <div class="progress-bar bg-success" role="progressbar"
-                                    [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? '#364732!important' : null"
+                                    [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null"
                                     [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
                                     [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"
                                     [attr.aria-valuemax]="tile.itemsRequired">
