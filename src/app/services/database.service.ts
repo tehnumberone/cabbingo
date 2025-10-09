@@ -8,7 +8,7 @@ import { Tile } from '../models/tile';
   providedIn: 'root',
 })
 export class DatabaseService {
-  constructor(private database: Database, @Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(private database: Database, @Inject(PLATFORM_ID) private platformId: Object) { }
 
   getTiles(): Observable<any[]> {
     // Return empty observable immediately on server
@@ -60,6 +60,43 @@ export class DatabaseService {
   getTeamCredentials(teamNumber: number): any {
     const tileRef = ref(this.database, `LoginCredentials/Team ${teamNumber + 1}`);
     return get(tileRef);
+  }
+
+  async getDonations(): Promise<{ name: string, amount: number }[]> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return [];
+    }
+
+    const donations: { name: string, amount: number }[] = [];
+    let id = 0;
+
+    while (true) {
+      const donationsRef = ref(this.database, `Donations/${id}`);
+      const snapshot = await get(donationsRef);
+
+      if (!snapshot.exists()) {
+        break;
+      }
+      const raw: any = snapshot.val();
+      let name: string;
+      let amount: number;
+      // Handle shape like { someName: 50 } by extracting the single key/value
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        const entries = Object.entries(raw as Record<string, unknown>);
+        if (entries.length === 1) {
+          const [k, v] = entries[0];
+          name = String(k);
+          amount = typeof v === 'number' ? v : Number(v ?? 0) || 0;
+
+          donations.push({ name, amount });
+          id++;
+          continue;
+        }
+      }
+      id++;
+    }
+
+    return donations;
   }
 
   async getTeamNames(): Promise<string[]> {

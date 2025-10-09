@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, Inject, OnChanges, OnInit, PLATFORM_ID } from '@angular/core';
 import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
-import { DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { MockService } from '../../services/mock-service';
 import { environment as env } from '../../environments/environment.prod';
 import { Teams } from '../../models/teamEnum';
 import { RouterModule } from '@angular/router';
 import { TempleOSService } from '../../services/templeos-service';
+import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass, RouterModule, DecimalPipe],
+  imports: [NgClass, RouterModule, CabbingoStats],
   templateUrl: './cabbingo-board.html',
   changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: '../../../styles.css',
@@ -26,12 +27,10 @@ export class CabbingoBoard implements OnInit {
   rowBonus = 5;
   bingoRulesOpened: boolean = true;
   teamNames = ['Team 1', 'Team 2'];
-
-  team1Exp: string = '0';
-  team2Exp: string = '0';
-  team1Mvp: string = '';
-  team2Mvp: string = '';
   teams: any[] = [];
+  participants: any[] = [];
+  info: any = {};
+  donations: any[] = [];
 
   constructor(
     private databaseService: DatabaseService,
@@ -40,13 +39,20 @@ export class CabbingoBoard implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.databaseService.getDonations().then((donations) => {
+      donations.sort((a: any, b: any) => b.amount - a.amount);
+      this.donations = donations;
+    });
     this.templeOSService.getCompetition('32578').subscribe((data) => {
+      console.log(data);
       const teamsObj = data.data.teams as Record<string, any>;
       const teamsArr = Object.keys(teamsObj)
         .filter(k => !Number.isNaN(Number(k)))
         .sort((a, b) => Number(a) - Number(b))
         .map(k => teamsObj[k]);
       this.teams = teamsArr;
+      this.participants = data.data.participants;
+      this.info = data.data.info;
     });
     if (env.production === false) {
       const mockService = new MockService();

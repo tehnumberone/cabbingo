@@ -43,6 +43,7 @@
   background-color: rgb(51, 43, 33);
   background-size: 700px;
 }
+
 .osrs-border-thick {
   border: 3px solid rgb(66, 67, 65);
   outline: 6px solid rgb(14, 14, 12);
@@ -51,10 +52,20 @@
   background-size: 700px;
   width: fit-content;
   min-width: 1175px;
+  max-width: 1175px;
+}
+
+.osrs-border-thick-login {
+  border: 3px solid rgb(66, 67, 65);
+  outline: 6px solid rgb(14, 14, 12);
+  background-color: rgb(57, 50, 40);
+  background: url(assets/tiles-backdrop.png) repeat top center;
+  background-size: 700px;
+  width: fit-content;
 }
 
 /* Center the main board container without affecting inner layout */
-.page-wrap > .osrs-border-thick {
+.page-wrap > .osrs-border-thick, .osrs-border-thick-login {
   margin-left: auto;
   margin-right: auto;
 }
@@ -330,4 +341,15 @@ body {
     right: 6px;
     top: 6px;
   }
+}
+
+.stats-item{
+    border: 3px solid #685C4C;
+    background-color: #574E42;
+    mask: radial-gradient(6px at 6px 6px,#0000 98%,#000) -6px -6px;
+}
+
+.stats-outline{
+    border: 3px solid #2E2B23;
+    mask: radial-gradient(10px at 10px 10px,#0000 98%,#000) -10px -10px;
 }

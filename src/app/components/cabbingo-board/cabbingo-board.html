@@ -43,8 +43,7 @@
                     @for(tile of row; track tile.id){
                     <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
                 'tile-selected': tile === selectedTile,
-                'tile-completed': tile.itemsObtained >= tile.itemsRequired
-              }">
+                'tile-completed': tile.itemsObtained >= tile.itemsRequired}">
                         <div>
                             <div class="progress" style="height: 5px"
                                 [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null">
@@ -140,21 +139,8 @@
         </div>
     </div>
     <div class="osrs-border-thick px-4 py-2 mb-4 d-flex flex-column justify-content-between">
-        <h3 class="d-flex justify-content-center">Team Stats</h3>
-        <div class=" d-flex flex-row justify-content-between d-flex justify-content-center gap-3">
-            <div class="osrs-border p-3 col-5">
-            <h3 class="d-flex justify-content-center">Members</h3>
-            @for(member of teams[currentTeam].members; track member; let i = $index){
-            <div style="color:#FF9933;">{{i + 1}}. {{ member }}</div>
-            }
-        </div>
-        <div class="osrs-border p-3 col-7">
-            @let team = teams[currentTeam];
-            Total Exp {{ team.name }}: {{ (+team.gain || 0) | number:'1.0-0' }}
-            <br>
-            Team MVP {{ team.name }}: {{ team.mvp || 'Not found' }}
-            <br>
-        </div>
-        </div>
+        @if(teams[currentTeam]){
+        <app-cabbingo-stats [teams]="teams" [participants]="participants" [currentTeam]="currentTeam"
+        [endDatetime]="info.end_date" [donations]="donations"></app-cabbingo-stats>}
     </div>
 </div>

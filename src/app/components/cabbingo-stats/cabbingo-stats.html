@@ -1,0 +1,91 @@
+<h3 class="d-flex justify-content-center">Team Statistics</h3>
+<div class=" d-flex flex-row justify-content-between d-flex justify-content-center gap-3">
+    <div class="osrs-border p-1 col-4">
+        <div class="stats-outline mb-2">
+            <div class="d-flex flex-column justify-content-center align-items-center stats-item px-5 ">
+                <div style="color:#FF9933;">
+                    <h3 class="d-flex justify-content-center p-0 m-0">
+                        <img src="assets/members.png" height="25" class="me-2" /> Members
+                    </h3>
+                </div>
+            </div>
+        </div>
+        @for(member of teams[currentTeam].members; track member; let i = $index){
+        <div class="d-flex flex-row justify-content-between  mx-2">
+            @for(participant of participants; track participant; let j = $index){
+            @if(participant.username === member){
+            <div class="d-flex flex-row col-9" style="color:#FF9933;">
+                <div class="col-1 align">{{i + 1}}.</div>
+                <div class="col-11">{{participant.player_name_with_capitalization}}</div>
+            </div>
+            <div class="col-3">+ {{ participant.gain | number:'1.0-0' }}</div> }}
+        </div>
+        }
+    </div>
+    <div class="osrs-border p-1 col-8">
+        @let team = teams[currentTeam];
+        <div class="d-flex flex-column justify-content-between align-items-center gap-5">
+            <div class="d-flex flex-column justify-content-between align-items-center gap-4 w-100">
+                <div class="stats-outline w-100">
+                    <div class="d-flex flex-column justify-content-center align-items-center stats-item px-5">
+                        <h3 style="color:#FF9933;" class="d-flex justify-content-center p-0 m-0">
+                            <img src="assets/xp.png" height="25" class="me-2" /> Total experience gained
+                        </h3>
+                        <h3 class="d-flex justify-content-center align-items-center align-content-center p-0 m-0">
+                            {{ (+team.gain || 0) | number:'1.0-0' }}
+                        </h3>
+                    </div>
+                </div>
+                <div class="d-flex flex-row w-100 gap-1">
+                    <div class="stats-outline w-100">
+                        <div class="d-flex flex-column justify-content-center align-items-center stats-item px-5">
+                            <h3 style="color:#FF9933;" class="d-flex justify-content-center p-0 m-0">
+                                <img src="assets/mvp.png" height="25" class="me-2" /> Team MVP
+                            </h3>
+                            <h3 class="d-flex justify-content-center p-0 m-0">
+                                {{ team.mvp || 'Not found' }}
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="stats-outline w-100">
+                        <div class="d-flex flex-column justify-content-center align-items-center stats-item px-5">
+                            <h3 style="color:#FF9933;" class="d-flex justify-content-center p-0 m-0">
+                                <img src="assets/timeleft.png" height="25" class="me-2" /> Time left
+                            </h3>
+                            <h3 class="d-flex justify-content-center p-0 m-0">
+                                {{remainingTime}}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-outline w-100">
+                    <div class="d-flex flex-column justify-content-center align-items-center stats-item px-5">
+                        <h3 style="color:#FF9933;"
+                            class="d-flex justify-content-center align-items-center align-content-center p-0 m-0">
+                            <img src="assets/prizepool.png" height="25" class="me-2" /> Prize pool
+                        </h3>
+                        <h3 class="d-flex justify-content-center align-items-center align-content-center p-0 m-0">
+                            {{prizePool | number:'1.0-0'}}
+                        </h3>
+                    </div>
+                </div>
+                <div class="stats-outline w-100">
+                    <div class="d-flex flex-column stats-item px-5">
+                        <h3 style="color:#FF9933;"
+                            class="d-flex justify-content-center align-items-center align-content-center p-0 m-0">
+                            <img src="assets/coins.png" height="25" class="me-2" /> Donations
+                        </h3>
+                        <div class="w-100" style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            @for(donation of donations; track donation; let i = $index){
+                            <div class="d-flex align-items-baseline" style="font-size:20px;">
+                                <p class="m-0">{{ i + 1 }}. {{ donation.name }}:</p>
+                                <span class="text-success ms-2">+{{ donation.amount | number:'1.0-0' }}</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
