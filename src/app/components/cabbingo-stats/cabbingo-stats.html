@@ -79,7 +79,7 @@
                             @for(donation of donations; track donation; let i = $index){
                             <div class="d-flex align-items-baseline" style="font-size:20px;">
                                 <p class="m-0">{{ i + 1 }}. {{ donation.name }}:</p>
-                                <span class="text-success ms-2">+{{ donation.amount | number:'1.0-0' }}</span>
+                                <span class="text-success ms-2">+{{ donation.amount | number:'1.0-0' }}M</span>
                             </div>
                             }
                         </div>
