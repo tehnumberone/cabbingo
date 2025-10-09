@@ -138,9 +138,9 @@
             </div>
         </div>
     </div>
+    @if(teams[currentTeam]){
     <div class="osrs-border-thick px-4 py-2 mb-4 d-flex flex-column justify-content-between">
-        @if(teams[currentTeam]){
         <app-cabbingo-stats [teams]="teams" [participants]="participants" [currentTeam]="currentTeam"
-        [endDatetime]="info.end_date" [donations]="donations"></app-cabbingo-stats>}
-    </div>
+            [endDatetime]="info.end_date" [donations]="donations"></app-cabbingo-stats>
+    </div>}
 </div>
