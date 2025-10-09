@@ -26,7 +26,6 @@ export class CabbingoStats implements OnInit {
     if (this.endDatetime) {
       let date = new Date(this.endDatetime);
       date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-      console.log(date);
       this.endDateTimemillis = date.getTime();
       this.updateCountdown();
       this.subscription = interval(1000).subscribe(() => this.updateCountdown());
