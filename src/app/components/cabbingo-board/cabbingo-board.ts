@@ -41,12 +41,42 @@ export class CabbingoBoard implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.getDonations();
+    if (this.teams.length === 0) {
+      this.getTempleOSDate();
+    }
+    //refreshes the templeOSRS data every 60 seconds
+    this.subscription = interval(60000).subscribe(() => this.getTempleOSDate());
+    if (env.production === false) {
+      const mockService = new MockService();
+      this.board = mockService.board;
+      this.generateBoard(this.board[this.currentTeam]);
+    } else {
+      // Only load Firebase data in the browser
+      if (isPlatformBrowser(this.platformId)) {
+        this.getTeamNames();
+        this.loadTilesFromFirebase();
+      }
+    }
+  }
+
+  private getTeamNames() {
+    this.databaseService.getTeamNames().then((namesFromDb) => {
+      this.teamNames[0] = namesFromDb[0] || 'Team 1';
+      this.teamNames[1] = namesFromDb[1] || 'Team 2';
+    });
+  }
+
+  private getDonations() {
     this.databaseService.getDonations().then((donations) => {
       donations.sort((a: any, b: any) => b.amount - a.amount);
       this.donations = donations;
     });
-    if (this.teams.length === 0) {
-      this.templeOSService.getCompetition('32578').subscribe((data) => {
+  }
+
+  private getTempleOSDate() {
+    this.templeOSService.getCompetition('32578').subscribe({
+      next: (data) => {
         const teamsObj = data.data.teams as Record<string, any>;
         const teamsArr = Object.keys(teamsObj)
           .filter(k => !Number.isNaN(Number(k)))
@@ -55,33 +85,8 @@ export class CabbingoBoard implements OnInit {
         this.teams = teamsArr;
         this.participants = data.data.participants;
         this.info = data.data.info;
-      });
-    }
-    this.subscription = interval(60000).subscribe(() => this.templeOSService.getCompetition('32578').subscribe((data) => {
-      const teamsObj = data.data.teams as Record<string, any>;
-      const teamsArr = Object.keys(teamsObj)
-        .filter(k => !Number.isNaN(Number(k)))
-        .sort((a, b) => Number(a) - Number(b))
-        .map(k => teamsObj[k]);
-      this.teams = teamsArr;
-      this.participants = data.data.participants;
-      this.info = data.data.info;
-    }));
-
-    if (env.production === false) {
-      const mockService = new MockService();
-      this.board = mockService.board;
-      this.generateBoard(this.board[this.currentTeam]);
-    } else {
-      // Only load Firebase data in the browser
-      if (isPlatformBrowser(this.platformId)) {
-        this.databaseService.getTeamNames().then((namesFromDb) => {
-          this.teamNames[0] = namesFromDb[0] || 'Team 1';
-          this.teamNames[1] = namesFromDb[1] || 'Team 2';
-        });
-        this.loadTilesFromFirebase();
-      }
-    }
+      }, error: () => alert('Connection to TempleOSRS timed out.')
+    });
   }
 
   loadTilesFromFirebase() {

@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { DatePipe, DecimalPipe, JsonPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -20,17 +20,24 @@ export class CabbingoStats implements OnInit {
   endDateTimemillis: number = 0;
   remainingTime: string = '';
   prizePool: number = 0;
-  buyinCost : number = 3;
+  buyinCost: number = 3;
 
   ngOnInit() {
+    this.setBingoEndCountdown();
+    this.getPrizePool();
+  }
+
+  private setBingoEndCountdown() {
     if (this.endDatetime) {
       let date = new Date(this.endDatetime);
       date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-      console.log(date);
       this.endDateTimemillis = date.getTime();
       this.updateCountdown();
       this.subscription = interval(1000).subscribe(() => this.updateCountdown());
     }
+  }
+
+  private getPrizePool() {
     for (let donation of this.donations) {
       this.prizePool += donation.amount;
     }

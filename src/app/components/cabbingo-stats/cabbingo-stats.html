@@ -75,7 +75,8 @@
                             class="d-flex justify-content-center align-items-center align-content-center p-0 m-0">
                             <img src="assets/coins.png" height="25" class="me-2" /> Donations
                         </h3>
-                        <div class="w-100" style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div class="w-100 d-grid gap-3 mb-2"
+                            style=" grid-template-columns: repeat(2, 1fr); justify-items: center;">
                             @for(donation of donations; track donation; let i = $index){
                             <div class="d-flex align-items-baseline" style="font-size:20px;">
                                 <p class="m-0">{{ i + 1 }}. {{ donation.name }}:</p>
