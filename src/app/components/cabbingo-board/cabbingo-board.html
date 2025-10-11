@@ -105,6 +105,9 @@
 
                         <div class="rulesbox custom-scrollbar overflow-y-scroll osrs-border-darker">
                             @if(!bingoRulesOpened){
+                            @if(!selectedTile?.rules || selectedTile?.rules?.length === 0){
+                            There are no rules for this tile.
+                            }@else{
                             @for(rule of selectedTile?.rules; track i; let i = $index){
                             @if(rule.includes('Excluded') || rule.includes('Allowed')){
                             {{ rule }}
@@ -115,7 +118,7 @@
                             } @else{
                             <strong style="color:#FF9933;">{{ rule }}</strong>
                             }
-                            <br />}}
+                            <br />}}}
                             @else {
                             <ul class="px-2">
                                 <li>Multiple accounts are allowed, but only one can be logged in at once.</li>

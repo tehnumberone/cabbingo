@@ -25,6 +25,11 @@ export class CabbingoStats implements OnInit {
     this.setBingoEndCountdown();
   }
 
+  getTeamMvp() {
+    const team = this.teams[this.currentTeam];
+    return this.participants.find(p => p.username === team.mvp)?.player_name_with_capitalization ?? team.mvp;
+  }
+
   private setBingoEndCountdown() {
     if (this.endDatetime) {
       let date = new Date(this.endDatetime);
