@@ -33,6 +33,8 @@ export class CabbingoBoard implements OnInit {
   info: any = {};
   donations: any[] = [];
   subscription!: Subscription;
+  prizePool: number = 0;
+  buyinCost: number = 3;
 
   constructor(
     private databaseService: DatabaseService,
@@ -41,12 +43,11 @@ export class CabbingoBoard implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.getDonations();
     if (this.teams.length === 0) {
-      this.getTempleOSDate();
+      this.getTempleOSData();
     }
     //refreshes the templeOSRS data every 60 seconds
-    this.subscription = interval(60000).subscribe(() => this.getTempleOSDate());
+    this.subscription = interval(60000).subscribe(() => this.getTempleOSData());
     if (env.production === false) {
       const mockService = new MockService();
       this.board = mockService.board;
@@ -68,13 +69,30 @@ export class CabbingoBoard implements OnInit {
   }
 
   private getDonations() {
-    this.databaseService.getDonations().then((donations) => {
-      donations.sort((a: any, b: any) => b.amount - a.amount);
-      this.donations = donations;
-    });
+    this.databaseService.getDonations2().subscribe(
+      {
+        next: (donationsFromDb) => {
+          donationsFromDb.sort((a: any, b: any) => b.amount - a.amount);
+          this.donations = donationsFromDb;
+          this.getPrizePool();
+        },
+        error: (error) => {
+          console.error('Error loading donations:', error);
+        }
+      }
+    );
   }
 
-  private getTempleOSDate() {
+  private getPrizePool() {
+    this.prizePool = 0;
+    for (let donation of this.donations) {
+      this.prizePool += donation.amount;
+    }
+    this.prizePool += this.participants.length * this.buyinCost;
+    this.prizePool *= 1000000; // convert to millions
+  }
+
+  private getTempleOSData() {
     this.templeOSService.getCompetition('32578').subscribe({
       next: (data) => {
         const teamsObj = data.data.teams as Record<string, any>;
@@ -85,7 +103,8 @@ export class CabbingoBoard implements OnInit {
         this.teams = teamsArr;
         this.participants = data.data.participants;
         this.info = data.data.info;
-      }, error: () => alert('Connection to TempleOSRS timed out.')
+        this.getDonations();
+      }, error: (error) => console.error('Error loading TempleOSRS data:', error)
     });
   }
 

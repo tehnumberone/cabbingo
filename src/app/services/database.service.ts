@@ -62,6 +62,42 @@ export class DatabaseService {
     return get(tileRef);
   }
 
+  getDonations2(): Observable<any[]> {
+    // Return empty observable immediately on server
+    if (!isPlatformBrowser(this.platformId)) {
+      return of([]);
+    }
+
+    return new Observable((observer) => {
+      const tilesRef = ref(this.database, 'Donations/');
+      const unsubscribe = onValue(
+        tilesRef,
+        (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const donations: any = [];
+            for (const donation in data) {
+              for (const key in data[donation]) {
+                donations.push({name: key, amount: data[donation][key]});
+              }
+            }
+            observer.next(donations);
+          } else {
+            observer.next([]);
+          }
+        },
+        (error) => {
+          observer.error(error);
+        }
+      );
+
+      // Return cleanup function
+      return () => {
+        unsubscribe();
+      };
+    });
+  }
+
   async getDonations(): Promise<{ name: string, amount: number }[]> {
     if (!isPlatformBrowser(this.platformId)) {
       return [];

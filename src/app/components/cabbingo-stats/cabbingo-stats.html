@@ -77,7 +77,7 @@
                         </h3>
                         <div class="w-100 d-grid gap-3 mb-2"
                             style=" grid-template-columns: repeat(2, 1fr); justify-items: center;">
-                            @for(donation of donations; track donation; let i = $index){
+                            @for(donation of donations; track i; let i = $index){
                             <div class="d-flex align-items-baseline" style="font-size:20px;">
                                 <p class="m-0">{{ i + 1 }}. {{ donation.name }}:</p>
                                 <span class="text-success ms-2">+{{ donation.amount | number:'1.0-0' }}M</span>

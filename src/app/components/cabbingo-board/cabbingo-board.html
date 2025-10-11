@@ -31,7 +31,7 @@
                     }
                     }
                 </div>
-                @for(row of board; track row; let rowIndex = $index){
+                @for(row of board; track rowIndex; let rowIndex = $index){
                 <div class="d-flex justify-content-left px-2 py-1 gap-2">
                     @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
                     <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
@@ -105,7 +105,7 @@
 
                         <div class="rulesbox custom-scrollbar overflow-y-scroll osrs-border-darker">
                             @if(!bingoRulesOpened){
-                            @for(rule of selectedTile?.rules; track rule; let i = $index){
+                            @for(rule of selectedTile?.rules; track i; let i = $index){
                             @if(rule.includes('Excluded') || rule.includes('Allowed')){
                             {{ rule }}
                             } @else if(rule.includes('-')){
@@ -141,6 +141,6 @@
     @if(teams[currentTeam]){
     <div class="osrs-border-thick px-4 py-2 mb-4 d-flex flex-column justify-content-between">
         <app-cabbingo-stats [teams]="teams" [participants]="participants" [currentTeam]="currentTeam"
-            [endDatetime]="info.end_date" [donations]="donations"></app-cabbingo-stats>
+            [endDatetime]="info.end_date" [donations]="donations" [prizePool]="prizePool"></app-cabbingo-stats>
     </div>}
 </div>

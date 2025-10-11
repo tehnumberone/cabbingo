@@ -19,12 +19,10 @@ export class CabbingoStats implements OnInit {
   now: number = Date.now();
   endDateTimemillis: number = 0;
   remainingTime: string = '';
-  prizePool: number = 0;
-  buyinCost: number = 3;
+  @Input() prizePool: number = 0;
 
   ngOnInit() {
     this.setBingoEndCountdown();
-    this.getPrizePool();
   }
 
   private setBingoEndCountdown() {
@@ -35,14 +33,6 @@ export class CabbingoStats implements OnInit {
       this.updateCountdown();
       this.subscription = interval(1000).subscribe(() => this.updateCountdown());
     }
-  }
-
-  private getPrizePool() {
-    for (let donation of this.donations) {
-      this.prizePool += donation.amount;
-    }
-    this.prizePool += this.participants.length * this.buyinCost;
-    this.prizePool *= 1000000; // convert to millions
   }
 
   private updateCountdown(): void {

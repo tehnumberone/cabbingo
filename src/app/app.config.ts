@@ -10,7 +10,7 @@ import { provideHttpClient } from '@angular/common/http';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(),
-    provideRouter(routes), 
+    provideRouter(routes),
     provideClientHydration(withEventReplay(), withNoHttpTransferCache()),
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideDatabase(() => getDatabase()),
