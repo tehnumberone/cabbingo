@@ -64,7 +64,7 @@
                   </td>
                   <td>
                     <div>
-                      <img class="tile-image" [src]="tile.src" />
+                      <img class="tile-image" [src]="tile.tileImg" />
                     </div>
                   </td>
                   <td>
@@ -74,9 +74,8 @@
                   </td>
                   <td>{{ tile.points }}</td>
                   <td>{{ tile.description }}</td>
-                  <td>{{ tile.itemsRequired }}</td>
-                  <td><input class="form-control" [(ngModel)]="tile.itemsObtained" type="number" min="0"
-                      [max]="tile.itemsRequired" /></td>
+                  <td>{{ tile.conditions.amount }}</td>
+                  <td><input class="form-control" [(ngModel)]="tile.conditions.progress" /></td>
                   <td>
                     <button class="btn custom-btn col-12" (click)="saveTile(tile, tile.id-1)">Save</button>
                   </td>

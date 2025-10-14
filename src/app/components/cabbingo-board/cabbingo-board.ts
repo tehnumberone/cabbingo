@@ -3,13 +3,13 @@ import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
 import { isPlatformBrowser } from '@angular/common';
 import { NgClass } from '../../../../node_modules/@angular/common';
-import { MockService } from '../../services/mock-service';
 import { environment as env } from '../../environments/environment.prod';
 import { Teams } from '../../models/teamEnum';
 import { RouterModule } from '@angular/router';
 import { TempleOSService } from '../../services/templeos-service';
 import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
 import { interval, Subscription } from 'rxjs';
+import { Board } from '../../models/board';
 
 @Component({
   selector: 'app-cabbingo-board',
@@ -22,8 +22,8 @@ export class CabbingoBoard implements OnInit {
   teamEnum: typeof Teams = Teams;
   currentTeam: Teams = Teams.Team1;
   selectedTile: Tile | undefined = undefined;
-  board: Tile[][] = [];
-  boardSize: number = 6;
+  board!: Board;
+  boardSize: number = 2;
   columnBonus = 5;
   rowBonus = 5;
   bingoRulesOpened: boolean = true;
@@ -35,6 +35,7 @@ export class CabbingoBoard implements OnInit {
   subscription!: Subscription;
   prizePool: number = 0;
   buyinCost: number = 3;
+  bingoTiles: Tile[][] = [];
 
   constructor(
     private databaseService: DatabaseService,
@@ -43,22 +44,40 @@ export class CabbingoBoard implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    if (this.teams.length === 0) {
-      this.getTempleOSData();
-    }
-    //refreshes the templeOSRS data every 60 seconds
-    this.subscription = interval(60000).subscribe(() => this.getTempleOSData());
-    if (env.production === false) {
-      const mockService = new MockService();
-      this.board = mockService.board;
-      this.generateBoard(this.board[this.currentTeam]);
-    } else {
-      // Only load Firebase data in the browser
-      if (isPlatformBrowser(this.platformId)) {
-        this.getTeamNames();
-        this.loadTilesFromFirebase();
+    this.databaseService.getBingoBoards().subscribe({
+      next: (boardsFromDb: Board[]) => {
+        if (boardsFromDb && boardsFromDb.length > 0) {
+          console.log(boardsFromDb[0].tiles);
+          this.board = boardsFromDb[0]; // Assuming you want the first board
+          this.generateBoard(this.board.tiles);
+        }
       }
+    });
+    // if (this.teams.length === 0) {
+    //   this.getTempleOSData();
+    // }
+    // //refreshes the templeOSRS data every 60 seconds
+    // this.subscription = interval(60000).subscribe(() => this.getTempleOSData());
+    // if (env.production === false) {
+    //   const mockService = new MockService();
+    //   this.board = mockService.board;
+    //   this.generateBoard(this.board[this.currentTeam]);
+    // } else {
+    //   // Only load Firebase data in the browser
+    //   if (isPlatformBrowser(this.platformId)) {
+    //     this.getTeamNames();
+    //     this.loadTilesFromFirebase();
+    //   }
+    // }
+  }
+
+  calculateTileProgress(tile: Tile): number {
+    const progressList = tile?.conditions?.progress ?? [];
+    if (tile?.conditions?.type === "obtain any item") {
+      const totalObtained = progressList.reduce((sum: number, p: any) => sum + (Number(p?.obtained) || 0), 0);
+      return totalObtained || 0;
     }
+    else return 0;
   }
 
   private getTeamNames() {
@@ -114,7 +133,7 @@ export class CabbingoBoard implements OnInit {
         if (firebaseTeams && firebaseTeams.length > 0) {
           this.generateBoard(firebaseTeams[this.currentTeam]);
           if (this.selectedTile) {
-            this.selectedTile = this.board[this.currentTeam][this.selectedTile?.id! - 1];
+            this.selectedTile = this.bingoTiles[this.currentTeam][this.selectedTile?.id! - 1];
           }
         }
       },
@@ -125,16 +144,16 @@ export class CabbingoBoard implements OnInit {
   }
 
   generateBoard(tiles: Tile[]): void {
-    this.board = []; // Clear the board before generating
+    this.bingoTiles = []; // Clear the board before generating
     let tileIndex = 0;
 
     for (let row = 0; row < this.boardSize; row++) {
-      this.board[row] = [];
+      this.bingoTiles[row] = [];
       for (let col = 0; col < this.boardSize; col++) {
         if (tileIndex >= tiles.length) {
           return; // Stop filling the board if we run out of tiles
         }
-        this.board[row][col] = {
+        this.bingoTiles[row][col] = {
           ...tiles[tileIndex],
           id: row * this.boardSize + col + 1, // Unique ID for each tile
         };
@@ -154,9 +173,7 @@ export class CabbingoBoard implements OnInit {
       this.selectedTile = undefined;
       this.bingoRulesOpened = true;
       if (env.production === false) {
-        const mockService = new MockService();
-        this.board = mockService.board;
-        this.generateBoard(this.board[this.currentTeam]);
+        this.generateBoard(this.bingoTiles[this.currentTeam]);
       } else {
         this.loadTilesFromFirebase();
       }
@@ -167,12 +184,12 @@ export class CabbingoBoard implements OnInit {
     let totalPoints = 0;
 
     // Calculate row points and row bonuses
-    for (let rowIndex = 0; rowIndex < this.board.length; rowIndex++) {
-      const row = this.board[rowIndex];
+    for (let rowIndex = 0; rowIndex < this.bingoTiles.length; rowIndex++) {
+      const row = this.bingoTiles[rowIndex];
       let isRowComplete = true;
 
       for (const tile of row) {
-        if (tile.itemsObtained >= tile.itemsRequired) {
+        if (this.calculateTileProgress(tile) >= tile.conditions.amount) {
           totalPoints += tile.points || 0;
         } else {
           isRowComplete = false;
@@ -197,9 +214,9 @@ export class CabbingoBoard implements OnInit {
     for (const colIndex of columnsToCheck) {
       let isColumnComplete = true;
 
-      for (let rowIndex = 0; rowIndex < this.board.length; rowIndex++) {
-        const tile = this.board[rowIndex][colIndex];
-        if (!tile || tile.itemsObtained < tile.itemsRequired) {
+      for (let rowIndex = 0; rowIndex < this.bingoTiles.length; rowIndex++) {
+        const tile = this.bingoTiles[rowIndex][colIndex];
+        if (!tile || this.calculateTileProgress(tile) < tile.conditions.amount) {
           isColumnComplete = false;
           break;
         }
@@ -215,13 +232,13 @@ export class CabbingoBoard implements OnInit {
   calculateRowBonuses(rowIndex?: number): number {
     let rowBonusPoints = 0;
 
-    const rowsToCheck = rowIndex !== undefined ? [rowIndex] : Array.from({ length: this.board.length }, (_, i) => i);
+    const rowsToCheck = rowIndex !== undefined ? [rowIndex] : Array.from({ length: this.bingoTiles.length }, (_, i) => i);
 
     for (const rowIdx of rowsToCheck) {
       let isRowComplete = true;
 
-      for (const tile of this.board[rowIdx]) {
-        if (!tile || tile.itemsObtained < tile.itemsRequired) {
+      for (const tile of this.bingoTiles[rowIdx]) {
+        if (!tile || this.calculateTileProgress(tile) < tile.conditions.amount) {
           isRowComplete = false;
           break;
         }

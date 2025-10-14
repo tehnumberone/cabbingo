@@ -17,51 +17,53 @@
                 {{teamNames[1]}}
             </button>
         </div>
-        <div class="gap-2 d-flex justify-content-center">
-            <div class="tiles osrs-border column col-auto">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
-                    @for(column of [].constructor(boardSize); track i; let i = $index){
-                    @if(getTotalPoints() > 0 && calculateColumnBonuses(i) > 0){
-                    <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }} <i
-                            class="bi bi-check-circle-fill"></i></div>
-                    }
-                    @else{
-                    <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
-                    }
-                    }
-                </div>
-                @for(row of board; track rowIndex; let rowIndex = $index){
-                <div class="d-flex justify-content-left px-2 py-1 gap-2">
-                    @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
-                    <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
-                            class="bi bi-check-circle-fill"></i></div>
-                    }
-                    @else{
-                    <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
-                    }
-                    @for(tile of row; track tile.id){
-                    <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
+        <div class="gap-2 d-flex justify-content-between">
+            <div class="d-flex justify-content-center align-items-center col-9">
+                <div class="tiles osrs-border column">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
+                        @for(column of [].constructor(boardSize); track i; let i = $index){
+                        @if(getTotalPoints() > 0 && calculateColumnBonuses(i) > 0){
+                        <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }} <i
+                                class="bi bi-check-circle-fill"></i></div>
+                        }
+                        @else{
+                        <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
+                        }
+                        }
+                    </div>
+                    @for(row of bingoTiles; track rowIndex; let rowIndex = $index){
+                    <div class="d-flex justify-content-left px-2 py-1 gap-2">
+                        @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
+                        <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
+                                class="bi bi-check-circle-fill"></i></div>
+                        }
+                        @else{
+                        <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
+                        }
+                        @for(tile of row; track tile.id){
+                        <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
                 'tile-selected': tile === selectedTile,
-                'tile-completed': tile.itemsObtained >= tile.itemsRequired}">
-                        <div>
-                            <div class="progress" style="height: 5px"
-                                [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null">
-                                <div class="progress-bar bg-success" role="progressbar"
-                                    [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null"
-                                    [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
-                                    [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"
-                                    [attr.aria-valuemax]="tile.itemsRequired">
-                                    <div style="width: 110px"></div>
+                'tile-completed': calculateTileProgress(tile) >= tile.conditions.amount}">
+                            <div>
+                                <div class="progress" style="height: 5px"
+                                    [style.background-color]="calculateTileProgress(tile) >= tile.conditions.amount ? 'transparent!important' : null">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                        [style.background-color]="calculateTileProgress(tile) >= tile.conditions.amount ? 'transparent!important' : null"
+                                        [style.width.%]="(calculateTileProgress(tile) / tile.conditions.amount) * 100"
+                                        [attr.aria-valuenow]="calculateTileProgress(tile)" aria-valuemin="0"
+                                        [attr.aria-valuemax]="tile.conditions.amount">
+                                        <div style="width: 110px"></div>
+                                    </div>
                                 </div>
+                                <img class="tile-image p-1" [src]="tile.tileImg" />
+                                <p class="tile-text">{{ tile.title }}</p>
                             </div>
-                            <img class="tile-image p-1" [src]="tile.src" [alt]="tile.alt" />
-                            <p class="tile-text">{{ tile.title }}</p>
-                        </div>
-                    </button>
+                        </button>
+                        }
+                    </div>
                     }
                 </div>
-                }
             </div>
             <div class="infoArea d-flex justify-content-between col-auto">
                 <div>
@@ -70,7 +72,7 @@
                         @if(selectedTile){
                         <div>{{ selectedTile.description }}</div>
                         <div>
-                            <img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.alt || ''" />
+                            <img class="bossImage" [src]="selectedTile.bossSrc" />
                         </div>
                         <div class="d-flex flex-column align-items-center">
                             <div class="d-flex flex-row pt-3">
@@ -79,9 +81,35 @@
                                     {{ selectedTile.points }}
                                 </p>
                             </div>
-                            <div
-                                [style.color]="selectedTile.itemsObtained >= selectedTile.itemsRequired ? 'rgb(8, 255, 8)' : null">
-                                {{ selectedTile.itemsObtained }} / {{ selectedTile.itemsRequired }} Obtained
+                            <div class="accordion accordion-flush w-100" id="accordionFlushExample">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                                            aria-expanded="false" aria-controls="flush-collapseOne"
+                                            [style.color]="calculateTileProgress(selectedTile) >= selectedTile.conditions.amount ? 'rgb(8, 255, 8)' :  'gray'">
+                                            Progress: {{ calculateTileProgress(selectedTile) }} / {{
+                                            selectedTile.conditions.amount }}
+                                        </button>
+                                    </h2>
+                                    <div id="flush-collapseOne" class="accordion-collapse collapse"
+                                        data-bs-parent="#accordionFlushExample">
+                                        <div class="accordion-body px-2 py-1 m-0">@for(progress of selectedTile.conditions.progress;
+                                            track p; let p = $index){
+                                            <li class="d-flex flex-row dropdown-item p-0 m-0">
+                                                <p class="p-0 m-0"
+                                                    [style]="{'color': progress.obtained ? 'rgb(8, 255, 8)' : 'white'}">
+                                                    {{
+                                                    progress.name }}:</p>
+                                                <p class="mx-2 p-0 m-0"
+                                                    [style]="{'color': progress.obtained ? 'rgb(8, 255, 8)' : 'white'}">
+                                                    {{ progress.obtained }}
+                                                </p>
+                                            </li>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         } @else{

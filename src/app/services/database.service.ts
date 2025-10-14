@@ -10,6 +10,36 @@ import { Tile } from '../models/tile';
 export class DatabaseService {
   constructor(private database: Database, @Inject(PLATFORM_ID) private platformId: Object) { }
 
+  getBingoBoards(): Observable<any[]> {
+
+    // Return empty observable immediately on server
+    if (!isPlatformBrowser(this.platformId)) {
+      return of([]);
+    }
+    return new Observable((observer) => {
+      const boardsRef = ref(this.database, 'BingoBoards');
+      const unsubscribe = onValue(
+        boardsRef,
+        (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            console.log(data); 
+            observer.next(data);
+          } else {
+            observer.next([]);
+          }
+        },
+        (error) => {
+          observer.error(error);
+        }
+      );
+      // Return cleanup function
+      return () => {
+        unsubscribe();
+      };
+    });
+  }
+
   getTiles(): Observable<any[]> {
     // Return empty observable immediately on server
     if (!isPlatformBrowser(this.platformId)) {
@@ -78,7 +108,7 @@ export class DatabaseService {
             const donations: any = [];
             for (const donation in data) {
               for (const key in data[donation]) {
-                donations.push({name: key, amount: data[donation][key]});
+                donations.push({ name: key, amount: data[donation][key] });
               }
             }
             observer.next(donations);

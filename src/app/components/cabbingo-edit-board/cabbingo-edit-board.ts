@@ -3,7 +3,6 @@ import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/c
 import { FormsModule } from '@angular/forms';
 import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
-import { MockService } from '../../services/mock-service';
 import { environment as env } from '../../environments/environment.prod';
 import { RouterModule } from '@angular/router';
 import { SessionService } from '../../services/session-service';
@@ -83,15 +82,9 @@ export class CabbingoEditBoard implements OnInit {
   async login() {
     const isValid = await this.sessionService.validPassword(this.password, this.selectedTeam);
     if (isValid) {
-      if (env.production === false) {
-        const mockService = new MockService();
-        this.board = mockService.board;
-        this.generateBoard(this.board[this.selectedTeam]);
-      } else {
-        // Only load Firebase data in the browser
-        if (isPlatformBrowser(this.platformId)) {
-          this.loadTilesFromFirebase();
-        }
+      // Only load Firebase data in the browser
+      if (isPlatformBrowser(this.platformId)) {
+        this.loadTilesFromFirebase();
       }
     }
     else {

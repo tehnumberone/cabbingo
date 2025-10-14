@@ -2,12 +2,13 @@
 export interface Tile {
   id: number;
   title: string;
-  itemsRequired: number;
-  itemsObtained: number;
-  src: string;
+  conditions: {
+    amount: number, type: string,
+    progress: { name: string, obtained: number }[]
+  };
+  tileImg: string;
   bossSrc: string;
   points: number;
-  alt?: string;
   description?: string;
-  rules:string[]
+  rules: string[];
 }
