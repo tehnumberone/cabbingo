@@ -41,9 +41,8 @@
                     <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
                     }
                     @for(tile of row; track tile.id){
-                    <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
-                'tile-selected': tile === selectedTile,
-                'tile-completed': tile.itemsObtained >= tile.itemsRequired}">
+                    <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" (mousemove)="onMouseMove($event)" (mouseenter)="onMouseEnter(tile.title)" (mouseleave)="onMouseLeave()"
+                     [ngClass]="{ 'tile-selected': tile === selectedTile,'tile-completed': tile.itemsObtained >= tile.itemsRequired}">
                         <div>
                             <div class="progress" style="height: 5px"
                                 [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null">
@@ -147,3 +146,4 @@
             [endDatetime]="info.end_date" [donations]="donations" [prizePool]="prizePool"></app-cabbingo-stats>
     </div>}
 </div>
+<app-osrs-tooltip ></app-osrs-tooltip>
