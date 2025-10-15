@@ -45,9 +45,10 @@
                      [ngClass]="{ 'tile-selected': tile === selectedTile,'tile-completed': tile.itemsObtained >= tile.itemsRequired}">
                         <div>
                             <div class="progress" style="height: 5px"
+                                [ngClass]="{ 'progress-bar-completed': tile.itemsObtained >= tile.itemsRequired }"
                                 [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null">
                                 <div class="progress-bar bg-success" role="progressbar"
-                                    [style.background-color]="tile.itemsObtained >= tile.itemsRequired ? 'transparent!important' : null"
+                                [ngClass]="{ 'progress-bar-completed': tile.itemsObtained >= tile.itemsRequired }"
                                     [style.width.%]="(tile.itemsObtained / tile.itemsRequired) * 100"
                                     [attr.aria-valuenow]="tile.itemsObtained" aria-valuemin="0"
                                     [attr.aria-valuemax]="tile.itemsRequired">

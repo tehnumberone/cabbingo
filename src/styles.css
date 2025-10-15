@@ -167,6 +167,7 @@ body {
 
 
 .tile {
+  transition: all 0.5s ease-in-out;
   width: 125px;
   height: 105px;
   flex-wrap: nowrap;
@@ -179,6 +180,7 @@ body {
 .tile:focus-visible,
 .tile:active,
 .tile:hover {
+  transition: all 0.5s ease-in-out;
   background-color: rgb(100, 85, 70);
   color: gold !important;
 }
@@ -209,11 +211,18 @@ body {
 }
 
 .tile-completed {
+  transition: all 0.5 ease-in-out;
   background: #364732;
 }
 
 .tile-completed:hover {
+  transition: all 0.5s ease-in-out;
   background: #475e42;
+}
+
+.progress-bar-completed{
+  transition: all 0.5s ease-in-out;
+  background-color:transparent!important
 }
 
 .rules-btn-selected {
