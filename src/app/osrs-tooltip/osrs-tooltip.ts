@@ -10,10 +10,50 @@ export class OsrsTooltip {
   @Input('appCursorTooltip') tooltipText = '';
   tooltipElement!: HTMLElement;
 
-  constructor(private renderer: Renderer2) {}
+  constructor(private renderer: Renderer2) { }
+
+
+  @HostListener('touchstart')
+  onTouchStart() {
+    this.showTooltip();
+
+    // Auto-hide after 2 seconds (adjust as needed)
+    setTimeout(() => this.hideTooltip(), 2000);
+  }
+
+  @HostListener('document:touchmove')
+  onTouchMove() {
+    this.hideTooltip(); // Hide on scroll/drag
+  }
+
+  @HostListener('document:touchend')
+  onTouchEnd() {
+    this.hideTooltip(); // Hide on tap elsewhere
+  }
 
   @HostListener('mouseenter')
   onMouseEnter() {
+    this.showTooltip();
+  }
+
+  @HostListener('mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (this.tooltipElement) {
+      this.renderer.setStyle(this.tooltipElement, 'top', `${event.clientY + 10}px`);
+      this.renderer.setStyle(this.tooltipElement, 'left', `${event.clientX + 10}px`);
+    }
+  }
+
+  @HostListener('mouseleave')
+  onMouseLeave() {
+    if (this.tooltipElement) {
+      this.renderer.removeChild(document.body, this.tooltipElement);
+      this.tooltipElement = null!;
+    }
+  }
+
+  private showTooltip() {
+    if (this.tooltipElement) return;
     const tilePrefix = 'Open ';
 
     const container = this.renderer.createElement('div');
@@ -47,16 +87,7 @@ export class OsrsTooltip {
     this.renderer.appendChild(document.body, this.tooltipElement);
   }
 
-  @HostListener('mousemove', ['$event'])
-  onMouseMove(event: MouseEvent) {
-    if (this.tooltipElement) {
-      this.renderer.setStyle(this.tooltipElement, 'top', `${event.clientY + 10}px`);
-      this.renderer.setStyle(this.tooltipElement, 'left', `${event.clientX + 10}px`);
-    }
-  }
-
-  @HostListener('mouseleave')
-  onMouseLeave() {
+  private hideTooltip() {
     if (this.tooltipElement) {
       this.renderer.removeChild(document.body, this.tooltipElement);
       this.tooltipElement = null!;
