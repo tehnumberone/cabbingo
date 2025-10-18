@@ -46,7 +46,7 @@ export class CabbingoStats implements OnInit {
     const distance = target - now;
 
     if (distance < 0) {
-      this.remainingTime = 'Expired';
+      this.remainingTime = 'Bingo ended!';
       this.subscription?.unsubscribe();
       return;
     }
