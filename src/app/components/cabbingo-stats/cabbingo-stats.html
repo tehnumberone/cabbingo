@@ -14,11 +14,12 @@
         <div class="d-flex flex-row justify-content-between  mx-2">
             @for(participant of participants; track participant; let j = $index){
             @if(participant.username === member){
-            <div class="d-flex flex-row col-8" style="color:#FF9933;">
+            <div class="d-flex flex-row col-7" style="color:#FF9933;">
                 <div class="col-1 align">{{i + 1}}.</div>
                 <div class="col-11">{{participant.player_name_with_capitalization}}</div>
             </div>
-            <div class="col-4">+ {{ participant.gain | number:'1.0-0' }}</div> }}
+            <div class="d-flex justify-content-end align-items-center col-5">+ {{ participant.gain | number:'1.0-0' }}
+            </div> }}
         </div>
         }
     </div>

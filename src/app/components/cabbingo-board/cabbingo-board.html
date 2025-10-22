@@ -6,63 +6,66 @@
             </a>
         </div>
     </div>
-    <div class="osrs-border-thick px-4 py-2 mb-4">
-        <div class="row teams mb-2">
-            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team1)"
-                [ngClass]="currentTeam === teamEnum.Team1 ? 'btn selected-team' : ''">
-                {{teamNames[0]}}
-            </button>
-            <button class="button btn col-md-5" (click)="switchTeam(teamEnum.Team2)"
-                [ngClass]="currentTeam === teamEnum.Team2 ? 'btn selected-team' : ''">
-                {{teamNames[1]}}
-            </button>
-        </div>
+    <div class="osrs-border-thick px-4 py-2">
         <div class="gap-2 d-flex justify-content-between">
-            <div class="d-flex justify-content-center align-items-center col-9">
-                <div class="tiles osrs-border column">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
-                        @for(column of [].constructor(boardSize); track i; let i = $index){
-                        @if(getTotalPoints() > 0 && calculateColumnBonuses(i) > 0){
-                        <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }} <i
-                                class="bi bi-check-circle-fill"></i></div>
-                        }
-                        @else{
-                        <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
-                        }
-                        }
-                    </div>
-                    @for(row of bingoTiles; track rowIndex; let rowIndex = $index){
-                    <div class="d-flex justify-content-left px-2 py-1 gap-2">
-                        @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
-                        <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
-                                class="bi bi-check-circle-fill"></i></div>
-                        }
-                        @else{
-                        <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
-                        }
-                        @for(tile of row; track tile.id){
-                        <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" [ngClass]="{
-                'tile-selected': tile === selectedTile,
-                'tile-completed': calculateTileProgress(tile) >= tile.conditions.amount}">
-                            <div>
-                                <div class="progress" style="height: 5px"
+            <div class="d-flex flex-column col-9">
+                <div class="d-flex flex-row teams mb-2">
+                    <button class="button btn" (click)="switchTeam(teamEnum.Team1)"
+                        [ngClass]="currentTeam === teamEnum.Team1 ? 'btn selected-team' : ''">
+                        {{teamNames[0]}}
+                    </button>
+                    <button class="button btn" (click)="switchTeam(teamEnum.Team2)"
+                        [ngClass]="currentTeam === teamEnum.Team2 ? 'btn selected-team' : ''">
+                        {{teamNames[1]}}
+                    </button>
+                </div>
+                <div class="d-flex justify-content-center align-items-center h-100 w-100">
+                    <div class="tiles column col-auto">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
+                            @for(column of [].constructor(boardSize); track i; let i = $index){
+                            @if(getTotalPoints() > 0 && calculateColumnBonuses(i) > 0){
+                            <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }}
+                                <i class="bi bi-check-circle-fill"></i></div>
+                            }
+                            @else{
+                            <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
+                            }
+                            }
+                        </div>
+                        @for(row of bingoTiles; track rowIndex; let rowIndex = $index){
+                        <div class="d-flex justify-content-left px-2 py-1 gap-2">
+                            @if(getTotalPoints() > 0 && calculateRowBonuses(rowIndex) > 0){
+                            <div class="d-flex flex-row gap-1 px-1 align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
+                                    class="bi bi-check-circle-fill"></i></div>
+                            }
+                            @else{
+                            <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
+                            }
+                            @for(tile of row; track tile.id){
+                            <button class="btn tile px-1 py-2" (click)="onTileClick(tile)"
+                                (mousemove)="onMouseMove($event)" (mouseenter)="onMouseEnter(tile.title)"
+                                (mouseleave)="onMouseLeave()"
+                                [ngClass]="{ 'tile-selected': tile === selectedTile, 'tile-completed': calculateTileProgress(tile) >= tile.conditions.amount}">
+                                <div class="d-flex flex-column justify-content-center h-100 w-100">
+                                    <img class="tile-image" [src]="tile.tileImg" />
+                                </div>
+                                <div class="progress"
+                                    [ngClass]="{'progress-styling' : calculateTileProgress(tile) < tile.conditions.amount}"
+                                    style="height: 5px;"
                                     [style.background-color]="calculateTileProgress(tile) >= tile.conditions.amount ? 'transparent!important' : null">
                                     <div class="progress-bar bg-success" role="progressbar"
                                         [style.background-color]="calculateTileProgress(tile) >= tile.conditions.amount ? 'transparent!important' : null"
                                         [style.width.%]="(calculateTileProgress(tile) / tile.conditions.amount) * 100"
                                         [attr.aria-valuenow]="calculateTileProgress(tile)" aria-valuemin="0"
                                         [attr.aria-valuemax]="tile.conditions.amount">
-                                        <div style="width: 110px"></div>
                                     </div>
                                 </div>
-                                <img class="tile-image p-1" [src]="tile.tileImg" />
-                                <p class="tile-text">{{ tile.title }}</p>
-                            </div>
-                        </button>
+                            </button>
+                            }
+                        </div>
                         }
                     </div>
-                    }
                 </div>
             </div>
             <div class="infoArea d-flex justify-content-between col-auto">
@@ -94,7 +97,8 @@
                                     </h2>
                                     <div id="flush-collapseOne" class="accordion-collapse collapse"
                                         data-bs-parent="#accordionFlushExample">
-                                        <div class="accordion-body px-2 py-1 m-0">@for(progress of selectedTile.conditions.progress;
+                                        <div class="accordion-body px-2 py-1 m-0">@for(progress of
+                                            selectedTile.conditions.progress;
                                             track p; let p = $index){
                                             <li class="d-flex flex-row dropdown-item p-0 m-0">
                                                 <p class="p-0 m-0"
@@ -169,9 +173,10 @@
             </div>
         </div>
     </div>
-    @if(teams[currentTeam]){
-    <div class="osrs-border-thick px-4 py-2 mb-4 d-flex flex-column justify-content-between">
-        <app-cabbingo-stats [teams]="teams" [participants]="participants" [currentTeam]="currentTeam"
-            [endDatetime]="info.end_date" [donations]="donations" [prizePool]="prizePool"></app-cabbingo-stats>
-    </div>}
 </div>
+@if(teams[currentTeam]){
+<div class="osrs-border-thick px-4 py-2 mb-4 d-flex flex-column justify-content-between">
+    <app-cabbingo-stats [teams]="teams" [participants]="participants" [currentTeam]="currentTeam"
+        [endDatetime]="info.end_date" [donations]="donations" [prizePool]="prizePool"></app-cabbingo-stats>
+</div>}
+<app-osrs-tooltip></app-osrs-tooltip>

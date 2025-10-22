@@ -1,19 +1,19 @@
-import { ChangeDetectionStrategy, Component, Inject, OnChanges, OnInit, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { Tile } from '../../models/tile';
 import { DatabaseService } from '../../services/database.service';
-import { isPlatformBrowser } from '@angular/common';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { environment as env } from '../../environments/environment.prod';
 import { Teams } from '../../models/teamEnum';
 import { RouterModule } from '@angular/router';
 import { TempleOSService } from '../../services/templeos-service';
 import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
-import { interval, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { Board } from '../../models/board';
+import { OsrsTooltip } from '../../osrs-tooltip/osrs-tooltip';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass, RouterModule, CabbingoStats],
+  imports: [NgClass, RouterModule, CabbingoStats, OsrsTooltip],
   templateUrl: './cabbingo-board.html',
   changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: '../../../styles.css',
@@ -36,6 +36,7 @@ export class CabbingoBoard implements OnInit {
   prizePool: number = 0;
   buyinCost: number = 3;
   bingoTiles: Tile[][] = [];
+  @ViewChild(OsrsTooltip) tooltip!: OsrsTooltip;
 
   constructor(
     private databaseService: DatabaseService,
@@ -250,4 +251,18 @@ export class CabbingoBoard implements OnInit {
     }
     return rowBonusPoints;
   }
+
+  onMouseEnter(tileText : string) {
+    this.tooltip.tooltipText = tileText;
+    this.tooltip.onMouseEnter();
+  }
+
+  onMouseLeave() {
+    this.tooltip.onMouseLeave();
+  }
+
+  onMouseMove(event: MouseEvent) {
+    this.tooltip.onMouseMove(event);
+  }
+
 }
