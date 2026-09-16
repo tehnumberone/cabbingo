@@ -61,7 +61,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 
 - [x] Board counts as archived once the end date passes; worker refuses edits (admins excepted) (`35730bc`)
 - [x] Anyone can view any board without logging in (`35730bc`)
-- [ ] Board list page shows the archive (see Phase 2)
+- [x] Board list page shows the archive (`121afe1`)
 - [ ] Edit page shows "this bingo has ended" instead of save buttons on archived boards
 
 ## Phase 5: Flip tiles
