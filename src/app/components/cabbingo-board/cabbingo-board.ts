@@ -1,166 +1,111 @@
-import { ChangeDetectionStrategy, Component, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
-import { Tile } from '../../models/tile';
+import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
+import { isPlatformBrowser, NgClass } from '@angular/common';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { Subscription, filter, switchMap, timer } from 'rxjs';
+import { Board, Progress, Tile, sideDone, tilePoints, totalPoints } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
-import { NgClass } from '../../../../node_modules/@angular/common';
-import { environment as env } from '../../environments/environment.prod';
-import { Teams } from '../../models/teamEnum';
-import { RouterModule } from '@angular/router';
 import { TempleOSService } from '../../services/templeos-service';
 import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
-import { Subscription } from 'rxjs';
-import { Board } from '../../models/board';
 import { OsrsTooltip } from '../../osrs-tooltip/osrs-tooltip';
 
 @Component({
   selector: 'app-cabbingo-board',
   imports: [NgClass, RouterModule, CabbingoStats, OsrsTooltip],
   templateUrl: './cabbingo-board.html',
-  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: '../../../styles.css',
 })
-export class CabbingoBoard implements OnInit {
-  teamEnum: typeof Teams = Teams;
-  currentTeam: Teams = Teams.Team1;
-  selectedTile: Tile | undefined = undefined;
-  board!: Board;
-  boardSize: number = 2;
-  columnBonus = 5;
-  rowBonus = 5;
-  bingoRulesOpened: boolean = true;
-  teamNames = ['Team 1', 'Team 2'];
-  teams: any[] = [];
+export class CabbingoBoard implements OnInit, OnDestroy {
+  board?: Board;
+  progress: Record<string, Record<string, Progress>> = {};
+  currentTeam = 0;
+  selectedTile?: Tile;
+  bingoRulesOpened = true;
+  templeTeams: any[] = [];
   participants: any[] = [];
   info: any = {};
-  donations: any[] = [];
-  subscription!: Subscription;
-  prizePool: number = 0;
-  buyinCost: number = 3;
-  bingoTiles: Tile[][] = [];
+  private subscription?: Subscription;
   @ViewChild(OsrsTooltip) tooltip!: OsrsTooltip;
 
   constructor(
     private databaseService: DatabaseService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private templeOSService: TempleOSService
+    private templeOSService: TempleOSService,
+    private route: ActivatedRoute,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   ngOnInit(): void {
-    this.databaseService.getBingoBoards().subscribe({
-      next: (boardsFromDb: Board[]) => {
-        if (boardsFromDb && boardsFromDb.length > 0) {
-          console.log(boardsFromDb[0].tiles);
-          this.board = boardsFromDb[0]; // Assuming you want the first board
-          this.generateBoard(this.board.tiles);
-        }
-      }
-    });
-    // if (this.teams.length === 0) {
-    //   this.getTempleOSData();
-    // }
-    // //refreshes the templeOSRS data every 60 seconds
-    // this.subscription = interval(60000).subscribe(() => this.getTempleOSData());
-    // if (env.production === false) {
-    //   const mockService = new MockService();
-    //   this.board = mockService.board;
-    //   this.generateBoard(this.board[this.currentTeam]);
-    // } else {
-    //   // Only load Firebase data in the browser
-    //   if (isPlatformBrowser(this.platformId)) {
-    //     this.getTeamNames();
-    //     this.loadTilesFromFirebase();
-    //   }
-    // }
-  }
-
-  calculateTileProgress(tile: Tile): number {
-    const progressList = tile?.conditions?.progress ?? [];
-    if (tile?.conditions?.type === "obtain any item") {
-      const totalObtained = progressList.reduce((sum: number, p: any) => sum + (Number(p?.obtained) || 0), 0);
-      return totalObtained || 0;
-    }
-    else return 0;
-  }
-
-  private getTeamNames() {
-    this.databaseService.getTeamNames().then((namesFromDb) => {
-      this.teamNames[0] = namesFromDb[0] || 'Team 1';
-      this.teamNames[1] = namesFromDb[1] || 'Team 2';
-    });
-  }
-
-  private getDonations() {
-    this.databaseService.getDonations2().subscribe(
-      {
-        next: (donationsFromDb) => {
-          donationsFromDb.sort((a: any, b: any) => b.amount - a.amount);
-          this.donations = donationsFromDb;
-          this.getPrizePool();
+    if (!isPlatformBrowser(this.platformId)) return;
+    // ponytail: polls every 30s instead of Firebase's live push
+    this.subscription = this.databaseService
+      .resolveBoardId(this.route.snapshot.queryParamMap.get('board'))
+      .pipe(
+        filter((id): id is number => !!id),
+        switchMap((id) => timer(0, 30_000).pipe(switchMap(() => this.databaseService.getBoard(id))))
+      )
+      .subscribe({
+        next: ({ board, progress }) => {
+          if (!this.board && board.templeosCompetitionId) this.getTempleOSData(board.templeosCompetitionId);
+          this.board = board;
+          this.progress = progress;
+          this.selectedTile = board.tiles.find((t) => t.id === this.selectedTile?.id);
         },
-        error: (error) => {
-          console.error('Error loading donations:', error);
-        }
-      }
-    );
+        error: (error) => console.error('Error loading board:', error),
+      });
   }
 
-  private getPrizePool() {
-    this.prizePool = 0;
-    for (let donation of this.donations) {
-      this.prizePool += donation.amount;
-    }
-    this.prizePool += this.participants.length * this.buyinCost;
-    this.prizePool *= 1000000; // convert to millions
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
   }
 
-  private getTempleOSData() {
-    this.templeOSService.getCompetition('32578').subscribe({
-      next: (data) => {
-        const teamsObj = data.data.teams as Record<string, any>;
-        const teamsArr = Object.keys(teamsObj)
-          .filter(k => !Number.isNaN(Number(k)))
-          .sort((a, b) => Number(a) - Number(b))
-          .map(k => teamsObj[k]);
-        this.teams = teamsArr;
-        this.participants = data.data.participants;
-        this.info = data.data.info;
-        this.getDonations();
-      }, error: (error) => console.error('Error loading TempleOSRS data:', error)
-    });
+  get rows(): Tile[][] {
+    const n = this.board?.size ?? 0;
+    return Array.from({ length: n }, (_, r) => this.board!.tiles.slice(r * n, r * n + n));
   }
 
-  loadTilesFromFirebase() {
-    this.databaseService.getTiles().subscribe({
-      next: (firebaseTeams) => {
-        if (firebaseTeams && firebaseTeams.length > 0) {
-          this.generateBoard(firebaseTeams[this.currentTeam]);
-          if (this.selectedTile) {
-            this.selectedTile = this.bingoTiles[this.currentTeam][this.selectedTile?.id! - 1];
-          }
-        }
-      },
-      error: (error) => {
-        console.error('Error loading tiles:', error);
-      },
-    });
+  get columns(): number[] {
+    return Array.from({ length: this.board?.size ?? 0 }, (_, i) => i);
   }
 
-  generateBoard(tiles: Tile[]): void {
-    this.bingoTiles = []; // Clear the board before generating
-    let tileIndex = 0;
+  get team() {
+    return this.board?.teams[this.currentTeam];
+  }
 
-    for (let row = 0; row < this.boardSize; row++) {
-      this.bingoTiles[row] = [];
-      for (let col = 0; col < this.boardSize; col++) {
-        if (tileIndex >= tiles.length) {
-          return; // Stop filling the board if we run out of tiles
-        }
-        this.bingoTiles[row][col] = {
-          ...tiles[tileIndex],
-          id: row * this.boardSize + col + 1, // Unique ID for each tile
-        };
-        tileIndex++;
-      }
-    }
+  get donations() {
+    return [...(this.board?.donations ?? [])].sort((a, b) => b.amount - a.amount);
+  }
+
+  get prizePool(): number {
+    const donated = this.donations.reduce((sum, d) => sum + d.amount, 0);
+    return (donated + this.participants.length * (this.board?.buyIn ?? 0)) * 1_000_000;
+  }
+
+  tileProgress(tile: Tile): Progress | undefined {
+    return this.team && this.progress[this.team.id]?.[tile.id];
+  }
+
+  obtained(tile: Tile): number {
+    return (this.tileProgress(tile)?.front.obtained ?? []).reduce((sum, o) => sum + (Number(o.obtained) || 0), 0);
+  }
+
+  isComplete(tile: Tile): boolean {
+    return sideDone(tile, this.tileProgress(tile)?.front);
+  }
+
+  progressPercent(tile: Tile): number {
+    if (tile.type === 'custom') return this.isComplete(tile) ? 100 : 0;
+    return Math.min(100, (this.obtained(tile) / tile.amount) * 100);
+  }
+
+  rowComplete(row: number): boolean {
+    return this.rows[row].every((t) => this.board && tilePoints(this.board, t, this.tileProgress(t)) > 0);
+  }
+
+  columnComplete(col: number): boolean {
+    return this.rows.every((row) => this.board && tilePoints(this.board, row[col], this.tileProgress(row[col])) > 0);
+  }
+
+  getTotalPoints(): number {
+    return this.board && this.team ? totalPoints(this.board, this.progress[this.team.id] ?? {}) : 0;
   }
 
   onTileClick(tile: Tile): void {
@@ -168,91 +113,28 @@ export class CabbingoBoard implements OnInit {
     this.bingoRulesOpened = false;
   }
 
-  switchTeam(selectedTeam: Teams): void {
-    if (this.currentTeam !== selectedTeam) {
-      this.currentTeam = selectedTeam;
-      this.selectedTile = undefined;
-      this.bingoRulesOpened = true;
-      if (env.production === false) {
-        this.generateBoard(this.bingoTiles[this.currentTeam]);
-      } else {
-        this.loadTilesFromFirebase();
-      }
-    }
+  switchTeam(index: number): void {
+    this.currentTeam = index;
+    this.selectedTile = undefined;
+    this.bingoRulesOpened = true;
   }
 
-  getTotalPoints(): number {
-    let totalPoints = 0;
-
-    // Calculate row points and row bonuses
-    for (let rowIndex = 0; rowIndex < this.bingoTiles.length; rowIndex++) {
-      const row = this.bingoTiles[rowIndex];
-      let isRowComplete = true;
-
-      for (const tile of row) {
-        if (this.calculateTileProgress(tile) >= tile.conditions.amount) {
-          totalPoints += tile.points || 0;
-        } else {
-          isRowComplete = false;
-        }
-      }
-
-      if (isRowComplete) {
-        totalPoints += 5;
-      }
-    }
-    totalPoints += this.calculateColumnBonuses();
-
-
-    return totalPoints;
+  private getTempleOSData(competitionId: string) {
+    this.templeOSService.getCompetition(competitionId).subscribe({
+      next: (data) => {
+        const teamsObj = data.data.teams as Record<string, any>;
+        this.templeTeams = Object.keys(teamsObj)
+          .filter((k) => !Number.isNaN(Number(k)))
+          .sort((a, b) => Number(a) - Number(b))
+          .map((k) => teamsObj[k]);
+        this.participants = data.data.participants;
+        this.info = data.data.info;
+      },
+      error: (error) => console.error('Error loading TempleOSRS data:', error),
+    });
   }
 
-  calculateColumnBonuses(columnIndex?: number): number {
-    let columnBonusPoints = 0;
-
-    const columnsToCheck = columnIndex !== undefined ? [columnIndex] : Array.from({ length: this.boardSize }, (_, i) => i);
-
-    for (const colIndex of columnsToCheck) {
-      let isColumnComplete = true;
-
-      for (let rowIndex = 0; rowIndex < this.bingoTiles.length; rowIndex++) {
-        const tile = this.bingoTiles[rowIndex][colIndex];
-        if (!tile || this.calculateTileProgress(tile) < tile.conditions.amount) {
-          isColumnComplete = false;
-          break;
-        }
-      }
-
-      if (isColumnComplete) {
-        columnBonusPoints += this.columnBonus;
-      }
-    }
-    return columnBonusPoints;
-  }
-
-  calculateRowBonuses(rowIndex?: number): number {
-    let rowBonusPoints = 0;
-
-    const rowsToCheck = rowIndex !== undefined ? [rowIndex] : Array.from({ length: this.bingoTiles.length }, (_, i) => i);
-
-    for (const rowIdx of rowsToCheck) {
-      let isRowComplete = true;
-
-      for (const tile of this.bingoTiles[rowIdx]) {
-        if (!tile || this.calculateTileProgress(tile) < tile.conditions.amount) {
-          isRowComplete = false;
-          break;
-        }
-      }
-
-      if (isRowComplete) {
-        rowBonusPoints += this.rowBonus;
-      }
-    }
-    return rowBonusPoints;
-  }
-
-  onMouseEnter(tileText : string) {
+  onMouseEnter(tileText: string) {
     this.tooltip.tooltipText = tileText;
     this.tooltip.onMouseEnter();
   }
@@ -264,5 +146,4 @@ export class CabbingoBoard implements OnInit {
   onMouseMove(event: MouseEvent) {
     this.tooltip.onMouseMove(event);
   }
-
 }

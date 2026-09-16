@@ -3,38 +3,41 @@
   <div class="d-flex justify-content-center">
     <div class="osrs-border-thick-login px-5 py-4 mb-5 d-flex flex-column justify-content-between" style="height:auto">
       <div class="d-flex justify-content-center">
-        @if(!sessionService.session.authenticated){
-        <form style="width:500px;">
+        @if(!loggedIn){
+        <form style="width:500px;" (ngSubmit)="login()">
           <div class="col-12">
             <label for="teamSelect" class="form-label">Choose your team</label>
-            <select id="teamSelect" class="form-control" [(ngModel)]="selectedTeam"
-              [ngModelOptions]="{standalone: true}" (change)="onTeamSelect(selectedTeam)">
-              <option [value]="-1" disabled selected>Select Team</option>
-              <option [value]="0">{{teamNames[0]}}</option>
-              <option [value]="1">{{teamNames[1]}}</option>
+            <select id="teamSelect" class="form-control" [(ngModel)]="selectedTeam" name="team">
+              <option value="" disabled>Select Team</option>
+              @for(team of board?.teams; track team.id){
+              <option [value]="team.id">{{ team.name }}</option>
+              }
             </select>
           </div>
           <br>
+          @if(selectedTeam){
           <div class="col-12">
-            @if(selectedTeam === 0){
-            <label for="password">Team 1 Password:</label>}
-            @if(selectedTeam === 1){
-            <label for="password">Team 2 Password:</label>
-            }
-            @if(selectedTeam !== -1){
+            <label for="password">Team password:</label>
             <input class="form-control" type="password" id="password" name="password" placeholder="Enter password"
               [ngClass]="{'is-invalid': errorMessage !== ''}" [(ngModel)]="password" />
-            }
+          </div>
+          }
+          @if(errorMessage.length > 0){
+          <div class="text-danger mt-2">{{ errorMessage }}</div>
+          }@else {<br />}
+          <div class="d-flex justify-content-between">
+            <button class="btn custom-btn" type="submit">Log in</button>
+            <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board?.id }">Return to board</a>
           </div>
         </form>
         } @else {
         <div>
           <div class="d-flex flex-row justify-content-between">
-            <h2>Welcome {{teamNames[sessionService.session.team]}}!</h2>
+            <h2>Welcome {{ teamName }}!</h2>
             <p>This is where you can edit your board!</p>
             <div class="d-flex flex-row gap-4">
-              <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
-              <button class="btn custom-btn" (click)="logout()" type="submit">Log out</button>
+              <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board?.id }">Return to board</a>
+              <button class="btn custom-btn" (click)="logout()" type="button">Log out</button>
             </div>
           </div>
           <div style="max-height: 600px;" class="mt-2 overflow-auto">
@@ -52,50 +55,37 @@
                 </tr>
               </thead>
               <tbody>
-                @if(board.length === 0){<tr>
-                  <td colspan="8">No tiles available</td>
-                </tr>}
-                @else{
-                @for(row of board; track row;){
-                @for(tile of row; track tile; let i = $index){
+                @for(tile of board?.tiles; track tile.id){
+                @let edit = edits[tile.id];
                 <tr>
-                  <td>
-                    {{tile.title}}
-                  </td>
-                  <td>
-                    <div>
-                      <img class="tile-image" [src]="tile.tileImg" />
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <img class="tile-image" [src]="tile.bossSrc" />
-                    </div>
-                  </td>
+                  <td>{{ tile.title }}</td>
+                  <td><img class="tile-image" [src]="tile.tileImg" /></td>
+                  <td><img class="tile-image" [src]="tile.bossSrc" /></td>
                   <td>{{ tile.points }}</td>
-                  <td>{{ tile.description }}</td>
-                  <td>{{ tile.conditions.amount }}</td>
-                  <td><input class="form-control" [(ngModel)]="tile.conditions.progress" /></td>
+                  <td>{{ tile.description }}@if(tile.criteria){<br>{{ tile.criteria }}}</td>
+                  @if(tile.type === 'custom'){
+                  <td>Manual</td>
+                  <td><input type="checkbox" [(ngModel)]="edit.completed" [attr.aria-label]="'Completed ' + tile.title" /></td>
+                  } @else {
+                  <td>{{ tile.amount }}</td>
+                  <td><input class="form-control" type="number" min="0" [(ngModel)]="edit.obtained"
+                      [attr.aria-label]="'Obtained for ' + tile.title" /></td>
+                  }
                   <td>
-                    <button class="btn custom-btn col-12" (click)="saveTile(tile, tile.id-1)">Save</button>
+                    <button class="btn custom-btn col-12" (click)="saveTile(tile)">Save</button>
+                    @if(edit.status){<small>{{ edit.status }}</small>}
                   </td>
                 </tr>
-                }}}
+                } @empty {
+                <tr>
+                  <td colspan="8">No tiles available</td>
+                </tr>
+                }
               </tbody>
             </table>
           </div>
         </div>
         }
-      </div>
-      <div>
-        @if(!sessionService.session.authenticated){
-        @if(errorMessage.length > 0){
-        <div class="text-danger mt-2">{{ errorMessage }}</div>
-        }@else {<br />}
-        <div class="d-flex justify-content-between">
-          <button class="btn custom-btn" type="submit" (click)="login()">Log in</button>
-          <button class="btn custom-btn" [routerLink]="['']">Return to board</button>
-        </div>}
       </div>
     </div>
   </div>

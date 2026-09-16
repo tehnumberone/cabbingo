@@ -1,10 +1,10 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Tile } from '../../models/tile';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { filter, switchMap } from 'rxjs';
+import { Board, Progress, Tile, emptyProgress } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
-import { environment as env } from '../../environments/environment.prod';
-import { RouterModule } from '@angular/router';
 import { SessionService } from '../../services/session-service';
 
 @Component({
@@ -14,96 +14,81 @@ import { SessionService } from '../../services/session-service';
   styleUrl: './cabbingo-edit-board.css',
 })
 export class CabbingoEditBoard implements OnInit {
-  selectedTeam = -1;
-  boardSize: number = 6;
+  board?: Board;
+  progress: Record<string, Record<string, Progress>> = {};
+  selectedTeam = '';
   password = '';
-  board: Tile[][] = [[]];
-  teamNames = ['Team 1', 'Team 2'];
-  errorMessage: string = '';
+  errorMessage = '';
+  edits: Record<string, { obtained: number; completed: boolean; status?: string }> = {};
 
   constructor(
     private databaseService: DatabaseService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    public sessionService: SessionService
+    public sessionService: SessionService,
+    private route: ActivatedRoute,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   ngOnInit(): void {
-    this.databaseService.getTeamNames().then((namesFromDb) => {
-      this.teamNames[0] = namesFromDb[0] || 'Team 1';
-      this.teamNames[1] = namesFromDb[1] || 'Team 2';
-    });
-    if (this.sessionService.session.authenticated) {
-      this.selectedTeam = this.sessionService.session.team;
-      this.loadTilesFromFirebase();
-    }
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.databaseService
+      .resolveBoardId(this.route.snapshot.queryParamMap.get('board'))
+      .pipe(
+        filter((id): id is number => !!id),
+        switchMap((id) => this.databaseService.getBoard(id))
+      )
+      .subscribe(({ board, progress }) => {
+        this.board = board;
+        this.progress = progress;
+        if (this.loggedIn) this.loadEdits();
+      });
   }
 
-  onTeamSelect(teamNumber: any) {
-    this.selectedTeam = parseInt(teamNumber);
-    this.loadTilesFromFirebase();
+  get loggedIn(): boolean {
+    return !!this.board && this.sessionService.team?.boardId === this.board.id;
   }
 
-  loadTilesFromFirebase() {
-    this.databaseService.getTiles().subscribe({
-      next: (firebaseTeams) => {
-        if (firebaseTeams && firebaseTeams.length > 0) {
-          this.generateBoard(firebaseTeams[this.selectedTeam]);
-        }
-      },
-      error: (error) => {
-      },
-    });
+  get teamName(): string {
+    return this.board?.teams.find((t) => t.id === this.sessionService.team?.teamId)?.name ?? '';
   }
 
-  saveTile(tile: Tile, index: number) {
-    this.databaseService.updateTile(this.selectedTeam, tile, index).catch((error) => {
-    });
-  }
-
-  generateBoard(tiles: Tile[]): void {
-    this.board = []; // Clear the board before generating
-    let tileIndex = 0;
-
-    for (let row = 0; row < this.boardSize; row++) {
-      this.board[row] = [];
-      for (let col = 0; col < this.boardSize; col++) {
-        if (tileIndex >= tiles.length) {
-          return; // Stop filling the board if we run out of tiles
-        }
-        this.board[row][col] = {
-          ...tiles[tileIndex],
-          id: row * this.boardSize + col + 1, // Unique ID for each tile
-        };
-        tileIndex++;
-      }
+  private loadEdits() {
+    const teamProgress = this.progress[this.sessionService.team!.teamId] ?? {};
+    this.edits = {};
+    for (const tile of this.board!.tiles) {
+      const p = teamProgress[tile.id]?.front;
+      this.edits[tile.id] = {
+        obtained: (p?.obtained ?? []).reduce((sum, o) => sum + (Number(o.obtained) || 0), 0),
+        completed: !!p?.completed,
+      };
     }
   }
 
   async login() {
-    const isValid = await this.sessionService.validPassword(this.password, this.selectedTeam);
-    if (isValid) {
-      // Only load Firebase data in the browser
-      if (isPlatformBrowser(this.platformId)) {
-        this.loadTilesFromFirebase();
-      }
-    }
-    else {
-      this.errorMessage = "Incorrect password. Please try again.";
-    }
+    if (!this.board || !this.selectedTeam) return;
+    const error = await this.databaseService.teamLogin(this.board.id!, this.selectedTeam, this.password);
+    this.errorMessage = error ?? '';
+    if (!error) this.loadEdits();
+  }
+
+  saveTile(tile: Tile) {
+    const teamId = this.sessionService.team!.teamId;
+    const edit = this.edits[tile.id];
+    const prev = this.progress[teamId]?.[tile.id] ?? emptyProgress();
+    // ponytail: collapses per-item breakdown into one "Obtained" count; per-item editing comes with the board editor
+    const next: Progress = { ...prev, front: { obtained: [{ name: 'Obtained', obtained: edit.obtained }], completed: edit.completed } };
+    edit.status = 'Saving...';
+    this.databaseService.updateProgress(this.board!.id!, teamId, tile.id, next).subscribe({
+      next: () => {
+        (this.progress[teamId] ??= {})[tile.id] = next;
+        edit.status = 'Saved';
+      },
+      error: (e) => (edit.status = e?.error?.error ?? 'Save failed'),
+    });
   }
 
   logout() {
     this.sessionService.logout();
-    this.selectedTeam = -1;
-    this.board = [[]];
     this.password = '';
     this.errorMessage = '';
-  }
-
-  @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      this.login();
-    }
   }
 }

@@ -1,0 +1,17 @@
+{
+  "name": "cabbingo-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute cabbingo --remote --file=schema.sql",
+    "db:init:local": "wrangler d1 execute cabbingo --local --file=schema.sql",
+    "check": "tsc --noEmit && node --experimental-strip-types test.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260916.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.133.0"
+  }
+}

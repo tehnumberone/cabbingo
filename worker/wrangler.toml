@@ -1,0 +1,11 @@
+name = "cabbingo"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://tehnumberone.github.io,http://localhost:4200"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cabbingo"
+database_id = "84c20115-b698-48c7-be8a-e90847516f4f"

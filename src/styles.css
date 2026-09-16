@@ -123,26 +123,6 @@ body {
   text-align: center;
 }
 
-.button.accordion-button::after {
---bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white' stroke='%23212529' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
---bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white' stroke='%23052c65' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-}
-.accordion-button:hover{
-  filter: drop-shadow(0px 0px .5mm gold);
-}
-.accordion-button:focus{
-  filter: drop-shadow(0px 0px .5mm gold);
-  --bs-accordion-btn-focus-box-shadow:0 0 0 0.0rem none!important;
-}
-.accordion{
-  --bs-accordion-bg:none;
-  --bs-accordion-border-color:none;
-  --bs-accordion-active-color:gold;
-}
-.accordion-body{
-  background-color: rgb(72, 62, 51);
-}
-
 .teams {
   flex-direction: row;
   justify-content: space-evenly;
@@ -204,13 +184,6 @@ body {
   background-color: rgb(100, 85, 70);
   color: gold !important;
 }
-
-.tile:focus{
-  transition: all 0.5s ease-in-out;
-  border: 1px solid gold;
-  outline: 1px solid gold;
-}
-
 .rules-btn,
 .row-tile,
 .column-tile{
@@ -226,7 +199,7 @@ body {
 .row-tile{
   flex-direction: column;
   justify-content: center;
-  width:70px;
+  width:45px;
 }
 
 .tile:hover {
@@ -388,9 +361,4 @@ body {
 .stats-outline{
     border: 3px solid #2E2B23;
     mask: radial-gradient(10px at 10px 10px,#0000 98%,#000) -10px -10px;
-}
-
-.progress-styling{
-    border-radius: 2px;
-    border: 1px solid #685C4C;
 }
