@@ -21,7 +21,7 @@ export interface Team {
   id: string;
   name: string;
   players: string[];
-  password?: string; // write-only: sent when setting, never returned
+  captains: string[]; // usernames of accounts that may update this team's progress
 }
 
 export interface Board {
@@ -93,6 +93,8 @@ export function validateBoard(b: Board): string | null {
     return 'Tile ids must be unique';
   if (!Array.isArray(b.teams) || !b.teams.length) return 'At least one team is required';
   if (b.teams.some((t) => typeof t?.id !== 'string' || !t.name)) return 'Every team needs a name';
+  if (b.teams.some((t) => !Array.isArray(t.captains) || t.captains.some((c) => typeof c !== 'string' || !c.trim())))
+    return 'Captains must be usernames';
   if (new Set(b.teams.map((t) => t.id)).size !== b.teams.length) return 'Team ids must be unique';
   if (isNaN(Date.parse(b.startDate)) || isNaN(Date.parse(b.endDate))) return 'Invalid dates';
   if (Date.parse(b.endDate) <= Date.parse(b.startDate)) return 'End date must be after start date';

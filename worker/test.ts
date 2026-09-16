@@ -9,7 +9,7 @@ const tile = (points: number, id: string): Tile => ({
 const board: Board = {
   title: 'b', description: '', rules: [], size: 3, startDate: '2026-01-01', endDate: '2026-02-01',
   rowBonus: 5, columnBonus: 7, flipEnabled: true, flipMode: 'all-or-nothing',
-  tiles: Array.from({ length: 9 }, (_, i) => tile(10, 't' + i)), teams: [{ id: 'a', name: 'A', players: [] }],
+  tiles: Array.from({ length: 9 }, (_, i) => tile(10, 't' + i)), teams: [{ id: 'a', name: 'A', players: [], captains: [] }],
 };
 const done = { obtained: [{ name: 'x', obtained: 1 }, { name: 'y', obtained: 1 }] };
 

@@ -1,17 +1,45 @@
-import { Injectable } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Board } from '../models/bingo';
 
-// ponytail: in-memory like before, a page refresh logs the team out; persist to localStorage if that gets annoying
+export interface User {
+    id: number;
+    username: string;
+    isAdmin: boolean;
+}
+
+const USER_KEY = 'cabbingo-user';
+
 @Injectable({
     providedIn: 'root',
 })
 export class SessionService {
-    team: { boardId: number; teamId: string; token: string } | null = null;
+    user: (User & { token: string }) | null = null;
 
-    headers(): Record<string, string> {
-        return this.team ? { Authorization: `Bearer ${this.team.token}` } : {};
+    constructor(@Inject(PLATFORM_ID) platformId: Object) {
+        if (!isPlatformBrowser(platformId)) return;
+        try {
+            this.user = JSON.parse(localStorage.getItem(USER_KEY) ?? 'null');
+        } catch { }
     }
 
-    logout() {
-        this.team = null;
+    setUser(user: (User & { token: string }) | null) {
+        this.user = user;
+        try {
+            if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+            else localStorage.removeItem(USER_KEY);
+        } catch { }
+    }
+
+    headers(): Record<string, string> {
+        return this.user ? { Authorization: `Bearer ${this.user.token}` } : {};
+    }
+
+    // Teams whose progress the logged-in user may update. The worker enforces the same rule.
+    editableTeams(board?: Board) {
+        const user = this.user;
+        if (!board || !user) return [];
+        if (user.isAdmin || user.id === board.ownerId) return board.teams;
+        return board.teams.filter((t) => t.captains.some((c) => c.toLowerCase() === user.username.toLowerCase()));
     }
 }

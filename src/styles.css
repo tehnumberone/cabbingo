@@ -334,6 +334,14 @@ body {
   scroll-behavior: smooth;
 }
 
+/* Pinned edit progress button (top-left) */
+.edit-btn {
+  position: absolute; /* inside .banner */
+  top: 8px;
+  left: 8px;
+  z-index: 1050;
+}
+
 /* Pinned login button (top-right, safe-area aware) */
 .login-btn {
   position: absolute; /* inside .banner */
@@ -344,6 +352,13 @@ body {
 
 /* On very small screens, slightly reduce the button to avoid covering the center logo */
 @media (max-width: 420px) {
+  .edit-btn {
+    transform: scale(0.85);
+    transform-origin: top left;
+    left: 6px;
+    top: 6px;
+  }
+
   .login-btn {
     transform: scale(0.85);
     transform-origin: top right;

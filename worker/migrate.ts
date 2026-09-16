@@ -1,19 +1,12 @@
 // One-off Firebase export -> D1 import.
 // node --experimental-strip-types migrate.ts <export.json> <templeosrs competition id> > import.sql
 // Board owner = first admin user, so register + make yourself admin before running import.sql.
-import { pbkdf2Sync, randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { type Board, type Progress, validateBoard } from '../src/app/models/bingo.ts';
 
 const [file, compId] = process.argv.slice(2);
 const fb = JSON.parse(readFileSync(file, 'utf8'));
 const temple = (await (await fetch(`https://templeosrs.com/api/competition_info_v2.php?id=${compId}`)).json()).data;
-
-// same format as hashPassword() in src/index.ts
-const hash = (pw: string) => {
-  const salt = randomBytes(16);
-  return `10000:${salt.toString('base64')}:${pbkdf2Sync(pw, salt, 10000, 32, 'sha256').toString('base64')}`;
-};
 
 const teamKeys = Object.keys(fb.Boards); // "Team 1", "Team 2"
 const tiles = fb.Boards[teamKeys[0]].map((t: any) => ({
@@ -47,15 +40,13 @@ const board: Board & { teams: any[] } = {
   flipEnabled: false,
   flipMode: 'all-or-nothing',
   tiles,
-  teams: teamKeys.map((key, i) => {
-    const creds = fb.LoginCredentials?.[key] ?? {};
-    return {
-      id: `team-${i + 1}`,
-      name: creds.name ?? key,
-      players: temple.teams[String(i + 1)]?.members ?? [],
-      ...(creds.password ? { pwHash: hash(creds.password) } : {}),
-    };
-  }),
+  // old team passwords are dropped: captains are accounts now, assign them in the board editor
+  teams: teamKeys.map((key, i) => ({
+    id: `team-${i + 1}`,
+    name: fb.LoginCredentials?.[key]?.name ?? key,
+    players: temple.teams[String(i + 1)]?.members ?? [],
+    captains: [],
+  })),
   donations: (fb.Donations ?? []).filter(Boolean).flatMap((d: Record<string, number>) =>
     Object.entries(d).map(([name, amount]) => ({ name, amount: Number(amount) }))
   ),
@@ -64,12 +55,14 @@ const board: Board & { teams: any[] } = {
 
 const err = validateBoard(board);
 if (err) throw new Error(err);
+// stored form: captains -> captainIds
+const stored = { ...board, teams: board.teams.map(({ captains, ...t }) => ({ ...t, captainIds: [] })) };
 
 const q = (v: unknown) => `'${String(v).replace(/'/g, "''")}'`;
 const boardId = `(SELECT id FROM boards WHERE json_extract(config, '$.templeosCompetitionId') = ${q(compId)})`;
 const out = [
   `INSERT INTO boards (owner_id, end_date, config)
-SELECT (SELECT id FROM users WHERE is_admin = 1 ORDER BY id LIMIT 1), ${Date.parse(board.endDate)}, ${q(JSON.stringify(board))}
+SELECT (SELECT id FROM users WHERE is_admin = 1 ORDER BY id LIMIT 1), ${Date.parse(board.endDate)}, ${q(JSON.stringify(stored))}
 WHERE NOT EXISTS ${boardId};`,
 ];
 teamKeys.forEach((key, i) => {

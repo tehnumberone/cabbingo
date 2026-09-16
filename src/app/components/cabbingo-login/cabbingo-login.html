@@ -1,0 +1,50 @@
+<div class="page-wrap">
+  <div class="banner"></div>
+  <div class="d-flex justify-content-center">
+    <div class="osrs-border-thick-login px-5 py-4 mb-5 d-flex flex-column" style="height:auto">
+      @if(sessionService.user; as user){
+      <div style="width:500px; max-width:100%;">
+        <h2>Welcome {{ user.username }}!</h2>
+        <p>
+          You are logged in{{ user.isAdmin ? ' as an admin' : '' }}.
+          With an account you can create and manage your own bingo boards.
+        </p>
+        <div class="d-flex justify-content-between">
+          <button class="btn custom-btn" type="button" (click)="logout()">Log out</button>
+          <a class="btn custom-btn" [routerLink]="['']">Return to board</a>
+        </div>
+      </div>
+      } @else {
+      <form style="width:500px; max-width:100%;" (ngSubmit)="submit()">
+        <h2>{{ mode === 'login' ? 'Log in' : 'Create an account' }}</h2>
+        <div class="col-12 mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input class="form-control" id="username" name="username" autocomplete="username" required
+            [(ngModel)]="username" />
+        </div>
+        <div class="col-12">
+          <label for="password" class="form-label">Password</label>
+          <input class="form-control" type="password" id="password" name="password" required
+            [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+            [class.is-invalid]="errorMessage !== ''" [(ngModel)]="password" />
+          @if(mode === 'register'){
+          <small>At least 8 characters.</small>
+          }
+        </div>
+        @if(errorMessage){
+        <div class="text-danger mt-2" role="alert">{{ errorMessage }}</div>
+        } @else {<br />}
+        <div class="d-flex justify-content-between gap-2 mt-2">
+          <button class="btn custom-btn" type="submit" [disabled]="busy">
+            {{ mode === 'login' ? 'Log in' : 'Register' }}
+          </button>
+          <button class="btn custom-btn" type="button" (click)="switchMode()">
+            {{ mode === 'login' ? 'No account? Register' : 'Have an account? Log in' }}
+          </button>
+          <a class="btn custom-btn" [routerLink]="['']">Return to board</a>
+        </div>
+      </form>
+      }
+    </div>
+  </div>
+</div>

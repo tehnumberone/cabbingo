@@ -5,12 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
   is_admin INTEGER NOT NULL DEFAULT 0
 );
 
--- user session: user_id set; team session: board_id + team_id set
 CREATE TABLE IF NOT EXISTS sessions (
   token TEXT PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
-  team_id TEXT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   expires INTEGER NOT NULL
 );
 
@@ -18,7 +15,7 @@ CREATE TABLE IF NOT EXISTS boards (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   owner_id INTEGER NOT NULL REFERENCES users(id),
   end_date INTEGER NOT NULL, -- ms epoch, drives archive
-  config TEXT NOT NULL -- Board JSON, team passwords stored as pwHash
+  config TEXT NOT NULL -- Board JSON, team captains stored as captainIds
 );
 
 CREATE TABLE IF NOT EXISTS progress (

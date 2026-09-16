@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription, filter, switchMap, timer } from 'rxjs';
 import { Board, Progress, Tile, sideDone, tilePoints, totalPoints } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
+import { SessionService } from '../../services/session-service';
 import { TempleOSService } from '../../services/templeos-service';
 import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
 import { OsrsTooltip } from '../../osrs-tooltip/osrs-tooltip';
@@ -29,6 +30,7 @@ export class CabbingoBoard implements OnInit, OnDestroy {
   constructor(
     private databaseService: DatabaseService,
     private templeOSService: TempleOSService,
+    public sessionService: SessionService,
     private route: ActivatedRoute,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }

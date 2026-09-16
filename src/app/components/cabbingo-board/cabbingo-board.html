@@ -1,8 +1,13 @@
 <div class="page-wrap">
     <div class="w-100">
         <div class="d-flex justify-content-center align-items-center w-100 banner">
-            <a class="btn button login-btn" [routerLink]="['/edit-board']" [queryParams]="{ board: board?.id }">
-                Log in as captain
+            @if(sessionService.editableTeams(board).length){
+            <a class="btn button edit-btn" [routerLink]="['/edit-board']" [queryParams]="{ board: board?.id }">
+                Edit progress
+            </a>
+            }
+            <a class="btn button login-btn" [routerLink]="['/login']">
+                {{ sessionService.user ? sessionService.user.username + (sessionService.user.isAdmin ? ' (admin)' : '') : 'Log in / Register' }}
             </a>
         </div>
     </div>

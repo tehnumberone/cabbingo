@@ -5,10 +5,10 @@ interface Env {
   ALLOWED_ORIGINS: string;
 }
 
-type StoredTeam = Omit<Team, 'password'> & { pwHash?: string };
+type StoredTeam = Omit<Team, 'captains'> & { captainIds: number[] };
 type StoredBoard = Omit<Board, 'id' | 'ownerId' | 'teams'> & { teams: StoredTeam[] };
 type BoardRow = { id: number; owner_id: number; end_date: number; config: StoredBoard };
-type Session = { user_id: number | null; board_id: number | null; team_id: string | null; username: string | null; is_admin: number | null };
+type Session = { user_id: number; username: string; is_admin: number };
 
 const DAY = 86_400_000;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']; // no svg: it can carry scripts
@@ -86,7 +86,7 @@ async function route(req: Request, env: Env): Promise<Response> {
       if (String(e).includes('UNIQUE')) throw new HttpError(409, 'Username is taken');
       throw e;
     }
-    return Response.json({ token: await newSession(env, { user_id: user!.id }), user: toUser(user!) });
+    return Response.json({ token: await newSession(env, user!.id), user: toUser(user!) });
   }
 
   if (p === '/auth/login' && m === 'POST') {
@@ -96,7 +96,7 @@ async function route(req: Request, env: Env): Promise<Response> {
       .first<{ id: number; username: string; is_admin: number; pw_hash: string }>();
     // ponytail: no login rate limit; add a Workers Rate Limiting binding if brute force shows up
     if (!user || !(await verifyPassword(String(password), user.pw_hash))) throw new HttpError(401, 'Invalid username or password');
-    return Response.json({ token: await newSession(env, { user_id: user.id }), user: toUser(user) });
+    return Response.json({ token: await newSession(env, user.id), user: toUser(user) });
   }
 
   if (p === '/auth/logout' && m === 'POST') {
@@ -107,10 +107,7 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (p === '/auth/me' && m === 'GET') {
     const s = await session(req, env);
-    return Response.json({
-      user: s?.user_id ? { id: s.user_id, username: s.username, isAdmin: !!s.is_admin } : null,
-      team: s?.team_id ? { boardId: s.board_id, teamId: s.team_id } : null,
-    });
+    return Response.json({ user: s ? { id: s.user_id, username: s.username, isAdmin: !!s.is_admin } : null });
   }
 
   if (p === '/upload' && m === 'POST') {
@@ -147,7 +144,7 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (p === '/boards' && m === 'POST') {
     const s = await requireUser(req, env);
-    const board = await cleanBoard(await body(req), []);
+    const board = await cleanBoard(env, await body(req));
     const row = await env.DB.prepare('INSERT INTO boards (owner_id, end_date, config) VALUES (?, ?, ?) RETURNING id')
       .bind(s.user_id, Date.parse(board.endDate), JSON.stringify(board))
       .first<{ id: number }>();
@@ -163,8 +160,21 @@ async function route(req: Request, env: Env): Promise<Response> {
       const progress: Record<string, Record<string, Progress>> = {};
       for (const r of results) (progress[r.team_id] ??= {})[r.tile_id] = JSON.parse(r.data);
       const { teams, ...config } = row.config;
+      const ids = [...new Set(teams.flatMap((t) => t.captainIds))];
+      const names = new Map<number, string>();
+      if (ids.length) {
+        const users = await env.DB.prepare(`SELECT id, username FROM users WHERE id IN (${ids.map(() => '?').join(',')})`)
+          .bind(...ids)
+          .all<{ id: number; username: string }>();
+        for (const u of users.results) names.set(u.id, u.username);
+      }
       return Response.json({
-        board: { ...config, id: row.id, ownerId: row.owner_id, teams: teams.map(({ pwHash, ...t }) => t) },
+        board: {
+          ...config,
+          id: row.id,
+          ownerId: row.owner_id,
+          teams: teams.map(({ captainIds, ...t }) => ({ ...t, captains: captainIds.flatMap((id) => names.get(id) ?? []) })),
+        },
         progress,
       });
     }
@@ -172,7 +182,7 @@ async function route(req: Request, env: Env): Promise<Response> {
     if (s.user_id !== row.owner_id && !s.is_admin) throw new HttpError(403, 'Not your board');
     if (m === 'PUT') {
       if (row.end_date < Date.now() && !s.is_admin) throw new HttpError(403, 'This bingo has ended');
-      const board = await cleanBoard(await body(req), row.config.teams);
+      const board = await cleanBoard(env, await body(req));
       await env.DB.prepare('UPDATE boards SET end_date = ?, config = ? WHERE id = ?')
         .bind(Date.parse(board.endDate), JSON.stringify(board), row.id)
         .run();
@@ -181,32 +191,23 @@ async function route(req: Request, env: Env): Promise<Response> {
     if (m === 'DELETE') {
       await env.DB.batch([
         env.DB.prepare('DELETE FROM progress WHERE board_id = ?').bind(row.id),
-        env.DB.prepare('DELETE FROM sessions WHERE board_id = ?').bind(row.id),
         env.DB.prepare('DELETE FROM boards WHERE id = ?').bind(row.id),
       ]);
       return Response.json({ ok: true });
     }
   }
 
-  if ((g = p.match(/^\/boards\/(\d+)\/teams\/([^/]+)\/login$/)) && m === 'POST') {
-    const row = await getBoard(env, Number(g[1]));
-    const team = row.config.teams.find((t) => t.id === decodeURIComponent(g![2]));
-    const { password } = await body(req);
-    if (!team || !(await verifyPassword(String(password), team.pwHash))) throw new HttpError(401, 'Wrong team password');
-    return Response.json({ token: await newSession(env, { board_id: row.id, team_id: team.id }) });
-  }
-
   if ((g = p.match(/^\/boards\/(\d+)\/teams\/([^/]+)\/tiles\/([^/]+)$/)) && m === 'PUT') {
     const row = await getBoard(env, Number(g[1]));
     const teamId = decodeURIComponent(g[2]);
     const tileId = decodeURIComponent(g[3]);
-    const s = await session(req, env);
-    const isOwner = !!s?.user_id && (s.user_id === row.owner_id || !!s.is_admin);
-    const isTeam = s?.board_id === row.id && s.team_id === teamId;
-    if (!isOwner && !isTeam) throw new HttpError(403, 'Log in as this team first');
-    if (row.end_date < Date.now() && !s?.is_admin) throw new HttpError(403, 'This bingo has ended');
+    const s = await requireUser(req, env);
+    const team = row.config.teams.find((t) => t.id === teamId);
     const tile = row.config.tiles.find((t) => t.id === tileId);
-    if (!tile || !row.config.teams.some((t) => t.id === teamId)) throw new HttpError(404, 'Not found');
+    if (!tile || !team) throw new HttpError(404, 'Not found');
+    const isOwner = s.user_id === row.owner_id || !!s.is_admin;
+    if (!isOwner && !team.captainIds.includes(s.user_id)) throw new HttpError(403, "Only this team's captains can update its progress");
+    if (row.end_date < Date.now() && !s.is_admin) throw new HttpError(403, 'This bingo has ended');
 
     const next = parseProgress(await body(req));
     const prevRow = await env.DB.prepare('SELECT data FROM progress WHERE board_id = ? AND team_id = ? AND tile_id = ?')
@@ -247,11 +248,23 @@ async function getBoard(env: Env, id: number): Promise<BoardRow> {
   return { ...row, config: JSON.parse(row.config) };
 }
 
-// Whitelists fields; hashes new team passwords, keeps existing hashes for teams sent without one.
-async function cleanBoard(input: any, oldTeams: StoredTeam[]): Promise<StoredBoard> {
+// Whitelists fields and turns captain usernames into user ids.
+async function cleanBoard(env: Env, input: any): Promise<StoredBoard> {
   const err = validateBoard(input);
   if (err) throw new HttpError(400, err);
   const b = input as Board;
+  const key = (name: string) => name.trim().toLowerCase();
+  const wanted = [...new Set(b.teams.flatMap((t) => t.captains.map(key)))];
+  if (wanted.length > 50) throw new HttpError(400, 'A board can have at most 50 captains'); // D1 binds max 100 params
+  const found = new Map<string, number>();
+  if (wanted.length) {
+    const users = await env.DB.prepare(`SELECT id, username FROM users WHERE username IN (${wanted.map(() => '?').join(',')})`)
+      .bind(...wanted)
+      .all<{ id: number; username: string }>();
+    for (const u of users.results) found.set(key(u.username), u.id);
+  }
+  const missing = wanted.filter((w) => !found.has(w));
+  if (missing.length) throw new HttpError(400, `No account found for captain: ${missing.join(', ')}`);
   return {
     title: b.title.trim(),
     description: String(b.description ?? ''),
@@ -267,14 +280,12 @@ async function cleanBoard(input: any, oldTeams: StoredTeam[]): Promise<StoredBoa
     tiles: b.tiles,
     donations: Array.isArray(b.donations) ? b.donations.map((d) => ({ name: String(d?.name), amount: Number(d?.amount) || 0 })) : undefined,
     buyIn: b.buyIn === undefined ? undefined : Number(b.buyIn) || 0,
-    teams: await Promise.all(
-      b.teams.map(async (t) => ({
-        id: t.id,
-        name: String(t.name),
-        players: Array.isArray(t.players) ? t.players.map(String) : [],
-        pwHash: t.password ? await hashPassword(String(t.password)) : oldTeams.find((o) => o.id === t.id)?.pwHash,
-      }))
-    ),
+    teams: b.teams.map((t) => ({
+      id: t.id,
+      name: String(t.name),
+      players: Array.isArray(t.players) ? t.players.map(String) : [],
+      captainIds: [...new Set(t.captains.map((c) => found.get(key(c))!))],
+    })),
   };
 }
 
@@ -296,31 +307,30 @@ function session(req: Request, env: Env): Promise<Session | null> {
   const token = bearer(req);
   if (!token) return Promise.resolve(null);
   return env.DB.prepare(
-    `SELECT s.user_id, s.board_id, s.team_id, u.username, u.is_admin
-     FROM sessions s LEFT JOIN users u ON u.id = s.user_id
+    `SELECT s.user_id, u.username, u.is_admin
+     FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token = ? AND s.expires > ?`
   )
     .bind(token, Date.now())
     .first<Session>();
 }
 
-async function requireUser(req: Request, env: Env): Promise<Session & { user_id: number }> {
+async function requireUser(req: Request, env: Env): Promise<Session> {
   const s = await session(req, env);
-  if (!s?.user_id) throw new HttpError(401, 'Log in first');
-  return s as Session & { user_id: number };
+  if (!s) throw new HttpError(401, 'Log in first');
+  return s;
 }
 
-async function newSession(env: Env, s: { user_id?: number; board_id?: number; team_id?: string }): Promise<string> {
+async function newSession(env: Env, userId: number): Promise<string> {
   const token = b64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, '');
   await env.DB.batch([
     env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
-    env.DB.prepare('INSERT INTO sessions (token, user_id, board_id, team_id, expires) VALUES (?, ?, ?, ?, ?)')
-      .bind(token, s.user_id ?? null, s.board_id ?? null, s.team_id ?? null, Date.now() + 30 * DAY),
+    env.DB.prepare('INSERT INTO sessions (token, user_id, expires) VALUES (?, ?, ?)').bind(token, userId, Date.now() + 30 * DAY),
   ]);
   return token;
 }
 
-// PBKDF2-SHA256 stored as "iterations:salt:hash" (base64). worker/migrate.mjs writes the same format.
+// PBKDF2-SHA256 stored as "iterations:salt:hash" (base64).
 // ponytail: 10k iterations fits Workers Free's 10ms CPU cap (100k takes ~30ms); raise PBKDF2_ITERATIONS on the paid plan,
 // old hashes keep verifying because each stores its own count.
 const PBKDF2_ITERATIONS = 10_000;
@@ -332,12 +342,12 @@ async function pbkdf2(password: string, salt: Uint8Array<ArrayBuffer>, iteration
   return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations }, key, 256);
 }
 
-export async function hashPassword(password: string): Promise<string> {
+async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   return `${PBKDF2_ITERATIONS}:${b64(salt)}:${b64(await pbkdf2(password, salt, PBKDF2_ITERATIONS))}`;
 }
 
-export async function verifyPassword(password: string, stored?: string): Promise<boolean> {
+async function verifyPassword(password: string, stored?: string): Promise<boolean> {
   if (!stored) return false;
   const [iterations, salt, hash] = stored.split(':');
   const actual = new Uint8Array(await pbkdf2(password, unb64(salt), Number(iterations)));

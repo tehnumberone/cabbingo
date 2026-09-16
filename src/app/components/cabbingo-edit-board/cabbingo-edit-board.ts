@@ -17,8 +17,6 @@ export class CabbingoEditBoard implements OnInit {
   board?: Board;
   progress: Record<string, Record<string, Progress>> = {};
   selectedTeam = '';
-  password = '';
-  errorMessage = '';
   edits: Record<string, { obtained: number; completed: boolean; status?: string }> = {};
 
   constructor(
@@ -39,22 +37,19 @@ export class CabbingoEditBoard implements OnInit {
       .subscribe(({ board, progress }) => {
         this.board = board;
         this.progress = progress;
-        if (this.loggedIn) this.loadEdits();
+        this.selectTeam(this.teams[0]?.id ?? '');
       });
   }
 
-  get loggedIn(): boolean {
-    return !!this.board && this.sessionService.team?.boardId === this.board.id;
+  get teams() {
+    return this.sessionService.editableTeams(this.board);
   }
 
-  get teamName(): string {
-    return this.board?.teams.find((t) => t.id === this.sessionService.team?.teamId)?.name ?? '';
-  }
-
-  private loadEdits() {
-    const teamProgress = this.progress[this.sessionService.team!.teamId] ?? {};
+  selectTeam(teamId: string) {
+    this.selectedTeam = teamId;
+    const teamProgress = this.progress[teamId] ?? {};
     this.edits = {};
-    for (const tile of this.board!.tiles) {
+    for (const tile of this.board?.tiles ?? []) {
       const p = teamProgress[tile.id]?.front;
       this.edits[tile.id] = {
         obtained: (p?.obtained ?? []).reduce((sum, o) => sum + (Number(o.obtained) || 0), 0),
@@ -63,15 +58,8 @@ export class CabbingoEditBoard implements OnInit {
     }
   }
 
-  async login() {
-    if (!this.board || !this.selectedTeam) return;
-    const error = await this.databaseService.teamLogin(this.board.id!, this.selectedTeam, this.password);
-    this.errorMessage = error ?? '';
-    if (!error) this.loadEdits();
-  }
-
   saveTile(tile: Tile) {
-    const teamId = this.sessionService.team!.teamId;
+    const teamId = this.selectedTeam;
     const edit = this.edits[tile.id];
     const prev = this.progress[teamId]?.[tile.id] ?? emptyProgress();
     // ponytail: collapses per-item breakdown into one "Obtained" count; per-item editing comes with the board editor
@@ -84,11 +72,5 @@ export class CabbingoEditBoard implements OnInit {
       },
       error: (e) => (edit.status = e?.error?.error ?? 'Save failed'),
     });
-  }
-
-  logout() {
-    this.sessionService.logout();
-    this.password = '';
-    this.errorMessage = '';
   }
 }

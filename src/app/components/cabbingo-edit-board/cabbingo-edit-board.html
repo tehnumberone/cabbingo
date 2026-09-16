@@ -3,42 +3,35 @@
   <div class="d-flex justify-content-center">
     <div class="osrs-border-thick-login px-5 py-4 mb-5 d-flex flex-column justify-content-between" style="height:auto">
       <div class="d-flex justify-content-center">
-        @if(!loggedIn){
-        <form style="width:500px;" (ngSubmit)="login()">
-          <div class="col-12">
-            <label for="teamSelect" class="form-label">Choose your team</label>
-            <select id="teamSelect" class="form-control" [(ngModel)]="selectedTeam" name="team">
-              <option value="" disabled>Select Team</option>
-              @for(team of board?.teams; track team.id){
+        @if(!sessionService.user){
+        <div style="width:500px; max-width:100%;">
+          <p>Log in with your account to update your team's progress.</p>
+          <div class="d-flex justify-content-between">
+            <a class="btn custom-btn" [routerLink]="['/login']">Log in</a>
+            <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board?.id }">Return to board</a>
+          </div>
+        </div>
+        } @else if(board && !teams.length){
+        <div style="width:500px; max-width:100%;">
+          <p>You are not a captain on this board. Ask the board owner to add <strong>{{ sessionService.user.username
+              }}</strong> as a captain.</p>
+          <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board.id }">Return to board</a>
+        </div>
+        } @else if(board){
+        <div>
+          <div class="d-flex flex-row justify-content-between align-items-center gap-3">
+            @if(teams.length === 1){
+            <h2>Welcome {{ teams[0].name }}!</h2>
+            } @else {
+            <label for="teamSelect" class="visually-hidden">Team</label>
+            <select id="teamSelect" class="form-control w-auto" [ngModel]="selectedTeam" (ngModelChange)="selectTeam($event)">
+              @for(team of teams; track team.id){
               <option [value]="team.id">{{ team.name }}</option>
               }
             </select>
-          </div>
-          <br>
-          @if(selectedTeam){
-          <div class="col-12">
-            <label for="password">Team password:</label>
-            <input class="form-control" type="password" id="password" name="password" placeholder="Enter password"
-              [ngClass]="{'is-invalid': errorMessage !== ''}" [(ngModel)]="password" />
-          </div>
-          }
-          @if(errorMessage.length > 0){
-          <div class="text-danger mt-2">{{ errorMessage }}</div>
-          }@else {<br />}
-          <div class="d-flex justify-content-between">
-            <button class="btn custom-btn" type="submit">Log in</button>
-            <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board?.id }">Return to board</a>
-          </div>
-        </form>
-        } @else {
-        <div>
-          <div class="d-flex flex-row justify-content-between">
-            <h2>Welcome {{ teamName }}!</h2>
-            <p>This is where you can edit your board!</p>
-            <div class="d-flex flex-row gap-4">
-              <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board?.id }">Return to board</a>
-              <button class="btn custom-btn" (click)="logout()" type="button">Log out</button>
-            </div>
+            }
+            <p class="m-0">This is where you can edit your board!</p>
+            <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board.id }">Return to board</a>
           </div>
           <div style="max-height: 600px;" class="mt-2 overflow-auto">
             <table class="table osrs-table table-bordered">
@@ -55,12 +48,12 @@
                 </tr>
               </thead>
               <tbody>
-                @for(tile of board?.tiles; track tile.id){
+                @for(tile of board.tiles; track tile.id){
                 @let edit = edits[tile.id];
                 <tr>
                   <td>{{ tile.title }}</td>
-                  <td><img class="tile-image" [src]="tile.tileImg" /></td>
-                  <td><img class="tile-image" [src]="tile.bossSrc" /></td>
+                  <td><img class="tile-image" [src]="tile.tileImg" [alt]="tile.title" /></td>
+                  <td><img class="tile-image" [src]="tile.bossSrc" alt="" /></td>
                   <td>{{ tile.points }}</td>
                   <td>{{ tile.description }}@if(tile.criteria){<br>{{ tile.criteria }}}</td>
                   @if(tile.type === 'custom'){
