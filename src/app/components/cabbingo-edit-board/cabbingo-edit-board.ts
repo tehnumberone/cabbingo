@@ -1,8 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { filter, switchMap } from 'rxjs';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Board, Progress, Tile, emptyProgress } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
@@ -23,18 +22,18 @@ export class CabbingoEditBoard implements OnInit {
     private databaseService: DatabaseService,
     public sessionService: SessionService,
     private route: ActivatedRoute,
+    private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.databaseService
-      .resolveBoardId(this.route.snapshot.queryParamMap.get('board'))
-      .pipe(
-        filter((id): id is number => !!id),
-        switchMap((id) => this.databaseService.getBoard(id))
-      )
-      .subscribe(({ board, progress }) => {
+    const id = Number(this.route.snapshot.queryParamMap.get('board'));
+    if (!id) {
+      this.router.navigate(['']);
+      return;
+    }
+    this.databaseService.getBoard(id).subscribe(({ board, progress }) => {
         this.board = board;
         this.progress = progress;
         this.selectTeam(this.teams[0]?.id ?? '');

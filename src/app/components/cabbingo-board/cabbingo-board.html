@@ -1,11 +1,19 @@
 <div class="page-wrap">
     <div class="w-100">
         <div class="d-flex justify-content-center align-items-center w-100 banner">
-            @if(sessionService.editableTeams(board).length){
-            <a class="btn button edit-btn" [routerLink]="['/edit-board']" [queryParams]="{ board: board?.id }">
-                Edit progress
-            </a>
-            }
+            <div class="edit-btn d-flex flex-column gap-1">
+                <a class="btn button" [routerLink]="['']">All boards</a>
+                @if(sessionService.editableTeams(board).length){
+                <a class="btn button" [routerLink]="['/edit-board']" [queryParams]="{ board: board?.id }">
+                    Edit progress
+                </a>
+                }
+                @if(sessionService.canManage(board)){
+                <a class="btn button" [routerLink]="['/manage-board']" [queryParams]="{ board: board?.id }">
+                    Board settings
+                </a>
+                }
+            </div>
             <a class="btn button login-btn" [routerLink]="['/login']">
                 {{ sessionService.user ? sessionService.user.username + (sessionService.user.isAdmin ? ' (admin)' : '') : 'Log in / Register' }}
             </a>
@@ -58,7 +66,7 @@
                                     <div style="width: 110px"></div>
                                 </div>
                             </div>
-                            <img class="tile-image p-1" [src]="tile.tileImg" [alt]="tile.title" />
+                            @if(tile.tileImg){<img class="tile-image p-1" [src]="tile.tileImg" [alt]="tile.title" />}
                             <p class="tile-text">{{ tile.title }}</p>
                         </div>
                     </button>

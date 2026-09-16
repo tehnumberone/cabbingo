@@ -8,14 +8,14 @@
           <p>Log in with your account to update your team's progress.</p>
           <div class="d-flex justify-content-between">
             <a class="btn custom-btn" [routerLink]="['/login']">Log in</a>
-            <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board?.id }">Return to board</a>
+            <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: board?.id }">Return to board</a>
           </div>
         </div>
         } @else if(board && !teams.length){
         <div style="width:500px; max-width:100%;">
           <p>You are not a captain on this board. Ask the board owner to add <strong>{{ sessionService.user.username
               }}</strong> as a captain.</p>
-          <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board.id }">Return to board</a>
+          <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: board.id }">Return to board</a>
         </div>
         } @else if(board){
         <div>
@@ -31,7 +31,7 @@
             </select>
             }
             <p class="m-0">This is where you can edit your board!</p>
-            <a class="btn custom-btn" [routerLink]="['']" [queryParams]="{ board: board.id }">Return to board</a>
+            <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: board.id }">Return to board</a>
           </div>
           <div style="max-height: 600px;" class="mt-2 overflow-auto">
             <table class="table osrs-table table-bordered">
@@ -52,8 +52,8 @@
                 @let edit = edits[tile.id];
                 <tr>
                   <td>{{ tile.title }}</td>
-                  <td><img class="tile-image" [src]="tile.tileImg" [alt]="tile.title" /></td>
-                  <td><img class="tile-image" [src]="tile.bossSrc" alt="" /></td>
+                  <td>@if(tile.tileImg){<img class="tile-image" [src]="tile.tileImg" [alt]="tile.title" />}</td>
+                  <td>@if(tile.bossSrc){<img class="tile-image" [src]="tile.bossSrc" alt="" />}</td>
                   <td>{{ tile.points }}</td>
                   <td>{{ tile.description }}@if(tile.criteria){<br>{{ tile.criteria }}}</td>
                   @if(tile.type === 'custom'){

@@ -35,11 +35,16 @@ export class SessionService {
         return this.user ? { Authorization: `Bearer ${this.user.token}` } : {};
     }
 
-    // Teams whose progress the logged-in user may update. The worker enforces the same rule.
+    // Owner or admin: may change board settings and every team's progress. The worker enforces the same rules.
+    canManage(board?: Board): boolean {
+        return !!board && !!this.user && (this.user.isAdmin || this.user.id === board.ownerId);
+    }
+
+    // Teams whose progress the logged-in user may update.
     editableTeams(board?: Board) {
         const user = this.user;
         if (!board || !user) return [];
-        if (user.isAdmin || user.id === board.ownerId) return board.teams;
+        if (this.canManage(board)) return board.teams;
         return board.teams.filter((t) => t.captains.some((c) => c.toLowerCase() === user.username.toLowerCase()));
     }
 }

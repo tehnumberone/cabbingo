@@ -1,7 +1,7 @@
 import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { isPlatformBrowser, NgClass } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Subscription, filter, switchMap, timer } from 'rxjs';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription, switchMap, timer } from 'rxjs';
 import { Board, Progress, Tile, sideDone, tilePoints, totalPoints } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
@@ -32,18 +32,20 @@ export class CabbingoBoard implements OnInit, OnDestroy {
     private templeOSService: TempleOSService,
     public sessionService: SessionService,
     private route: ActivatedRoute,
+    private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    const id = Number(this.route.snapshot.queryParamMap.get('board'));
+    if (!id) {
+      this.router.navigate(['']);
+      return;
+    }
     // ponytail: polls every 30s instead of Firebase's live push
-    this.subscription = this.databaseService
-      .resolveBoardId(this.route.snapshot.queryParamMap.get('board'))
-      .pipe(
-        filter((id): id is number => !!id),
-        switchMap((id) => timer(0, 30_000).pipe(switchMap(() => this.databaseService.getBoard(id))))
-      )
+    this.subscription = timer(0, 30_000)
+      .pipe(switchMap(() => this.databaseService.getBoard(id)))
       .subscribe({
         next: ({ board, progress }) => {
           if (!this.board && board.templeosCompetitionId) this.getTempleOSData(board.templeosCompetitionId);

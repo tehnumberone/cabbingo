@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { firstValueFrom, map, Observable, of } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { Board, Progress } from '../models/bingo';
 import { SessionService, User } from './session-service';
 
@@ -34,10 +34,16 @@ export class DatabaseService {
     return this.http.get<BoardData>(`${API_URL}/boards/${id}`);
   }
 
-  // Board id from ?board=, otherwise the running board, otherwise the most recent one.
-  resolveBoardId(param: string | null): Observable<number | undefined> {
-    if (Number(param)) return of(Number(param));
-    return this.listBoards().pipe(map((boards) => (boards.find((b) => !b.archived) ?? boards[0])?.id));
+  createBoard(board: Board): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>(`${API_URL}/boards`, board, { headers: this.session.headers() });
+  }
+
+  saveBoard(id: number, board: Board) {
+    return this.http.put(`${API_URL}/boards/${id}`, board, { headers: this.session.headers() });
+  }
+
+  deleteBoard(id: number) {
+    return this.http.delete(`${API_URL}/boards/${id}`, { headers: this.session.headers() });
   }
 
   updateProgress(boardId: number, teamId: string, tileId: string, progress: Progress) {

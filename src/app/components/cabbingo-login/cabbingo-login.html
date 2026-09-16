@@ -11,7 +11,7 @@
         </p>
         <div class="d-flex justify-content-between">
           <button class="btn custom-btn" type="button" (click)="logout()">Log out</button>
-          <a class="btn custom-btn" [routerLink]="['']">Return to board</a>
+          <a class="btn custom-btn" [routerLink]="['']">All boards</a>
         </div>
       </div>
       } @else {
@@ -41,7 +41,7 @@
           <button class="btn custom-btn" type="button" (click)="switchMode()">
             {{ mode === 'login' ? 'No account? Register' : 'Have an account? Log in' }}
           </button>
-          <a class="btn custom-btn" [routerLink]="['']">Return to board</a>
+          <a class="btn custom-btn" [routerLink]="['']">All boards</a>
         </div>
       </form>
       }

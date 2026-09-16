@@ -377,3 +377,27 @@ body {
     border: 3px solid #2E2B23;
     mask: radial-gradient(10px at 10px 10px,#0000 98%,#000) -10px -10px;
 }
+
+/* Board editor: captain dropdown */
+.captain-picker {
+  position: relative;
+}
+
+.captain-picker summary {
+  cursor: pointer;
+  list-style: none;
+  text-shadow: none;
+}
+
+.captain-picker summary::after {
+  content: '▾';
+  float: right;
+}
+
+.captain-options {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+}

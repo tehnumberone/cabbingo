@@ -1,0 +1,179 @@
+<div class="page-wrap">
+  <div class="w-100">
+    <div class="d-flex justify-content-center align-items-center w-100 banner">
+      <a class="btn button edit-btn" [routerLink]="['']">All boards</a>
+      <a class="btn button login-btn" [routerLink]="['/login']">
+        {{ sessionService.user ? sessionService.user.username + (sessionService.user.isAdmin ? ' (admin)' : '') : 'Log in / Register' }}
+      </a>
+    </div>
+  </div>
+  <div class="d-flex justify-content-center">
+    <div class="osrs-border-thick-login px-5 py-4 mb-5" style="width:900px; max-width:100%;">
+      @if(!sessionService.user){
+      <p>Log in with your account to create or manage a bingo.</p>
+      <a class="btn custom-btn" [routerLink]="['/login']">Log in</a>
+      } @else if(loading){
+      <p>Loading board...</p>
+      } @else if(!loaded){
+      <p class="text-danger" role="alert">{{ errorMessage }}</p>
+      <a class="btn custom-btn" [routerLink]="['']">All boards</a>
+      } @else if(!canEdit){
+      <p>Only the creator of this bingo or an admin can change its settings.</p>
+      <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: boardId }">View board</a>
+      } @else {
+      <form class="d-flex flex-column gap-4" (ngSubmit)="save()">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+          <h2 class="m-0">{{ boardId ? 'Board settings' : 'Create a bingo' }}</h2>
+          @if(boardId){
+          <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: boardId }">View board</a>
+          }
+        </div>
+        @if(ended && !sessionService.user.isAdmin){
+        <p class="text-warning m-0">This bingo has ended. Only admins can still change it.</p>
+        }
+
+        <fieldset class="d-flex flex-column gap-2">
+          <legend>General</legend>
+          <div>
+            <label for="title" class="form-label">Title</label>
+            <input id="title" name="title" class="form-control" required maxlength="100" [(ngModel)]="title" />
+          </div>
+          <div>
+            <label for="description" class="form-label">Description</label>
+            <textarea id="description" name="description" class="form-control" rows="2" [(ngModel)]="description"></textarea>
+          </div>
+          <div>
+            <label for="rules" class="form-label">Bingo rules <small>(one per line)</small></label>
+            <textarea id="rules" name="rules" class="form-control" rows="4" [(ngModel)]="rules"></textarea>
+          </div>
+          <div class="d-flex gap-3 flex-wrap">
+            <div>
+              <label for="size" class="form-label">Board size</label>
+              <select id="size" name="size" class="form-control" [ngModel]="size" (ngModelChange)="setSize($event)">
+                @for(s of sizes; track s){
+                <option [ngValue]="s">{{ s }} × {{ s }} ({{ s * s }} tiles)</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label for="startDate" class="form-label">Start</label>
+              <input id="startDate" name="startDate" type="datetime-local" class="form-control" required [(ngModel)]="startDate" />
+            </div>
+            <div>
+              <label for="endDate" class="form-label">End</label>
+              <input id="endDate" name="endDate" type="datetime-local" class="form-control" required [(ngModel)]="endDate" />
+            </div>
+          </div>
+          <small>Tiles get their own editor soon; new tiles start as placeholders.</small>
+        </fieldset>
+
+        <fieldset class="d-flex flex-column gap-2">
+          <legend>Scoring and prize pool</legend>
+          <div class="d-flex gap-3 flex-wrap">
+            <div>
+              <label for="rowBonus" class="form-label">Row bonus</label>
+              <input id="rowBonus" name="rowBonus" type="number" min="0" class="form-control" [(ngModel)]="rowBonus" />
+            </div>
+            <div>
+              <label for="columnBonus" class="form-label">Column bonus</label>
+              <input id="columnBonus" name="columnBonus" type="number" min="0" class="form-control" [(ngModel)]="columnBonus" />
+            </div>
+            <div>
+              <label for="buyIn" class="form-label">Buy-in per player <small>(M gp)</small></label>
+              <input id="buyIn" name="buyIn" type="number" min="0" class="form-control" [(ngModel)]="buyIn" />
+            </div>
+            <div>
+              <label for="temple" class="form-label">TempleOSRS competition ID <small>(optional)</small></label>
+              <input id="temple" name="temple" inputmode="numeric" class="form-control" [(ngModel)]="templeosCompetitionId" />
+            </div>
+          </div>
+          <div>
+            <span class="form-label d-block">Donations <small>(M gp)</small></span>
+            @for(donation of donations; track $index; let i = $index){
+            <div class="d-flex gap-2 mb-2">
+              <input class="form-control" placeholder="Name" [name]="'donationName' + i" [attr.aria-label]="'Donor ' + (i + 1)"
+                [(ngModel)]="donation.name" />
+              <input class="form-control w-25" type="number" min="0" [name]="'donationAmount' + i"
+                [attr.aria-label]="'Donation ' + (i + 1) + ' amount'" [(ngModel)]="donation.amount" />
+              <button class="btn custom-btn flex-shrink-0" type="button" (click)="removeDonation(i)"
+                [attr.aria-label]="'Remove donation ' + (i + 1)">Remove</button>
+            </div>
+            }
+            <button class="btn custom-btn" type="button" (click)="addDonation()">Add donation</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="d-flex flex-column gap-3">
+          <legend>Teams</legend>
+          @for(team of teams; track team.id; let i = $index){
+          <div class="osrs-border-darker p-3 d-flex flex-column gap-2">
+            <div class="d-flex gap-2 align-items-end">
+              <div class="flex-grow-1">
+                <label class="form-label" [for]="'teamName' + i">Team name</label>
+                <input class="form-control" required [id]="'teamName' + i" [name]="'teamName' + i" [(ngModel)]="team.name" />
+              </div>
+              <button class="btn custom-btn flex-shrink-0" type="button" (click)="removeTeam(team)" [disabled]="teams.length === 1">Remove team</button>
+            </div>
+            <div>
+              <label class="form-label" [for]="'newPlayer' + i">Players</label>
+              <div class="d-flex gap-2">
+                <input class="form-control" placeholder="Player name" [id]="'newPlayer' + i" [name]="'newPlayer' + i"
+                  [(ngModel)]="team.newPlayer" (keydown.enter)="$event.preventDefault(); addPlayer(team)" />
+                <button class="btn custom-btn flex-shrink-0" type="button" (click)="addPlayer(team)">Add player</button>
+              </div>
+              <ul class="list-unstyled d-flex flex-wrap gap-2 mt-2 mb-0">
+                @for(player of team.players; track player){
+                <li class="osrs-border d-flex align-items-center gap-2 ps-2">
+                  {{ player }}
+                  <button class="btn custom-btn btn-sm py-0" type="button" (click)="removePlayer(team, player)"
+                    [attr.aria-label]="'Remove ' + player">×</button>
+                </li>
+                } @empty {
+                <li><small>No players yet.</small></li>
+                }
+              </ul>
+            </div>
+            <div>
+              <span class="form-label d-block" [id]="'captainsLabel' + i">Captains</span>
+              <details class="captain-picker">
+                <summary class="form-control" [attr.aria-describedby]="'captainsLabel' + i">
+                  {{ team.captains.length ? team.captains.join(', ') : 'Select captains' }}
+                </summary>
+                <div class="captain-options osrs-border-darker p-2">
+                  @for(player of captainOptions(team); track player){
+                  <label class="d-flex align-items-center gap-2">
+                    <input type="checkbox" [checked]="isCaptain(team, player)"
+                      (change)="toggleCaptain(team, player, $any($event.target).checked)" />
+                    {{ player }}
+                  </label>
+                  } @empty {
+                  <small>Add players first.</small>
+                  }
+                </div>
+              </details>
+              <small>Captains can update this team's progress and need a Cabbingo account with the same name.</small>
+            </div>
+          </div>
+          }
+          <div>
+            <button class="btn custom-btn" type="button" (click)="addTeam()">Add team</button>
+          </div>
+        </fieldset>
+
+        @if(errorMessage){
+        <div class="text-danger" role="alert">{{ errorMessage }}</div>
+        }
+        @if(status){
+        <div class="text-success" role="status">{{ status }}</div>
+        }
+        <div class="d-flex justify-content-between gap-2">
+          <button class="btn custom-btn" type="submit" [disabled]="saving">{{ boardId ? 'Save changes' : 'Create bingo' }}</button>
+          @if(boardId){
+          <button class="btn custom-btn text-danger" type="button" (click)="delete()">Delete bingo</button>
+          }
+        </div>
+      </form>
+      }
+    </div>
+  </div>
+</div>
