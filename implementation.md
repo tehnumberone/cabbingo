@@ -39,15 +39,15 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 ## Phase 2: Create and configure boards on the site
 
 - [x] Create / update / delete board API with validation (`35730bc`)
-- [x] Board list page at `/`: active boards and archive, "Create a bingo" when logged in, settings link for owner/admin (PHASE2)
-- [x] Board page moved to `/board?board=<id>` with "All boards", "Edit progress" and "Board settings" buttons (PHASE2)
-- [x] Board editor at `/manage-board` (new) and `/manage-board?board=<id>` (edit), owner and admins only: (PHASE2)
+- [x] Board list page at `/`: active boards and archive, "Create a bingo" when logged in, settings link for owner/admin (`121afe1`)
+- [x] Board page moved to `/board?board=<id>` with "All boards", "Edit progress" and "Board settings" buttons (`121afe1`)
+- [x] Board editor at `/manage-board` (new) and `/manage-board?board=<id>` (edit), owner and admins only: (`121afe1`)
   - [x] Title, description, rules, start and end date
   - [x] Board size (3×3 to 10×10); growing adds placeholder tiles, shrinking keeps the first size² tiles
   - [x] Teams: name, players added one at a time (removable), captains picked from the players in a dropdown (a captain needs an account with the same name)
   - [x] TempleOSRS competition ID (optional)
   - [x] Row and column bonus, buy-in, donations
-- [x] Delete board from the editor (owner/admin) (PHASE2)
+- [x] Delete board from the editor (owner/admin) (`121afe1`)
 
 ## Phase 3: Tiles and uploads
 
