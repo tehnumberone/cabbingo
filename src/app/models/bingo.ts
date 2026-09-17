@@ -58,6 +58,9 @@ export interface Progress {
 
 export const emptyProgress = (): Progress => ({ front: { obtained: [] }, flipped: false });
 
+// Archived: the worker refuses edits after this, except from admins.
+export const isEnded = (board: Pick<Board, 'endDate'>) => Date.parse(board.endDate) < Date.now();
+
 export function sideDone(side: TileSide, p?: SideProgress): boolean {
   if (!p) return false;
   if (side.type === 'custom') return !!p.completed;

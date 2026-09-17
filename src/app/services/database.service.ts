@@ -43,8 +43,9 @@ export class DatabaseService {
     return this.http.put(`${API_URL}/boards/${id}`, board, { headers: this.session.headers() });
   }
 
-  deleteBoard(id: number) {
-    return this.http.delete(`${API_URL}/boards/${id}`, { headers: this.session.headers() });
+  // The worker only deletes when the exact title is sent along.
+  deleteBoard(id: number, title: string) {
+    return this.http.delete(`${API_URL}/boards/${id}`, { headers: this.session.headers(), body: { title } });
   }
 
   uploadImage(file: File): Observable<{ url: string }> {

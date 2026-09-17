@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { Board } from '../models/bingo';
+import { Board, isEnded } from '../models/bingo';
 
 export interface User {
     id: number;
@@ -38,6 +38,11 @@ export class SessionService {
     // Owner or admin: may change board settings and every team's progress. The worker enforces the same rules.
     canManage(board?: Board): boolean {
         return !!board && !!this.user && (this.user.isAdmin || this.user.id === board.ownerId);
+    }
+
+    // Ended bingos are read-only for everyone except admins.
+    locked(board?: Board): boolean {
+        return !!board && isEnded(board) && !this.user?.isAdmin;
     }
 
     // Teams whose progress the logged-in user may update.

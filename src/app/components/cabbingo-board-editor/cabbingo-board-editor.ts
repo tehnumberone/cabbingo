@@ -1,8 +1,8 @@
-import { isPlatformBrowser } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Board, Tile, validateBoard } from '../../models/bingo';
+import { Board, Tile, isEnded, validateBoard } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
 
@@ -30,7 +30,7 @@ const lines = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boo
 
 @Component({
   selector: 'app-cabbingo-board-editor',
-  imports: [FormsModule, RouterModule],
+  imports: [DatePipe, FormsModule, RouterModule],
   templateUrl: './cabbingo-board-editor.html',
 })
 export class CabbingoBoardEditor implements OnInit {
@@ -39,6 +39,9 @@ export class CabbingoBoardEditor implements OnInit {
   loaded?: Board; // board as loaded, keeps fields this page doesn't edit (flip settings)
   loading = false;
   saving = false;
+  unlocked = false; // admin pressed "Edit archived board" on this visit
+  confirmingDelete = false;
+  deleteConfirmation = '';
   errorMessage = '';
   status = '';
 
@@ -91,8 +94,13 @@ export class CabbingoBoardEditor implements OnInit {
     return !this.boardId || this.sessionService.canManage(this.loaded);
   }
 
-  get ended(): boolean {
-    return !!this.loaded?.id && Date.parse(this.loaded.endDate) < Date.now();
+  // Saved board past its end date. Read-only unless an admin unlocks it (the worker refuses non-admins anyway).
+  get archived(): boolean {
+    return !!this.loaded?.id && isEnded(this.loaded);
+  }
+
+  get readOnly(): boolean {
+    return this.archived && !this.unlocked;
   }
 
   private newBoard(): Board {
@@ -285,9 +293,14 @@ export class CabbingoBoardEditor implements OnInit {
     else this.databaseService.createBoard(board).subscribe({ next: ({ id }) => done(id), error: fail });
   }
 
+  // Compared with the saved title, not the one currently in the form.
+  get canDelete(): boolean {
+    return !!this.loaded?.title && this.deleteConfirmation === this.loaded.title;
+  }
+
   delete() {
-    if (!this.boardId || !confirm(`Delete "${this.title}"? All progress is lost and this cannot be undone.`)) return;
-    this.databaseService.deleteBoard(this.boardId).subscribe({
+    if (!this.boardId || !this.canDelete) return;
+    this.databaseService.deleteBoard(this.boardId, this.deleteConfirmation).subscribe({
       next: () => this.router.navigate(['']),
       error: (e) => (this.errorMessage = e?.error?.error ?? 'Deleting failed, please try again.'),
     });

@@ -21,6 +21,20 @@
       <p>Only the creator of this bingo or an admin can change its settings.</p>
       <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: boardId }">View board</a>
       } @else {
+      @if(readOnly){
+      <div class="d-flex flex-column gap-3">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+          <h2 class="m-0">Board settings</h2>
+          <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: boardId }">View board</a>
+        </div>
+        <p class="m-0">{{ loaded.title }} ended on {{ loaded.endDate | date: 'd MMM y, HH:mm' }}. Its settings are read-only.</p>
+        @if(sessionService.user.isAdmin){
+        <div>
+          <button class="btn custom-btn" type="button" (click)="unlocked = true">Edit archived board</button>
+        </div>
+        }
+      </div>
+      } @else {
       <form class="d-flex flex-column gap-4" (ngSubmit)="save()">
         <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
           <h2 class="m-0">{{ boardId ? 'Board settings' : 'Create a bingo' }}</h2>
@@ -28,8 +42,8 @@
           <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: boardId }">View board</a>
           }
         </div>
-        @if(ended && !sessionService.user.isAdmin){
-        <p class="text-warning m-0">This bingo has ended. Only admins can still change it.</p>
+        @if(archived){
+        <p class="text-warning m-0">You are editing an archived bingo. Saving changes its final result.</p>
         }
 
         <fieldset class="d-flex flex-column gap-2">
@@ -266,13 +280,33 @@
         @if(status){
         <div class="text-success" role="status">{{ status }}</div>
         }
-        <div class="d-flex justify-content-between gap-2">
+        <div>
           <button class="btn custom-btn" type="submit" [disabled]="saving">{{ boardId ? 'Save changes' : 'Create bingo' }}</button>
-          @if(boardId){
-          <button class="btn custom-btn text-danger" type="button" (click)="delete()">Delete bingo</button>
-          }
         </div>
       </form>
+      }
+
+      @if(boardId){
+      <section class="osrs-border-darker p-3 mt-4 d-flex flex-column gap-2" aria-labelledby="deleteHeading">
+        <h3 id="deleteHeading" class="m-0 text-danger">Delete bingo</h3>
+        @if(!confirmingDelete){
+        <p class="m-0">Deleting removes the board and all team progress. This cannot be undone.</p>
+        <div>
+          <button class="btn custom-btn text-danger" type="button" (click)="confirmingDelete = true">Delete bingo</button>
+        </div>
+        } @else {
+        <label for="deleteConfirmation" class="m-0">Type <strong>{{ loaded.title }}</strong> to confirm</label>
+        <input id="deleteConfirmation" class="form-control" autocomplete="off" [(ngModel)]="deleteConfirmation" />
+        @if(readOnly && errorMessage){
+        <div class="text-danger" role="alert">{{ errorMessage }}</div>
+        }
+        <div class="d-flex gap-2">
+          <button class="btn custom-btn text-danger" type="button" [disabled]="!canDelete" (click)="delete()">Delete permanently</button>
+          <button class="btn custom-btn" type="button" (click)="confirmingDelete = false; deleteConfirmation = ''">Cancel</button>
+        </div>
+        }
+      </section>
+      }
       }
     </div>
   </div>

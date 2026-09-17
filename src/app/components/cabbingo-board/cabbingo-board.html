@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-center align-items-center w-100 banner">
             <div class="edit-btn d-flex flex-column gap-1">
                 <a class="btn button" [routerLink]="['']">All boards</a>
-                @if(sessionService.editableTeams(board).length){
+                @if(sessionService.editableTeams(board).length && !sessionService.locked(board)){
                 <a class="btn button" [routerLink]="['/edit-board']" [queryParams]="{ board: board?.id }">
                     Edit progress
                 </a>

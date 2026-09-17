@@ -2,7 +2,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Board, Progress, Tile, emptyProgress } from '../../models/bingo';
+import { Board, Progress, Tile, emptyProgress, isEnded } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
 
@@ -39,6 +39,16 @@ export class CabbingoEditBoard implements OnInit {
         this.progress = progress;
         this.selectTeam(this.teams[0]?.id ?? '');
       });
+  }
+
+  unlocked = false; // admin pressed "Edit archived board" on this visit
+
+  get readOnly(): boolean {
+    return this.ended && !this.unlocked;
+  }
+
+  get ended(): boolean {
+    return !!this.board && isEnded(this.board);
   }
 
   get teams() {

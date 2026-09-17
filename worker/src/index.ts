@@ -191,6 +191,8 @@ async function route(req: Request, env: Env): Promise<Response> {
       return Response.json({ ok: true });
     }
     if (m === 'DELETE') {
+      const { title } = await body(req);
+      if (title !== row.config.title) throw new HttpError(400, 'Type the exact bingo title to delete it');
       await env.DB.batch([
         env.DB.prepare('DELETE FROM progress WHERE board_id = ?').bind(row.id),
         env.DB.prepare('DELETE FROM boards WHERE id = ?').bind(row.id),

@@ -17,8 +17,21 @@
               }}</strong> as a captain.</p>
           <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: board.id }">Return to board</a>
         </div>
+        } @else if(board && readOnly){
+        <div style="width:500px; max-width:100%;">
+          <p>This bingo ended on {{ board.endDate | date: 'd MMM y, HH:mm' }}. Progress is locked.</p>
+          <div class="d-flex justify-content-between gap-2">
+            <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: board.id }">Return to board</a>
+            @if(sessionService.user.isAdmin){
+            <button class="btn custom-btn" type="button" (click)="unlocked = true">Edit archived board</button>
+            }
+          </div>
+        </div>
         } @else if(board){
         <div>
+          @if(ended){
+          <p class="text-warning">You are editing an archived bingo. Every save changes its final result.</p>
+          }
           <div class="d-flex flex-row justify-content-between align-items-center gap-3">
             @if(teams.length === 1){
             <h2>Welcome {{ teams[0].name }}!</h2>
