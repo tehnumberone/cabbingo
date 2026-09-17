@@ -473,3 +473,40 @@ body {
 .item-count {
   width: 80px;
 }
+
+/* Uploaded image grids: "Use existing" picker and admin page */
+.image-library {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.image-library-item {
+  aspect-ratio: 1;
+  padding: 4px;
+  background-color: rgb(72, 62, 51);
+  border: 1px solid rgb(46, 43, 35);
+}
+
+.image-library-item img,
+.admin-image-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.image-library-item:hover,
+.image-library-item:focus-visible {
+  background-color: rgb(100, 85, 70);
+}
+
+.image-library-item.selected {
+  border: 2px solid gold;
+}
+
+.admin-image-thumb {
+  width: 64px;
+  height: 64px;
+}

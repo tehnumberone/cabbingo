@@ -3,7 +3,7 @@ import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Board, Tile, isEnded, validateBoard } from '../../models/bingo';
-import { DatabaseService } from '../../services/database.service';
+import { DatabaseService, UploadedImage } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
 
 interface TeamForm {
@@ -63,6 +63,8 @@ export class CabbingoBoardEditor implements OnInit {
   newItem = '';
   uploading: Record<string, boolean> = {};
   imageError = '';
+  pickingImage: 'tileImg' | 'bossSrc' | null = null;
+  library?: UploadedImage[];
 
   constructor(
     private databaseService: DatabaseService,
@@ -222,6 +224,25 @@ export class CabbingoBoardEditor implements OnInit {
     this.tile.items = this.tile.items?.filter((i) => i !== item);
   }
 
+  toggleLibrary(field: 'tileImg' | 'bossSrc') {
+    this.pickingImage = this.pickingImage === field ? null : field;
+    this.imageError = '';
+    if (this.pickingImage && !this.library) {
+      this.databaseService.listImages().subscribe({
+        next: (images) => (this.library = images),
+        error: () => {
+          this.pickingImage = null;
+          this.imageError = 'Could not load uploaded images, please try again.';
+        },
+      });
+    }
+  }
+
+  useImage(field: 'tileImg' | 'bossSrc', url: string) {
+    this.tile[field] = url;
+    this.pickingImage = null;
+  }
+
   uploadImage(event: Event, field: 'tileImg' | 'bossSrc') {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -237,6 +258,7 @@ export class CabbingoBoardEditor implements OnInit {
       next: ({ url }) => {
         tile[field] = url;
         this.uploading[field] = false;
+        this.library = undefined; // reload next time so the new upload shows up
       },
       error: (e) => {
         this.uploading[field] = false;

@@ -57,6 +57,8 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Tile editor in board settings: pick a tile from a grid, edit title, description, rules, points, type, amount, criteria (`ed801b1`)
 - [x] Upload tile icon and boss preview from the editor, or paste an image URL; type and 1MB checked before upload (`ed801b1`)
 - [x] Per-item progress: a tile can list tracked items, captains enter a count per item, board shows the breakdown; tiles without items keep one "Obtained" count (`ed801b1`)
+- [x] "Use existing" next to upload: pick from the shared library of uploaded images instead of uploading duplicates (IMAGES)
+- [x] Admin page `/admin/images` (linked from the account page): thumbnails, uploader, date, size, which bingos use each image, delete with a warning when in use (IMAGES)
 
 ## Phase 4: Archive
 

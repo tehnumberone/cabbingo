@@ -1,0 +1,69 @@
+<div class="page-wrap">
+  <div class="w-100">
+    <div class="d-flex justify-content-center align-items-center w-100 banner">
+      <a class="btn button edit-btn" [routerLink]="['']">All boards</a>
+      <a class="btn button login-btn" [routerLink]="['/login']">
+        {{ sessionService.user ? sessionService.user.username + (sessionService.user.isAdmin ? ' (admin)' : '') : 'Log in / Register' }}
+      </a>
+    </div>
+  </div>
+  <div class="d-flex justify-content-center">
+    <div class="osrs-border-thick-login px-5 py-4 mb-5 d-flex flex-column gap-3" style="width:900px; max-width:100%;">
+      <h2 class="m-0">Uploaded images</h2>
+      @if(!sessionService.user?.isAdmin){
+      <p class="m-0">Only admins can manage uploaded images.</p>
+      } @else if(errorMessage && !images){
+      <p class="text-danger m-0" role="alert">{{ errorMessage }}</p>
+      } @else if(!images){
+      <p class="m-0">Loading images...</p>
+      } @else {
+      <p class="m-0">{{ images.length }} image{{ images.length === 1 ? '' : 's' }}. Deleting an image removes it from every tile that uses it.</p>
+      @if(errorMessage){
+      <p class="text-danger m-0" role="alert">{{ errorMessage }}</p>
+      }
+      @if(images.length){
+      <div class="overflow-auto">
+        <table class="table osrs-table table-bordered m-0 align-middle">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Uploaded by</th>
+              <th>Uploaded</th>
+              <th>Size</th>
+              <th>Used in</th>
+              <th><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(image of images; track image.id; let n = $index){
+            <tr>
+              <td>
+                <a [href]="image.url" target="_blank" rel="noopener">
+                  <img class="admin-image-thumb" [src]="image.url" [alt]="'Uploaded image ' + (n + 1) + ' by ' + image.owner" loading="lazy" />
+                </a>
+              </td>
+              <td>{{ image.owner }}</td>
+              <td>{{ image.created ? (image.created | date: 'd MMM y, HH:mm') : 'Unknown' }}</td>
+              <td>{{ image.size / 1024 | number: '1.0-0' }} KB</td>
+              <td>
+                @for(board of image.usedIn; track board.id; let last = $last){
+                <a class="link-warning" [routerLink]="['/board']" [queryParams]="{ board: board.id }">{{ board.title }}</a>@if(!last){, }
+                } @empty {
+                Not used
+                }
+              </td>
+              <td>
+                <button class="btn custom-btn text-danger" type="button" [disabled]="deleting[image.id]" (click)="delete(image)">
+                  {{ deleting[image.id] ? 'Deleting...' : 'Delete' }}
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+      }
+    </div>
+  </div>
+</div>

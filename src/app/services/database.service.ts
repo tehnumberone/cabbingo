@@ -16,6 +16,16 @@ export interface BoardSummary {
   archived: boolean;
 }
 
+export interface UploadedImage {
+  id: string;
+  url: string;
+  type: string;
+  size: number; // bytes
+  created: number | null;
+  owner: string;
+  usedIn: { id: number; title: string }[];
+}
+
 export interface BoardData {
   board: Board;
   progress: Record<string, Record<string, Progress>>; // team id -> tile id -> progress
@@ -52,6 +62,14 @@ export class DatabaseService {
     return this.http.post<{ url: string }>(`${API_URL}/upload`, file, {
       headers: { ...this.session.headers(), 'Content-Type': file.type },
     });
+  }
+
+  listImages(): Observable<UploadedImage[]> {
+    return this.http.get<UploadedImage[]>(`${API_URL}/images`, { headers: this.session.headers() });
+  }
+
+  deleteImage(id: string) {
+    return this.http.delete(`${API_URL}/images/${id}`, { headers: this.session.headers() });
   }
 
   updateProgress(boardId: number, teamId: string, tileId: string, progress: Progress) {

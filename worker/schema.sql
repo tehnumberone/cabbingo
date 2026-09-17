@@ -30,5 +30,6 @@ CREATE TABLE IF NOT EXISTS images (
   id TEXT PRIMARY KEY,
   owner_id INTEGER NOT NULL REFERENCES users(id),
   type TEXT NOT NULL,
-  data BLOB NOT NULL
+  data BLOB NOT NULL,
+  created INTEGER -- ms epoch
 );

@@ -118,8 +118,45 @@ async function route(req: Request, env: Env): Promise<Response> {
     const data = await req.arrayBuffer();
     if (data.byteLength > MAX_IMAGE) throw new HttpError(413, 'Image must be under 1MB');
     const key = crypto.randomUUID();
-    await env.DB.prepare('INSERT INTO images (id, owner_id, type, data) VALUES (?, ?, ?, ?)').bind(key, s.user_id, type, data).run();
+    await env.DB.prepare('INSERT INTO images (id, owner_id, type, data, created) VALUES (?, ?, ?, ?, ?)')
+      .bind(key, s.user_id, type, data, Date.now())
+      .run();
     return Response.json({ url: `${url.origin}/img/${key}` });
+  }
+
+  // Shared image library: logged-in users pick from it ("Use existing"), admins also delete from it.
+  if (p === '/images' && m === 'GET') {
+    await requireUser(req, env);
+    // ponytail: returns every image in one response; paginate if the library grows past a few hundred
+    const [images, boards] = await env.DB.batch([
+      env.DB.prepare(
+        `SELECT i.id, i.type, length(i.data) AS size, i.created, u.username AS owner
+         FROM images i JOIN users u ON u.id = i.owner_id
+         ORDER BY i.created DESC`
+      ),
+      env.DB.prepare(`SELECT id, json_extract(config, '$.title') AS title, config FROM boards`),
+    ]);
+    const usedIn = new Map<string, { id: number; title: string }[]>();
+    for (const b of boards.results as { id: number; title: string; config: string }[]) {
+      for (const key of new Set([...b.config.matchAll(/\/img\/([\w-]+)/g)].map((x) => x[1]))) {
+        usedIn.set(key, [...(usedIn.get(key) ?? []), { id: b.id, title: b.title }]);
+      }
+    }
+    return Response.json(
+      (images.results as { id: string; type: string; size: number; created: number | null; owner: string }[]).map((i) => ({
+        ...i,
+        url: `${url.origin}/img/${i.id}`,
+        usedIn: usedIn.get(i.id) ?? [],
+      }))
+    );
+  }
+
+  if ((g = p.match(/^\/images\/([\w-]+)$/)) && m === 'DELETE') {
+    const s = await requireUser(req, env);
+    if (!s.is_admin) throw new HttpError(403, 'Only admins can delete images');
+    const { meta } = await env.DB.prepare('DELETE FROM images WHERE id = ?').bind(g[1]).run();
+    if (!meta.changes) throw new HttpError(404, 'Image not found');
+    return Response.json({ ok: true });
   }
 
   if (p === '/boards' && m === 'GET') {

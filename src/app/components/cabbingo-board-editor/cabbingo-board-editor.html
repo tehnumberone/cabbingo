@@ -86,7 +86,7 @@
             aria-label="Pick a tile to edit">
             @for(t of grid; track t.id; let i = $index){
             <button type="button" class="tile-picker-item" [class.selected]="i === selectedTile"
-              [attr.aria-pressed]="i === selectedTile" (click)="selectedTile = i; imageError = ''" [title]="t.title">
+              [attr.aria-pressed]="i === selectedTile" (click)="selectedTile = i; imageError = ''; pickingImage = null" [title]="t.title">
               @if(t.tileImg){<img [src]="t.tileImg" alt="" />}
               <span>{{ t.title || 'Untitled' }}</span>
             </button>
@@ -163,11 +163,31 @@
                 <label class="form-label" [for]="field + 'Url'">{{ image.label }}</label>
                 <input class="form-control mb-2" placeholder="Image URL" [id]="field + 'Url'" [name]="field + 'Url'"
                   [(ngModel)]="$any(tile)[field]" />
-                <label class="btn custom-btn" [class.disabled]="uploading[field]">
-                  {{ uploading[field] ? 'Uploading...' : 'Upload image' }}
-                  <input type="file" class="visually-hidden" accept="image/png,image/jpeg,image/gif,image/webp"
-                    [disabled]="uploading[field]" (change)="uploadImage($event, field)" />
-                </label>
+                <div class="d-flex gap-2 flex-wrap">
+                  <label class="btn custom-btn" [class.disabled]="uploading[field]">
+                    {{ uploading[field] ? 'Uploading...' : 'Upload image' }}
+                    <input type="file" class="visually-hidden" accept="image/png,image/jpeg,image/gif,image/webp"
+                      [disabled]="uploading[field]" (change)="uploadImage($event, field)" />
+                  </label>
+                  <button class="btn custom-btn" type="button" [attr.aria-expanded]="pickingImage === field"
+                    (click)="toggleLibrary(field)">Use existing</button>
+                </div>
+                @if(pickingImage === field){
+                <div class="image-library osrs-border-darker p-2 mt-2" role="group" [attr.aria-label]="'Pick an uploaded ' + image.label">
+                  @if(!library){
+                  <small>Loading images...</small>
+                  } @else {
+                  @for(img of library; track img.id; let n = $index){
+                  <button type="button" class="image-library-item" [class.selected]="$any(tile)[field] === img.url"
+                    (click)="useImage(field, img.url)" [title]="'Uploaded by ' + img.owner">
+                    <img [src]="img.url" [alt]="'Uploaded image ' + (n + 1) + ' by ' + img.owner" loading="lazy" />
+                  </button>
+                  } @empty {
+                  <small>No uploaded images yet.</small>
+                  }
+                  }
+                </div>
+                }
                 @if($any(tile)[field]){
                 <div class="mt-2"><img class="tile-image" [src]="$any(tile)[field]" [alt]="image.label + ' preview'" /></div>
                 }
