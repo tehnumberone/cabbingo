@@ -29,7 +29,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 ## Phase 1: Accounts, encrypted passwords, admin
 
 - [x] Register / log in / log out API with hashed passwords (`35730bc`)
-- [x] Admin flag: admins can edit or delete any board, and edit archived boards after pressing "Edit archived board" (`35730bc`, PHASE4)
+- [x] Admin flag: admins can edit or delete any board, and edit archived boards after pressing "Edit archived board" (`35730bc`, `1383616`)
 - [x] `/login` page; login kept across refreshes and re-checked on startup (`9910b11`)
 - [x] Team captains are accounts instead of team passwords; owner, admins and captains can update progress (`9910b11`)
 - [x] Banner: account button, "Edit progress" only for users who can edit (`9910b11`)
@@ -47,7 +47,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
   - [x] Teams: name, players added one at a time (removable), captains picked from the players in a dropdown (a captain needs an account with the same name)
   - [x] TempleOSRS competition ID (optional)
   - [x] Row and column bonus, buy-in, donations
-- [x] Delete board from the settings page (owner/admin); requires typing the exact bingo title, checked by the worker too (`121afe1`, PHASE4)
+- [x] Delete board from the settings page (owner/admin); requires typing the exact bingo title, checked by the worker too (`121afe1`, `1383616`)
 - [x] Bingo description opens from a 16×16 info icon next to the title (board page and list) (`f8781b3`)
 
 ## Phase 3: Tiles and uploads
@@ -63,8 +63,8 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Board counts as archived once the end date passes; worker refuses edits (admins excepted) (`35730bc`)
 - [x] Anyone can view any board without logging in (`35730bc`)
 - [x] Board list page shows the archive (`121afe1`)
-- [x] Archived bingos are read-only by default for everyone: no "Edit progress" button for non-admins, progress page says "Progress is locked", settings show a read-only notice instead of the form (PHASE4)
-- [x] Admins unlock an archived bingo per visit with "Edit archived board" (progress and settings), with a warning while editing, to prevent misclicks (PHASE4)
+- [x] Archived bingos are read-only by default for everyone: no "Edit progress" button for non-admins, progress page says "Progress is locked", settings show a read-only notice instead of the form (`1383616`)
+- [x] Admins unlock an archived bingo per visit with "Edit archived board" (progress and settings), with a warning while editing, to prevent misclicks (`1383616`)
 
 ## Phase 5: Flip tiles
 
