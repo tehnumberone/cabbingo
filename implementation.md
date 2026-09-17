@@ -54,9 +54,9 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 
 - [x] Image upload API: png/jpeg/gif/webp, max 1MB (`35730bc`)
 - [x] Custom tile type: free-text criteria, ticked complete by hand (model, scoring, progress page) (`35730bc`)
-- [x] Tile editor in board settings: pick a tile from a grid, edit title, description, rules, points, type, amount, criteria (PHASE3)
-- [x] Upload tile icon and boss preview from the editor, or paste an image URL; type and 1MB checked before upload (PHASE3)
-- [x] Per-item progress: a tile can list tracked items, captains enter a count per item, board shows the breakdown; tiles without items keep one "Obtained" count (PHASE3)
+- [x] Tile editor in board settings: pick a tile from a grid, edit title, description, rules, points, type, amount, criteria (`ed801b1`)
+- [x] Upload tile icon and boss preview from the editor, or paste an image URL; type and 1MB checked before upload (`ed801b1`)
+- [x] Per-item progress: a tile can list tracked items, captains enter a count per item, board shows the breakdown; tiles without items keep one "Obtained" count (`ed801b1`)
 
 ## Phase 4: Archive
 
