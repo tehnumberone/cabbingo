@@ -20,6 +20,14 @@
         </div>
     </div>
     <div class="osrs-border-thick px-4 py-2 mb-4">
+        @if(board){
+        <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <h2 class="m-0">{{ board.title }}</h2>
+            @if(board.description){
+            <app-info-popout [title]="board.title" [text]="board.description"></app-info-popout>
+            }
+        </div>
+        }
         <div class="row teams mb-2">
             @for(t of board?.teams; track t.id; let i = $index){
             <button class="button btn col-md-5" (click)="switchTeam(i)"

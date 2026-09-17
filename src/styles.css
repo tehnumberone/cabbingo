@@ -401,3 +401,27 @@ body {
   max-height: 220px;
   overflow-y: auto;
 }
+
+/* Info icon + popout */
+.info-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.info-btn:hover img,
+.info-btn:focus-visible img {
+  filter: drop-shadow(0 0 1mm gold);
+}
+
+.info-popout {
+  max-width: min(500px, calc(100vw - 32px));
+  color: white;
+  white-space: pre-line;
+}
+
+.info-popout::backdrop {
+  background: rgb(0 0 0 / 40%);
+}

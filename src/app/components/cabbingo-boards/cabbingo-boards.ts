@@ -3,10 +3,11 @@ import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { BoardSummary, DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
+import { InfoPopout } from '../info-popout/info-popout';
 
 @Component({
   selector: 'app-cabbingo-boards',
-  imports: [DatePipe, RouterModule],
+  imports: [DatePipe, RouterModule, InfoPopout],
   templateUrl: './cabbingo-boards.html',
 })
 export class CabbingoBoards implements OnInit {

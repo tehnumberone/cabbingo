@@ -8,10 +8,11 @@ import { SessionService } from '../../services/session-service';
 import { TempleOSService } from '../../services/templeos-service';
 import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
 import { OsrsTooltip } from '../../osrs-tooltip/osrs-tooltip';
+import { InfoPopout } from '../info-popout/info-popout';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass, RouterModule, CabbingoStats, OsrsTooltip],
+  imports: [NgClass, RouterModule, CabbingoStats, OsrsTooltip, InfoPopout],
   templateUrl: './cabbingo-board.html',
   styleUrl: '../../../styles.css',
 })

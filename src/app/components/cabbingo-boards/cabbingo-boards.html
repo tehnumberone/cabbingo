@@ -39,7 +39,14 @@
             <tbody>
               @for(board of section.boards; track board.id){
               <tr>
-                <td><a class="link-warning" [routerLink]="['/board']" [queryParams]="{ board: board.id }">{{ board.title }}</a></td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <a class="link-warning" [routerLink]="['/board']" [queryParams]="{ board: board.id }">{{ board.title }}</a>
+                    @if(board.description){
+                    <app-info-popout [title]="board.title" [text]="board.description"></app-info-popout>
+                    }
+                  </div>
+                </td>
                 <td>{{ board.owner }}</td>
                 <td>{{ board.startDate | date: 'd MMM y' }} – {{ board.endDate | date: 'd MMM y' }}</td>
                 <td>

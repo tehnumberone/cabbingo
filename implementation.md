@@ -48,6 +48,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
   - [x] TempleOSRS competition ID (optional)
   - [x] Row and column bonus, buy-in, donations
 - [x] Delete board from the editor (owner/admin) (`121afe1`)
+- [x] Bingo description opens from a 16×16 info icon next to the title (board page and list) (INFO)
 
 ## Phase 3: Tiles and uploads
 

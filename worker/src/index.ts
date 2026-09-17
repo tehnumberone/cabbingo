@@ -126,14 +126,16 @@ async function route(req: Request, env: Env): Promise<Response> {
     const { results } = await env.DB.prepare(
       `SELECT b.id, b.end_date, u.username AS owner,
               json_extract(b.config, '$.title') AS title,
+              json_extract(b.config, '$.description') AS description,
               json_extract(b.config, '$.startDate') AS startDate
        FROM boards b JOIN users u ON u.id = b.owner_id
        ORDER BY b.end_date DESC`
-    ).all<{ id: number; end_date: number; owner: string; title: string; startDate: string }>();
+    ).all<{ id: number; end_date: number; owner: string; title: string; description: string; startDate: string }>();
     return Response.json(
       results.map((r) => ({
         id: r.id,
         title: r.title,
+        description: r.description ?? '',
         owner: r.owner,
         startDate: r.startDate,
         endDate: new Date(r.end_date).toISOString(),

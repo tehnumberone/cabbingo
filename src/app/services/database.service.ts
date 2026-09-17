@@ -9,6 +9,7 @@ export const API_URL = 'https://cabbingo.tehnumberone87.workers.dev';
 export interface BoardSummary {
   id: number;
   title: string;
+  description: string;
   owner: string;
   startDate: string;
   endDate: string;
