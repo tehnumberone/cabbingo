@@ -106,6 +106,13 @@
                                 {{ obtained(selectedTile) }} / {{ selectedTile.amount }} Obtained
                                 }
                             </div>
+                            @if(selectedTile.type === 'items' && selectedTile.items?.length){
+                            <ul class="list-unstyled m-0 mt-1">
+                                @for(item of selectedTile.items; track item){
+                                <li>{{ item }}: {{ itemCount(selectedTile, item) }}</li>
+                                }
+                            </ul>
+                            }
                         </div>
                         } @else{
                         <p>Click on a tile!</p>

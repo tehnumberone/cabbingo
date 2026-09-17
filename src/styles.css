@@ -425,3 +425,51 @@ body {
 .info-popout::backdrop {
   background: rgb(0 0 0 / 40%);
 }
+
+/* Board editor: tile picker */
+.tile-picker {
+  display: grid;
+  gap: 4px;
+}
+
+.tile-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 4px;
+  overflow: hidden;
+  color: #FF9933;
+  font-size: 12px;
+  line-height: 1.1;
+  background-color: rgb(72, 62, 51);
+  border: 1px solid rgb(46, 43, 35);
+  outline: 1px solid rgb(86, 75, 61);
+}
+
+.tile-picker-item img {
+  height: 24px;
+  object-fit: contain;
+}
+
+.tile-picker-item span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-picker-item:hover,
+.tile-picker-item:focus-visible {
+  background-color: rgb(100, 85, 70);
+}
+
+.tile-picker-item.selected {
+  border: 2px solid gold;
+}
+
+.item-count {
+  width: 80px;
+}

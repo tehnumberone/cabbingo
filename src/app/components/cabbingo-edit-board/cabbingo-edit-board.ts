@@ -16,7 +16,8 @@ export class CabbingoEditBoard implements OnInit {
   board?: Board;
   progress: Record<string, Record<string, Progress>> = {};
   selectedTeam = '';
-  edits: Record<string, { obtained: number; completed: boolean; status?: string }> = {};
+  // obtained: single total; counts: per tracked item (tiles with items)
+  edits: Record<string, { obtained: number; counts: Record<string, number>; completed: boolean; status?: string }> = {};
 
   constructor(
     private databaseService: DatabaseService,
@@ -52,17 +53,25 @@ export class CabbingoEditBoard implements OnInit {
       const p = teamProgress[tile.id]?.front;
       this.edits[tile.id] = {
         obtained: (p?.obtained ?? []).reduce((sum, o) => sum + (Number(o.obtained) || 0), 0),
+        counts: Object.fromEntries((p?.obtained ?? []).map((o) => [o.name, Number(o.obtained) || 0])),
         completed: !!p?.completed,
       };
     }
+  }
+
+  total(tile: Tile): number {
+    const counts = this.edits[tile.id].counts;
+    return (tile.items ?? []).reduce((sum, name) => sum + (Number(counts[name]) || 0), 0);
   }
 
   saveTile(tile: Tile) {
     const teamId = this.selectedTeam;
     const edit = this.edits[tile.id];
     const prev = this.progress[teamId]?.[tile.id] ?? emptyProgress();
-    // ponytail: collapses per-item breakdown into one "Obtained" count; per-item editing comes with the board editor
-    const next: Progress = { ...prev, front: { obtained: [{ name: 'Obtained', obtained: edit.obtained }], completed: edit.completed } };
+    const obtained = tile.items?.length
+      ? tile.items.map((name) => ({ name, obtained: Number(edit.counts[name]) || 0 }))
+      : [{ name: 'Obtained', obtained: Number(edit.obtained) || 0 }];
+    const next: Progress = { ...prev, front: { obtained, completed: edit.completed } };
     edit.status = 'Saving...';
     this.databaseService.updateProgress(this.board!.id!, teamId, tile.id, next).subscribe({
       next: () => {

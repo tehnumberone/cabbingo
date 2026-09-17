@@ -6,6 +6,7 @@ export interface TileSide {
   type: 'items' | 'custom'; // items: sum of obtained >= amount; custom: manually ticked
   amount: number;
   criteria?: string; // free text for custom tiles
+  items?: string[]; // items tile: progress is tracked per item name; empty = one "Obtained" count
   rules: string[];
   tileImg: string;
   bossSrc: string;
@@ -81,7 +82,11 @@ export function totalPoints(board: Board, progress: Record<string, Progress>): n
 }
 
 const validSide = (s: TileSide) =>
-  typeof s?.title === 'string' && (s.type === 'items' || s.type === 'custom') && Number.isFinite(s.amount) && Array.isArray(s.rules);
+  typeof s?.title === 'string' &&
+  (s.type === 'items' || s.type === 'custom') &&
+  Number.isFinite(s.amount) &&
+  Array.isArray(s.rules) &&
+  (s.items === undefined || (Array.isArray(s.items) && s.items.every((i) => typeof i === 'string')));
 
 export function validateBoard(b: Board): string | null {
   if (typeof b?.title !== 'string' || !b.title.trim()) return 'Title is required';

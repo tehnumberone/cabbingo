@@ -17,6 +17,8 @@ interface TeamForm {
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 const SIZES = [3, 4, 5, 6, 7, 8, 9, 10];
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']; // same list as the worker
+const MAX_IMAGE = 1024 * 1024;
 const DAY = 86_400_000;
 
 // <input type="datetime-local"> works in local time without a zone
@@ -54,6 +56,10 @@ export class CabbingoBoardEditor implements OnInit {
   teams: TeamForm[] = [];
   // Never trimmed while editing, so shrinking and growing the size again keeps the tiles; save sends size² of them.
   tiles: Tile[] = [];
+  selectedTile = 0;
+  newItem = '';
+  uploading: Record<string, boolean> = {};
+  imageError = '';
 
   constructor(
     private databaseService: DatabaseService,
@@ -126,13 +132,14 @@ export class CabbingoBoardEditor implements OnInit {
     this.buyIn = board.buyIn ?? null;
     this.donations = (board.donations ?? []).map((d) => ({ ...d }));
     this.teams = board.teams.map((t) => ({ id: t.id, name: t.name, players: [...t.players], captains: [...t.captains], newPlayer: '' }));
-    this.tiles = [...board.tiles];
+    this.tiles = board.tiles.map((t) => ({ ...t, rules: [...t.rules], items: t.items && [...t.items] }));
+    this.selectedTile = 0;
     this.setSize(board.size);
   }
 
   setSize(size: number) {
     this.size = Number(size);
-    // ponytail: placeholder tiles until the tile editor lands (Phase 3)
+    if (this.selectedTile >= this.size * this.size) this.selectedTile = 0;
     while (this.tiles.length < this.size * this.size) {
       const n = this.tiles.length + 1;
       this.tiles.push({ id: crypto.randomUUID(), title: `Tile ${n}`, type: 'items', amount: 1, points: 1, rules: [], tileImg: '', bossSrc: '' });
@@ -179,6 +186,57 @@ export class CabbingoBoardEditor implements OnInit {
     this.donations.splice(index, 1);
   }
 
+  get grid(): Tile[] {
+    return this.tiles.slice(0, this.size * this.size);
+  }
+
+  get tile(): Tile {
+    return this.tiles[this.selectedTile];
+  }
+
+  // Rules textarea keeps blank lines while typing; they are dropped on save.
+  get tileRules(): string {
+    return this.tile.rules.join('\n');
+  }
+
+  set tileRules(text: string) {
+    this.tile.rules = text.split('\n');
+  }
+
+  addItem() {
+    const name = this.newItem.trim();
+    const items = (this.tile.items ??= []);
+    if (name && !items.some((i) => sameName(i, name))) items.push(name);
+    this.newItem = '';
+  }
+
+  removeItem(item: string) {
+    this.tile.items = this.tile.items?.filter((i) => i !== item);
+  }
+
+  uploadImage(event: Event, field: 'tileImg' | 'bossSrc') {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    this.imageError = '';
+    if (!file) return;
+    if (!IMAGE_TYPES.includes(file.type)) return void (this.imageError = 'Only png, jpeg, gif or webp images.');
+    if (file.size > MAX_IMAGE) return void (this.imageError = 'Images must be under 1MB.');
+    const tile = this.tile;
+    this.uploading[field] = true;
+    // ponytail: replaced or unused uploads stay in the images table; add cleanup if the 500MB D1 limit gets close
+    this.databaseService.uploadImage(file).subscribe({
+      next: ({ url }) => {
+        tile[field] = url;
+        this.uploading[field] = false;
+      },
+      error: (e) => {
+        this.uploading[field] = false;
+        this.imageError = e?.error?.error ?? 'Upload failed, please try again.';
+      },
+    });
+  }
+
   private toBoard(): Board {
     return {
       ...this.loaded!,
@@ -194,7 +252,15 @@ export class CabbingoBoardEditor implements OnInit {
       buyIn: this.buyIn === null || (this.buyIn as unknown) === '' ? undefined : Number(this.buyIn),
       donations: this.donations.filter((d) => d.name.trim()).map((d) => ({ name: d.name.trim(), amount: Number(d.amount) || 0 })),
       teams: this.teams.map((t) => ({ id: t.id, name: t.name.trim(), players: t.players, captains: t.captains })),
-      tiles: this.tiles.slice(0, this.size * this.size),
+      tiles: this.grid.map((t) => ({
+        ...t,
+        title: t.title.trim(),
+        rules: lines(t.rules.join('\n')),
+        amount: Number(t.amount) || 0,
+        points: Number(t.points) || 0,
+        items: t.type === 'items' && t.items?.length ? t.items : undefined,
+        criteria: t.type === 'custom' ? t.criteria?.trim() || undefined : undefined,
+      })),
     };
   }
 

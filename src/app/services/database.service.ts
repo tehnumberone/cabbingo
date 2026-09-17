@@ -47,6 +47,12 @@ export class DatabaseService {
     return this.http.delete(`${API_URL}/boards/${id}`, { headers: this.session.headers() });
   }
 
+  uploadImage(file: File): Observable<{ url: string }> {
+    return this.http.post<{ url: string }>(`${API_URL}/upload`, file, {
+      headers: { ...this.session.headers(), 'Content-Type': file.type },
+    });
+  }
+
   updateProgress(boardId: number, teamId: string, tileId: string, progress: Progress) {
     return this.http.put(
       `${API_URL}/boards/${boardId}/teams/${encodeURIComponent(teamId)}/tiles/${encodeURIComponent(tileId)}`,

@@ -61,8 +61,21 @@
                   <td><input type="checkbox" [(ngModel)]="edit.completed" [attr.aria-label]="'Completed ' + tile.title" /></td>
                   } @else {
                   <td>{{ tile.amount }}</td>
+                  @if(tile.items?.length){
+                  <td>
+                    @for(item of tile.items; track item){
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <input class="form-control item-count" type="number" min="0" [(ngModel)]="edit.counts[item]"
+                        [attr.aria-label]="item + ' for ' + tile.title" />
+                      <span>{{ item }}</span>
+                    </div>
+                    }
+                    <small>Total: {{ total(tile) }} / {{ tile.amount }}</small>
+                  </td>
+                  } @else {
                   <td><input class="form-control" type="number" min="0" [(ngModel)]="edit.obtained"
                       [attr.aria-label]="'Obtained for ' + tile.title" /></td>
+                  }
                   }
                   <td>
                     <button class="btn custom-btn col-12" (click)="saveTile(tile)">Save</button>

@@ -17,6 +17,8 @@ assert.equal(validateBoard(board), null);
 assert.match(validateBoard({ ...board, size: 2 })!, /Size/);
 assert.match(validateBoard({ ...board, tiles: board.tiles.slice(1) })!, /9 tiles/);
 assert.match(validateBoard({ ...board, tiles: board.tiles.map((t) => ({ ...t, id: 'same' })) })!, /unique/);
+assert.equal(validateBoard({ ...board, tiles: board.tiles.map((t) => ({ ...t, items: ['Torva platebody'] })) }), null);
+assert.match(validateBoard({ ...board, tiles: board.tiles.map((t) => ({ ...t, items: [1] as any })) })!, /Tile 1/);
 
 assert.equal(sideDone(board.tiles[0], { obtained: [{ name: 'x', obtained: 1 }] }), false);
 assert.equal(sideDone(board.tiles[0], done), true);

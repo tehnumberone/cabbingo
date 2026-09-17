@@ -92,6 +92,10 @@ export class CabbingoBoard implements OnInit, OnDestroy {
     return (this.tileProgress(tile)?.front.obtained ?? []).reduce((sum, o) => sum + (Number(o.obtained) || 0), 0);
   }
 
+  itemCount(tile: Tile, item: string): number {
+    return Number(this.tileProgress(tile)?.front.obtained.find((o) => o.name === item)?.obtained) || 0;
+  }
+
   isComplete(tile: Tile): boolean {
     return sideDone(tile, this.tileProgress(tile)?.front);
   }
