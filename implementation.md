@@ -91,5 +91,5 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [ ] Revoke the Firebase admin key (`cabbingo-db-firebase-adminsdk-…json` in Downloads)
 - [ ] Assign captains to season 3 once the editor exists (archived, so optional)
 - [ ] Merge `experiment` into `main` to deploy the new frontend
-- [x] Login and register throttled to 10 attempts per IP per minute, counted in D1 (Cloudflare's rate limit binding is a no-op on this plan) (CLEANUP)
-- [x] Team MVP and member names: use the username when TempleOSRS returns a dashed slug as the capitalised name (CLEANUP)
+- [x] Login and register throttled to 10 attempts per IP per minute, counted in D1 (Cloudflare's rate limit binding is a no-op on this plan) (`a441771`)
+- [x] Team MVP and member names: use the username when TempleOSRS returns a dashed slug as the capitalised name (`a441771`)
