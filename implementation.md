@@ -86,10 +86,14 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 
 ## Cleanup and follow-ups
 
-- [ ] Delete the old `steep-unit-c896` worker in Cloudflare
-- [ ] Remove the `FIREBASE_DETAILS` GitHub secret and shut down the Firebase project
-- [ ] Revoke the Firebase admin key (`cabbingo-db-firebase-adminsdk-…json` in Downloads)
-- [ ] Assign captains to season 3 once the editor exists (archived, so optional)
-- [ ] Merge `experiment` into `main` to deploy the new frontend
+Deploying is on hold (asked 2026-09-19): `experiment` is not merged, so the live site still runs the old Firebase build.
+Everything below in this group has to wait for that deploy, in this order:
+
+1. [ ] Merge `experiment` into `main` and push (GitHub Actions rebuilds the GitHub Pages site)
+2. [ ] Delete the old `steep-unit-c896` worker (the live site uses it until the deploy happens)
+3. [ ] Remove the `FIREBASE_DETAILS` GitHub secret (main's workflow still reads it) and shut down the Firebase project
+4. [ ] Revoke the Firebase admin key (`cabbingo-db-firebase-adminsdk-…json` in Downloads)
+
+- [ ] Assign captains to season 3 (archived, so an admin has to press "Edit archived board" first; optional)
 - [x] Login and register throttled to 10 attempts per IP per minute, counted in D1 (Cloudflare's rate limit binding is a no-op on this plan) (`a441771`)
 - [x] Team MVP and member names: use the username when TempleOSRS returns a dashed slug as the capitalised name (`a441771`)
