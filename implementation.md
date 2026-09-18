@@ -70,10 +70,10 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 
 ## Rule formatting
 
-- [x] BBCode-style markup for bingo and tile rules: `[color=green|red|orange]`, `[u]`, `[s]`, and `* ` for bullet lines; no colour = white (RULES)
-- [x] Rules render as text nodes, never as HTML, so nothing can be injected; unknown tags stay visible as plain text (RULES)
-- [x] Toolbar above both rule boxes (colours, underline, strikethrough, list) that wraps the selection, with a live preview (RULES)
-- [x] Season 3 rules converted to the new markup, so the board looks unchanged (RULES)
+- [x] BBCode-style markup for bingo and tile rules: `[color=green|red|orange]`, `[u]`, `[s]`, and `* ` for bullet lines; no colour = white (`5de9423`)
+- [x] Rules render as text nodes, never as HTML, so nothing can be injected; unknown tags stay visible as plain text (`5de9423`)
+- [x] Toolbar above both rule boxes (colours, underline, strikethrough, list) that wraps the selection, with a live preview (`5de9423`)
+- [x] Season 3 rules converted to the new markup, so the board looks unchanged (`5de9423`)
 - [ ] Optional later: "clear formatting" button, more colours
 
 ## Phase 5: Flip tiles
