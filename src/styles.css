@@ -510,3 +510,22 @@ body {
   width: 64px;
   height: 64px;
 }
+
+/* Formatted rules (app-rich-rules) */
+.rich-rules-list {
+  padding-left: .5rem;
+  padding-right: .5rem;
+}
+
+.rules-preview {
+  max-height: 200px;
+  overflow-y: auto;
+  color: white;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid black;
+}

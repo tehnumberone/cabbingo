@@ -68,6 +68,14 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Archived bingos are read-only by default for everyone: no "Edit progress" button for non-admins, progress page says "Progress is locked", settings show a read-only notice instead of the form (`1383616`)
 - [x] Admins unlock an archived bingo per visit with "Edit archived board" (progress and settings), with a warning while editing, to prevent misclicks (`1383616`)
 
+## Rule formatting
+
+- [x] BBCode-style markup for bingo and tile rules: `[color=green|red|orange]`, `[u]`, `[s]`, and `* ` for bullet lines; no colour = white (RULES)
+- [x] Rules render as text nodes, never as HTML, so nothing can be injected; unknown tags stay visible as plain text (RULES)
+- [x] Toolbar above both rule boxes (colours, underline, strikethrough, list) that wraps the selection, with a live preview (RULES)
+- [x] Season 3 rules converted to the new markup, so the board looks unchanged (RULES)
+- [ ] Optional later: "clear formatting" button, more colours
+
 ## Phase 5: Flip tiles
 
 - [x] Scoring: all-or-nothing (flipped side not done = 0 points) and keep (keeps original points); flipped side done = double points (`35730bc`)

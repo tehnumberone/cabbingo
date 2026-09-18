@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Board, Tile, isEnded, validateBoard } from '../../models/bingo';
 import { DatabaseService, UploadedImage } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
+import { RulesEditor } from '../rules-editor/rules-editor';
 
 interface TeamForm {
   id: string;
@@ -30,7 +31,7 @@ const lines = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boo
 
 @Component({
   selector: 'app-cabbingo-board-editor',
-  imports: [DatePipe, FormsModule, RouterModule],
+  imports: [DatePipe, FormsModule, RouterModule, RulesEditor],
   templateUrl: './cabbingo-board-editor.html',
 })
 export class CabbingoBoardEditor implements OnInit {
@@ -111,7 +112,7 @@ export class CabbingoBoardEditor implements OnInit {
     return {
       title: '',
       description: '',
-      rules: ['Complete a full row or column to earn a bonus!', 'Tiles can be completed in any order.', 'Good luck and have fun!'],
+      rules: ['* Complete a full row or column to earn a bonus!', '* Tiles can be completed in any order.', '* [color=green]Good luck and have fun![/color]'],
       size: 5,
       startDate: start.toISOString(),
       endDate: new Date(start.getTime() + 14 * DAY).toISOString(),

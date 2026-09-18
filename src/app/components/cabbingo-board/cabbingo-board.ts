@@ -9,10 +9,11 @@ import { TempleOSService } from '../../services/templeos-service';
 import { CabbingoStats } from '../cabbingo-stats/cabbingo-stats';
 import { OsrsTooltip } from '../../osrs-tooltip/osrs-tooltip';
 import { InfoPopout } from '../info-popout/info-popout';
+import { RichRules } from '../rich-rules/rich-rules';
 
 @Component({
   selector: 'app-cabbingo-board',
-  imports: [NgClass, RouterModule, CabbingoStats, OsrsTooltip, InfoPopout],
+  imports: [NgClass, RouterModule, CabbingoStats, OsrsTooltip, InfoPopout, RichRules],
   templateUrl: './cabbingo-board.html',
   styleUrl: '../../../styles.css',
 })

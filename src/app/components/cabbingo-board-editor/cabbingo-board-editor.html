@@ -57,8 +57,7 @@
             <textarea id="description" name="description" class="form-control" rows="2" [(ngModel)]="description"></textarea>
           </div>
           <div>
-            <label for="rules" class="form-label">Bingo rules <small>(one per line)</small></label>
-            <textarea id="rules" name="rules" class="form-control" rows="4" [(ngModel)]="rules"></textarea>
+            <app-rules-editor label="Bingo rules" inputId="rules" [value]="rules" (valueChange)="rules = $event"></app-rules-editor>
           </div>
           <div class="d-flex gap-3 flex-wrap">
             <div>
@@ -151,9 +150,7 @@
             }
 
             <div>
-              <label for="tileRules" class="form-label">Tile rules <small>(one per line)</small></label>
-              <textarea id="tileRules" name="tileRules" class="form-control" rows="4" [(ngModel)]="tileRules"></textarea>
-              <small>Start a line with + to show it green (allowed) or - to show it red (excluded).</small>
+              <app-rules-editor label="Tile rules" inputId="tileRules" [value]="tileRules" (valueChange)="tileRules = $event"></app-rules-editor>
             </div>
 
             <div class="d-flex gap-3 flex-wrap">

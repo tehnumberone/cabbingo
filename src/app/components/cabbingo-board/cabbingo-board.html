@@ -138,23 +138,10 @@
                             @if(!selectedTile?.rules || selectedTile?.rules?.length === 0){
                             There are no rules for this tile.
                             }@else{
-                            @for(rule of selectedTile?.rules; track i; let i = $index){
-                            @if(rule.includes('Excluded') || rule.includes('Allowed')){
-                            {{ rule }}
-                            } @else if(rule.includes('-')){
-                            <strong style="color: #E40303;">{{ rule.replace('-', '') }}</strong>
-                            } @else if(rule.includes('+')){
-                            <strong style="color: #0CD90D;">{{ rule.replace('+', '') }}</strong>
-                            } @else{
-                            <strong style="color:#FF9933;">{{ rule }}</strong>
-                            }
-                            <br />}}}
+                            <app-rich-rules [rules]="selectedTile?.rules"></app-rich-rules>
+                            }}
                             @else {
-                            <ul class="px-2">
-                                @for(rule of board?.rules; track $index){
-                                <li [style.color]="$last ? '#0CD90D' : null">{{ rule }}</li>
-                                }
-                            </ul>
+                            <app-rich-rules [rules]="board?.rules"></app-rich-rules>
                             }
                         </div>
                     </div>
