@@ -1,10 +1,17 @@
 // Rule formatting: a small BBCode-like markup, rendered as text nodes (never as HTML).
-//   [color=green]..[/color]  [color=red]..[/color]  [color=orange]..[/color]  (no tag = white)
+//   [color=<name>]..[/color] for the colours below (no tag = white)
 //   [u]..[/u] underline   [s]..[/s] strikethrough
 //   a line starting with "* " is a bullet; consecutive bullets form one list
 // Anything that isn't a valid tag stays visible as plain text.
 
-export const RULE_COLORS = { green: '#0CD90D', red: '#E40303', orange: '#FF9933' } as const;
+export const RULE_COLORS = {
+  green: '#0CD90D',
+  red: '#E40303',
+  orange: '#FF9933',
+  yellow: '#FFE500',
+  cyan: '#4FD6FF',
+  purple: '#C77DFF',
+} as const;
 export type RuleColor = keyof typeof RULE_COLORS;
 
 export interface Segment {
@@ -19,7 +26,8 @@ export interface RuleBlock {
   lines: Segment[][];
 }
 
-const TAG = /\[(\/?)(color|u|s)(?:=(green|red|orange))?\]/g;
+const COLOR_NAMES = Object.keys(RULE_COLORS).join('|');
+export const TAG = new RegExp(`\\[(\\/?)(color|u|s)(?:=(${COLOR_NAMES}))?\\]`, 'g');
 export const BULLET = /^\*\s+/;
 
 export function parseLine(line: string): Segment[] {
@@ -59,3 +67,8 @@ export function parseRules(rules: string[]): RuleBlock[] {
   }
   return blocks;
 }
+
+// Drops every tag the renderer honours, keeping the text (the editor's "Clear formatting").
+// Goes through parseLine so anything shown as plain text stays exactly as it is.
+export const stripTags = (text: string) =>
+  text.split('\n').map((line) => parseLine(line).map((s) => s.text).join('')).join('\n');

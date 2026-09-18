@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires INTEGER NOT NULL
 );
 
--- login/register throttle: one row per IP, counter resets when the window passes
+-- login/register throttle: one row per IP, 10 tries then a cooldown until reset
 CREATE TABLE IF NOT EXISTS attempts (
   ip TEXT PRIMARY KEY,
   count INTEGER NOT NULL,

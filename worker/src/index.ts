@@ -14,8 +14,8 @@ const DAY = 86_400_000;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']; // no svg: it can carry scripts
 const MAX_IMAGE = 1024 * 1024; // D1 caps a row at 2MB
 const MAX_BODY = 512 * 1024;
-const MAX_ATTEMPTS = 10; // login or register attempts per IP
-const ATTEMPT_WINDOW = 60_000;
+const MAX_ATTEMPTS = 10; // failed login or register attempts per IP before the cooldown
+const ATTEMPT_COOLDOWN = 15 * 60_000;
 
 class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -73,7 +73,8 @@ async function route(req: Request, env: Env): Promise<Response> {
     });
   }
 
-  if ((p === '/auth/register' || p === '/auth/login') && m === 'POST') await throttle(env, req);
+  let attemptIp = '';
+  if ((p === '/auth/register' || p === '/auth/login') && m === 'POST') attemptIp = await throttle(env, req);
 
   if (p === '/auth/register' && m === 'POST') {
     const { username, password } = await body(req);
@@ -90,6 +91,7 @@ async function route(req: Request, env: Env): Promise<Response> {
       if (String(e).includes('UNIQUE')) throw new HttpError(409, 'Username is taken');
       throw e;
     }
+    await clearAttempts(env, attemptIp);
     return Response.json({ token: await newSession(env, user!.id), user: toUser(user!) });
   }
 
@@ -99,6 +101,7 @@ async function route(req: Request, env: Env): Promise<Response> {
       .bind(String(username).trim())
       .first<{ id: number; username: string; is_admin: number; pw_hash: string }>();
       if (!user || !(await verifyPassword(String(password), user.pw_hash))) throw new HttpError(401, 'Invalid username or password');
+    await clearAttempts(env, attemptIp);
     return Response.json({ token: await newSession(env, user.id), user: toUser(user) });
   }
 
@@ -274,21 +277,29 @@ async function route(req: Request, env: Env): Promise<Response> {
   throw new HttpError(404, 'Not found');
 }
 
-// Counts login/register attempts per IP. Cloudflare's rate limit binding is a no-op on this plan, so this uses D1.
-async function throttle(env: Env, req: Request) {
+// Counts login/register attempts per IP: 10 tries, then a 15 minute cooldown.
+// Cloudflare's rate limit binding reports success on every call on this plan, so this uses D1.
+async function throttle(env: Env, req: Request): Promise<string> {
   const ip = req.headers.get('CF-Connecting-IP') ?? 'unknown';
   const now = Date.now();
   const row = await env.DB.prepare(
-    `INSERT INTO attempts (ip, count, reset) VALUES (?1, 1, ?2 + ${ATTEMPT_WINDOW})
+    `INSERT INTO attempts (ip, count, reset) VALUES (?1, 1, ?2 + ${ATTEMPT_COOLDOWN})
      ON CONFLICT (ip) DO UPDATE SET
        count = CASE WHEN reset < ?2 THEN 1 ELSE count + 1 END,
-       reset = CASE WHEN reset < ?2 THEN ?2 + ${ATTEMPT_WINDOW} ELSE reset END
-     RETURNING count`
+       reset = CASE WHEN reset < ?2 THEN ?2 + ${ATTEMPT_COOLDOWN} ELSE reset END
+     RETURNING count, reset`
   )
     .bind(ip, now)
-    .first<{ count: number }>();
-  if ((row?.count ?? 0) > MAX_ATTEMPTS) throw new HttpError(429, 'Too many attempts, please wait a minute');
+    .first<{ count: number; reset: number }>();
+  if ((row?.count ?? 0) > MAX_ATTEMPTS) {
+    const minutes = Math.max(1, Math.ceil((row!.reset - now) / 60_000));
+    throw new HttpError(429, `Too many attempts. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`);
+  }
+  return ip;
 }
+
+// A successful login or registration clears the counter, so normal use never hits the cooldown.
+const clearAttempts = (env: Env, ip: string) => env.DB.prepare('DELETE FROM attempts WHERE ip = ?').bind(ip).run();
 
 async function body(req: Request): Promise<any> {
   const text = await req.text();

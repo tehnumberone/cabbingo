@@ -1,7 +1,7 @@
 // node --experimental-strip-types test.ts
 import assert from 'node:assert/strict';
 import { type Board, type Tile, sideDone, tilePoints, totalPoints, validateBoard } from '../src/app/models/bingo.ts';
-import { parseLine, parseRules } from '../src/app/models/rich-text.ts';
+import { parseLine, parseRules, stripTags } from '../src/app/models/rich-text.ts';
 
 const tile = (points: number, id: string): Tile => ({
   id, title: 't', type: 'items', amount: 2, rules: [], tileImg: '', bossSrc: '', points,
@@ -46,6 +46,8 @@ assert.deepEqual(parseLine('[s]x[/s]'), [seg('x', undefined, false, true)]);
 assert.deepEqual(parseLine('[color=blue]x[/color]'), [seg('[color=blue]x[/color]')], 'unknown colour and stray close stay text');
 assert.deepEqual(parseLine('[color=red]open to the end'), [seg('open to the end', 'red')], 'unclosed tag runs to end of line');
 assert.deepEqual(parseLine('<script>alert(1)</script>'), [seg('<script>alert(1)</script>')]);
+assert.deepEqual(parseLine('[color=purple]p[/color]'), [seg('p', 'purple')], 'extra palette colours');
+assert.equal(stripTags('a [color=cyan][u]b[/u][/color] [color=blue]c[/color]'), 'a b [color=blue]c[/color]');
 assert.deepEqual(
   parseRules(['* one', '* two', 'plain', '', '* three']).map((b) => [b.list, b.lines.length]),
   [[true, 2], [false, 1], [true, 1]]
