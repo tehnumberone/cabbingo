@@ -58,6 +58,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Upload tile icon and boss preview from the editor, or paste an image URL; type and 1MB checked before upload (`ed801b1`)
 - [x] Per-item progress: a tile can list tracked items, captains enter a count per item, board shows the breakdown; tiles without items keep one "Obtained" count (`ed801b1`)
 - [x] "Use existing" next to upload: pick from the shared library of uploaded images instead of uploading duplicates (`09509a0`)
+- [x] The picker also lists images boards already link to (wiki URLs, repo assets like `./assets/x.png`); unused links never appear, and the admin page still lists uploads only (LINKED)
 - [x] Admin page `/admin/images` (linked from the account page): thumbnails, uploader, date, size, which bingos use each image, delete with a warning when in use (`09509a0`)
 
 ## Phase 4: Archive

@@ -1,4 +1,4 @@
-import { Board, Progress, SideProgress, Team, emptyProgress, sideDone, validateBoard } from '../../src/app/models/bingo';
+import { Board, Progress, SideProgress, Team, TileSide, emptyProgress, sideDone, validateBoard } from '../../src/app/models/bingo';
 
 interface Env {
   DB: D1Database;
@@ -130,7 +130,8 @@ async function route(req: Request, env: Env): Promise<Response> {
     return Response.json({ url: `${url.origin}/img/${key}` });
   }
 
-  // Shared image library: logged-in users pick from it ("Use existing"), admins also delete from it.
+  // Shared image library: uploads plus every image a board already links to (wiki URLs, repo assets).
+  // Logged-in users pick from it ("Use existing"); admins delete uploads from it.
   if (p === '/images' && m === 'GET') {
     await requireUser(req, env);
     // ponytail: returns every image in one response; paginate if the library grows past a few hundred
@@ -142,19 +143,34 @@ async function route(req: Request, env: Env): Promise<Response> {
       ),
       env.DB.prepare(`SELECT id, json_extract(config, '$.title') AS title, config FROM boards`),
     ]);
+    // Key: an upload id for our own images, otherwise the link exactly as the tile stores it.
+    const prefix = `${url.origin}/img/`;
     const usedIn = new Map<string, { id: number; title: string }[]>();
     for (const b of boards.results as { id: number; title: string; config: string }[]) {
-      for (const key of new Set([...b.config.matchAll(/\/img\/([\w-]+)/g)].map((x) => x[1]))) {
+      const config = JSON.parse(b.config) as StoredBoard;
+      const links = new Set<string>();
+      for (const tile of config.tiles ?? []) {
+        for (const tileSide of [tile as TileSide, tile.flip]) {
+          if (tileSide?.tileImg) links.add(tileSide.tileImg);
+          if (tileSide?.bossSrc) links.add(tileSide.bossSrc);
+        }
+      }
+      for (const link of links) {
+        const key = link.startsWith(prefix) ? link.slice(prefix.length) : link;
         usedIn.set(key, [...(usedIn.get(key) ?? []), { id: b.id, title: b.title }]);
       }
     }
-    return Response.json(
-      (images.results as { id: string; type: string; size: number; created: number | null; owner: string }[]).map((i) => ({
-        ...i,
-        url: `${url.origin}/img/${i.id}`,
-        usedIn: usedIn.get(i.id) ?? [],
-      }))
-    );
+    const uploads = (images.results as { id: string; type: string; size: number; created: number | null; owner: string }[]).map((i) => ({
+      ...i,
+      kind: 'upload' as const,
+      url: `${url.origin}/img/${i.id}`,
+      usedIn: usedIn.get(i.id) ?? [],
+    }));
+    const uploadIds = new Set(uploads.map((i) => i.id));
+    const linked = [...usedIn]
+      .filter(([key]) => !uploadIds.has(key))
+      .map(([link, boardsUsing]) => ({ kind: 'link' as const, url: link, usedIn: boardsUsing }));
+    return Response.json([...uploads, ...linked]);
   }
 
   if ((g = p.match(/^\/images\/([\w-]+)$/)) && m === 'DELETE') {

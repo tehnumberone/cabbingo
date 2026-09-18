@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TileSide } from '../../models/bingo';
-import { DatabaseService, UploadedImage } from '../../services/database.service';
+import { DatabaseService, LibraryImage } from '../../services/database.service';
 import { RulesEditor } from '../rules-editor/rules-editor';
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']; // same list as the worker
@@ -25,7 +25,7 @@ export class TileSideEditor {
   uploading: Record<string, boolean> = {};
   imageError = '';
   pickingImage: ImageField | null = null;
-  library?: UploadedImage[];
+  library?: LibraryImage[];
 
   constructor(private databaseService: DatabaseService) { }
 
@@ -61,6 +61,12 @@ export class TileSideEditor {
         },
       });
     }
+  }
+
+  // Uploads say who uploaded them; links only exist because a board uses them.
+  imageTitle(image: LibraryImage): string {
+    const used = image.usedIn.map((b) => b.title).join(', ');
+    return image.kind === 'upload' ? `Uploaded by ${image.owner}${used ? `, used in ${used}` : ''}` : `Linked image, used in ${used}`;
   }
 
   useImage(field: ImageField, url: string) {

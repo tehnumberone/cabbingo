@@ -16,14 +16,16 @@ export interface BoardSummary {
   archived: boolean;
 }
 
-export interface UploadedImage {
-  id: string;
+// "upload" lives in our images table; "link" is an image a board points at (wiki URL, repo asset).
+export interface LibraryImage {
+  kind: 'upload' | 'link';
   url: string;
-  type: string;
-  size: number; // bytes
-  created: number | null;
-  owner: string;
   usedIn: { id: number; title: string }[];
+  id?: string;
+  type?: string;
+  size?: number; // bytes
+  created?: number | null;
+  owner?: string;
 }
 
 export interface BoardData {
@@ -64,8 +66,8 @@ export class DatabaseService {
     });
   }
 
-  listImages(): Observable<UploadedImage[]> {
-    return this.http.get<UploadedImage[]>(`${API_URL}/images`, { headers: this.session.headers() });
+  listImages(): Observable<LibraryImage[]> {
+    return this.http.get<LibraryImage[]>(`${API_URL}/images`, { headers: this.session.headers() });
   }
 
   deleteImage(id: string) {

@@ -75,11 +75,11 @@
       } @else {
       @for(img of library; track img.id; let n = $index){
       <button type="button" class="image-library-item" [class.selected]="side[field] === img.url"
-        (click)="useImage(field, img.url)" [title]="'Uploaded by ' + img.owner">
-        <img [src]="img.url" [alt]="'Uploaded image ' + (n + 1) + ' by ' + img.owner" loading="lazy" />
+        (click)="useImage(field, img.url)" [title]="imageTitle(img)">
+        <img [src]="img.url" [alt]="imageTitle(img)" loading="lazy" />
       </button>
       } @empty {
-      <small>No uploaded images yet.</small>
+      <small>No images yet: upload one, or paste a link and save the board.</small>
       }
       }
     </div>

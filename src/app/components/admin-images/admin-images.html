@@ -44,7 +44,7 @@
               </td>
               <td>{{ image.owner }}</td>
               <td>{{ image.created ? (image.created | date: 'd MMM y, HH:mm') : 'Unknown' }}</td>
-              <td>{{ image.size / 1024 | number: '1.0-0' }} KB</td>
+              <td>{{ (image.size ?? 0) / 1024 | number: '1.0-0' }} KB</td>
               <td>
                 @for(board of image.usedIn; track board.id; let last = $last){
                 <a class="link-warning" [routerLink]="['/board']" [queryParams]="{ board: board.id }">{{ board.title }}</a>@if(!last){, }
@@ -53,8 +53,8 @@
                 }
               </td>
               <td>
-                <button class="btn custom-btn text-danger" type="button" [disabled]="deleting[image.id]" (click)="delete(image)">
-                  {{ deleting[image.id] ? 'Deleting...' : 'Delete' }}
+                <button class="btn custom-btn text-danger" type="button" [disabled]="deleting[image.id!]" (click)="delete(image)">
+                  {{ deleting[image.id!] ? 'Deleting...' : 'Delete' }}
                 </button>
               </td>
             </tr>
