@@ -14,6 +14,8 @@ const DAY = 86_400_000;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']; // no svg: it can carry scripts
 const MAX_IMAGE = 1024 * 1024; // D1 caps a row at 2MB
 const MAX_BODY = 512 * 1024;
+const MAX_ATTEMPTS = 10; // login or register attempts per IP
+const ATTEMPT_WINDOW = 60_000;
 
 class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -71,6 +73,8 @@ async function route(req: Request, env: Env): Promise<Response> {
     });
   }
 
+  if ((p === '/auth/register' || p === '/auth/login') && m === 'POST') await throttle(env, req);
+
   if (p === '/auth/register' && m === 'POST') {
     const { username, password } = await body(req);
     if (typeof username !== 'string' || !/^[\w -]{3,20}$/.test(username))
@@ -94,8 +98,7 @@ async function route(req: Request, env: Env): Promise<Response> {
     const user = await env.DB.prepare('SELECT id, username, is_admin, pw_hash FROM users WHERE username = ?')
       .bind(String(username).trim())
       .first<{ id: number; username: string; is_admin: number; pw_hash: string }>();
-    // ponytail: no login rate limit; add a Workers Rate Limiting binding if brute force shows up
-    if (!user || !(await verifyPassword(String(password), user.pw_hash))) throw new HttpError(401, 'Invalid username or password');
+      if (!user || !(await verifyPassword(String(password), user.pw_hash))) throw new HttpError(401, 'Invalid username or password');
     return Response.json({ token: await newSession(env, user.id), user: toUser(user) });
   }
 
@@ -271,6 +274,22 @@ async function route(req: Request, env: Env): Promise<Response> {
   throw new HttpError(404, 'Not found');
 }
 
+// Counts login/register attempts per IP. Cloudflare's rate limit binding is a no-op on this plan, so this uses D1.
+async function throttle(env: Env, req: Request) {
+  const ip = req.headers.get('CF-Connecting-IP') ?? 'unknown';
+  const now = Date.now();
+  const row = await env.DB.prepare(
+    `INSERT INTO attempts (ip, count, reset) VALUES (?1, 1, ?2 + ${ATTEMPT_WINDOW})
+     ON CONFLICT (ip) DO UPDATE SET
+       count = CASE WHEN reset < ?2 THEN 1 ELSE count + 1 END,
+       reset = CASE WHEN reset < ?2 THEN ?2 + ${ATTEMPT_WINDOW} ELSE reset END
+     RETURNING count`
+  )
+    .bind(ip, now)
+    .first<{ count: number }>();
+  if ((row?.count ?? 0) > MAX_ATTEMPTS) throw new HttpError(429, 'Too many attempts, please wait a minute');
+}
+
 async function body(req: Request): Promise<any> {
   const text = await req.text();
   if (text.length > MAX_BODY) throw new HttpError(413, 'Request too large');
@@ -366,6 +385,7 @@ async function newSession(env: Env, userId: number): Promise<string> {
   const token = b64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, '');
   await env.DB.batch([
     env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
+    env.DB.prepare('DELETE FROM attempts WHERE reset < ?').bind(Date.now()),
     env.DB.prepare('INSERT INTO sessions (token, user_id, expires) VALUES (?, ?, ?)').bind(token, userId, Date.now() + 30 * DAY),
   ]);
   return token;

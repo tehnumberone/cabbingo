@@ -11,6 +11,13 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires INTEGER NOT NULL
 );
 
+-- login/register throttle: one row per IP, counter resets when the window passes
+CREATE TABLE IF NOT EXISTS attempts (
+  ip TEXT PRIMARY KEY,
+  count INTEGER NOT NULL,
+  reset INTEGER NOT NULL -- ms epoch
+);
+
 CREATE TABLE IF NOT EXISTS boards (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   owner_id INTEGER NOT NULL REFERENCES users(id),

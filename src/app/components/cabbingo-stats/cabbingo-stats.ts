@@ -25,9 +25,17 @@ export class CabbingoStats implements OnInit {
     this.setBingoEndCountdown();
   }
 
+  // TempleOSRS sometimes gives a dashed slug (jay-m-e) as the capitalised name; the username reads better then.
+  displayName(participant: any): string {
+    const capitalised = participant?.player_name_with_capitalization;
+    const username = participant?.username ?? '';
+    return capitalised && !(capitalised.includes('-') && !username.includes('-')) ? capitalised : username;
+  }
+
   getTeamMvp() {
     const team = this.teams[this.currentTeam];
-    return this.participants.find(p => p.username === team.mvp)?.player_name_with_capitalization ?? team.mvp;
+    const mvp = this.participants.find(p => p.username === team.mvp);
+    return mvp ? this.displayName(mvp) : team.mvp;
   }
 
   private setBingoEndCountdown() {
