@@ -1,5 +1,5 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
-import { BULLET, RULE_COLORS, RuleColor, stripTags } from '../../models/rich-text';
+import { RULE_COLORS, RuleColor, addBullet, isBullet, stripBullet, stripTags } from '../../models/rich-text';
 import { RichRules } from '../rich-rules/rich-rules';
 
 const ANY_COLOR_OPEN = /\[color=\w+\]$/;
@@ -99,8 +99,8 @@ export class RulesEditor {
     const { selectionStart: a, selectionEnd: b, value } = el;
     const [start, end] = this.lineRange(value, a, b);
     const lines = value.slice(start, end).split('\n');
-    const allBullets = lines.every((l) => BULLET.test(l));
-    const changed = lines.map((l) => (allBullets ? l.replace(BULLET, '') : BULLET.test(l) ? l : '* ' + l)).join('\n');
+    const allBullets = lines.every((l) => isBullet(l));
+    const changed = lines.map((l) => (allBullets ? stripBullet(l) : isBullet(l) ? l : addBullet(l))).join('\n');
     this.replace(value.slice(0, start) + changed + value.slice(end), start, start + changed.length);
   }
 

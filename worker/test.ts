@@ -1,7 +1,7 @@
 // node --experimental-strip-types test.ts
 import assert from 'node:assert/strict';
 import { type Board, type Tile, sideDone, tilePoints, totalPoints, validateBoard } from '../src/app/models/bingo.ts';
-import { parseLine, parseRules, stripTags } from '../src/app/models/rich-text.ts';
+import { isBullet, parseLine, parseRules, stripBullet, stripTags } from '../src/app/models/rich-text.ts';
 
 const tile = (points: number, id: string): Tile => ({
   id, title: 't', type: 'items', amount: 2, rules: [], tileImg: '', bossSrc: '', points,
@@ -52,5 +52,12 @@ assert.deepEqual(
   parseRules(['* one', '* two', 'plain', '', '* three']).map((b) => [b.list, b.lines.length]),
   [[true, 2], [false, 1], [true, 1]]
 );
+// the bullet marker still counts when a colour wraps the whole line
+const coloured = parseRules(['[color=green]* one[/color]', '* [color=red]two[/color]']);
+assert.deepEqual(coloured.map((b) => b.list), [true]);
+assert.deepEqual(coloured[0].lines, [[seg('one', 'green')], [seg('two', 'red')]]);
+assert.equal(isBullet('[u]* x[/u]'), true);
+assert.equal(stripBullet('[u]* x[/u]'), '[u]x[/u]');
+assert.equal(isBullet('no marker'), false);
 
 console.log('ok');

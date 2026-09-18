@@ -1,7 +1,8 @@
 // Rule formatting: a small BBCode-like markup, rendered as text nodes (never as HTML).
 //   [color=<name>]..[/color] for the colours below (no tag = white)
 //   [u]..[/u] underline   [s]..[/s] strikethrough
-//   a line starting with "* " is a bullet; consecutive bullets form one list
+//   a line whose first text is "* " is a bullet; consecutive bullets form one list
+//   (the marker may sit behind tags, e.g. "[color=green]* item[/color]")
 // Anything that isn't a valid tag stays visible as plain text.
 
 export const RULE_COLORS = {
@@ -27,8 +28,14 @@ export interface RuleBlock {
 }
 
 const COLOR_NAMES = Object.keys(RULE_COLORS).join('|');
-export const TAG = new RegExp(`\\[(\\/?)(color|u|s)(?:=(${COLOR_NAMES}))?\\]`, 'g');
-export const BULLET = /^\*\s+/;
+const TAG_SOURCE = `\\[(\\/?)(color|u|s)(?:=(${COLOR_NAMES}))?\\]`;
+export const TAG = new RegExp(TAG_SOURCE, 'g');
+// "* " optionally behind opening tags, so colouring a whole bullet line keeps the bullet
+const BULLET = new RegExp(`^((?:${TAG_SOURCE})*)\\*\\s+`);
+
+export const isBullet = (line: string) => BULLET.test(line);
+export const stripBullet = (line: string) => line.replace(BULLET, '$1');
+export const addBullet = (line: string) => '* ' + line;
 
 export function parseLine(line: string): Segment[] {
   const out: Segment[] = [];
@@ -59,8 +66,8 @@ export function parseRules(rules: string[]): RuleBlock[] {
   const blocks: RuleBlock[] = [];
   for (const rule of rules) {
     if (!rule.trim()) continue;
-    const list = BULLET.test(rule);
-    const segments = parseLine(list ? rule.replace(BULLET, '') : rule);
+    const list = isBullet(rule);
+    const segments = parseLine(list ? stripBullet(rule) : rule);
     const current = blocks[blocks.length - 1];
     if (current?.list === list) current.lines.push(segments);
     else blocks.push({ list, lines: [segments] });
