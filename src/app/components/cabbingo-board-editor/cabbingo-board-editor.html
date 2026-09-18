@@ -85,7 +85,7 @@
             aria-label="Pick a tile to edit">
             @for(t of grid; track t.id; let i = $index){
             <button type="button" class="tile-picker-item" [class.selected]="i === selectedTile"
-              [attr.aria-pressed]="i === selectedTile" (click)="selectedTile = i; imageError = ''; pickingImage = null" [title]="t.title">
+              [attr.aria-pressed]="i === selectedTile" (click)="selectedTile = i" [title]="t.title">
               @if(t.tileImg){<img [src]="t.tileImg" alt="" />}
               <span>{{ t.title || 'Untitled' }}</span>
             </button>
@@ -94,105 +94,30 @@
 
           @if(tile){
           <div class="osrs-border-darker p-3 d-flex flex-column gap-2">
-            <h4 class="m-0">Tile {{ selectedTile + 1 }}</h4>
-            <div class="d-flex gap-3 flex-wrap">
-              <div class="flex-grow-1">
-                <label for="tileTitle" class="form-label">Title</label>
-                <input id="tileTitle" name="tileTitle" class="form-control" maxlength="60" [(ngModel)]="tile.title" />
-              </div>
+            <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+              <h4 class="m-0">Tile {{ selectedTile + 1 }}</h4>
               <div>
                 <label for="tilePoints" class="form-label">Points</label>
-                <input id="tilePoints" name="tilePoints" type="number" min="0" class="form-control" [(ngModel)]="tile.points" />
-              </div>
-              <div>
-                <label for="tileType" class="form-label">Completed by</label>
-                <select id="tileType" name="tileType" class="form-control" [(ngModel)]="tile.type">
-                  <option value="items">Obtaining items</option>
-                  <option value="custom">Custom criteria (ticked by a captain)</option>
-                </select>
+                <input id="tilePoints" name="tilePoints" type="number" min="0" class="form-control w-auto" [(ngModel)]="tile.points" />
               </div>
             </div>
-            <div>
-              <label for="tileDescription" class="form-label">Description</label>
-              <input id="tileDescription" name="tileDescription" class="form-control" [(ngModel)]="tile.description" />
-            </div>
+            <app-tile-side-editor [side]="tile" idPrefix="tile"></app-tile-side-editor>
 
-            @if(tile.type === 'items'){
-            <div>
-              <label for="tileAmount" class="form-label">Items required</label>
-              <input id="tileAmount" name="tileAmount" type="number" min="1" class="form-control w-auto" [(ngModel)]="tile.amount" />
+            @if(flipEnabled){
+            <hr />
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="tileFlip" name="tileFlip" [checked]="!!tile.flip"
+                (change)="toggleFlipSide($any($event.target).checked)" />
+              <label class="form-check-label" for="tileFlip">This tile has a flipped side</label>
             </div>
-            <div>
-              <label for="newItem" class="form-label">Tracked items <small>(optional: captains enter a count per item)</small></label>
-              <div class="d-flex gap-2">
-                <input id="newItem" name="newItem" class="form-control" placeholder="Item name, e.g. Torva platebody"
-                  [(ngModel)]="newItem" (keydown.enter)="$event.preventDefault(); addItem()" />
-                <button class="btn custom-btn flex-shrink-0" type="button" (click)="addItem()">Add item</button>
-              </div>
-              <ul class="list-unstyled d-flex flex-wrap gap-2 mt-2 mb-0">
-                @for(item of tile.items; track item){
-                <li class="osrs-border d-flex align-items-center gap-2 ps-2">
-                  {{ item }}
-                  <button class="btn custom-btn btn-sm py-0" type="button" (click)="removeItem(item)"
-                    [attr.aria-label]="'Remove ' + item">×</button>
-                </li>
-                } @empty {
-                <li><small>No tracked items: captains enter one total count.</small></li>
-                }
-              </ul>
-            </div>
-            } @else {
-            <div>
-              <label for="tileCriteria" class="form-label">Criteria</label>
-              <textarea id="tileCriteria" name="tileCriteria" class="form-control" rows="2"
-                placeholder="e.g. Complete the Fortis Colosseum with a 1m budget" [(ngModel)]="tile.criteria"></textarea>
-            </div>
+            @if(tile.flip){
+            <h5 class="m-0">Flipped side</h5>
+            <p class="m-0"><small>
+              A team may flip this tile once the front is done. Completing the flipped side doubles the tile to {{ tile.points * 2 }} points;
+              {{ flipMode === 'all-or-nothing' ? 'leaving it unfinished scores 0 for this tile.' : 'leaving it unfinished keeps the ' + tile.points + ' points.' }}
+            </small></p>
+            <app-tile-side-editor [side]="tile.flip" idPrefix="flip"></app-tile-side-editor>
             }
-
-            <div>
-              <app-rules-editor label="Tile rules" inputId="tileRules" [value]="tileRules" (valueChange)="tileRules = $event"></app-rules-editor>
-            </div>
-
-            <div class="d-flex gap-3 flex-wrap">
-              @for(image of [{ field: 'tileImg', label: 'Tile icon' }, { field: 'bossSrc', label: 'Boss preview' }]; track image.field){
-              @let field = $any(image.field);
-              <div class="flex-grow-1">
-                <label class="form-label" [for]="field + 'Url'">{{ image.label }}</label>
-                <input class="form-control mb-2" placeholder="Image URL" [id]="field + 'Url'" [name]="field + 'Url'"
-                  [(ngModel)]="$any(tile)[field]" />
-                <div class="d-flex gap-2 flex-wrap">
-                  <label class="btn custom-btn" [class.disabled]="uploading[field]">
-                    {{ uploading[field] ? 'Uploading...' : 'Upload image' }}
-                    <input type="file" class="visually-hidden" accept="image/png,image/jpeg,image/gif,image/webp"
-                      [disabled]="uploading[field]" (change)="uploadImage($event, field)" />
-                  </label>
-                  <button class="btn custom-btn" type="button" [attr.aria-expanded]="pickingImage === field"
-                    (click)="toggleLibrary(field)">Use existing</button>
-                </div>
-                @if(pickingImage === field){
-                <div class="image-library osrs-border-darker p-2 mt-2" role="group" [attr.aria-label]="'Pick an uploaded ' + image.label">
-                  @if(!library){
-                  <small>Loading images...</small>
-                  } @else {
-                  @for(img of library; track img.id; let n = $index){
-                  <button type="button" class="image-library-item" [class.selected]="$any(tile)[field] === img.url"
-                    (click)="useImage(field, img.url)" [title]="'Uploaded by ' + img.owner">
-                    <img [src]="img.url" [alt]="'Uploaded image ' + (n + 1) + ' by ' + img.owner" loading="lazy" />
-                  </button>
-                  } @empty {
-                  <small>No uploaded images yet.</small>
-                  }
-                  }
-                </div>
-                }
-                @if($any(tile)[field]){
-                <div class="mt-2"><img class="tile-image" [src]="$any(tile)[field]" [alt]="image.label + ' preview'" /></div>
-                }
-              </div>
-              }
-            </div>
-            @if(imageError){
-            <div class="text-danger" role="alert">{{ imageError }}</div>
             }
           </div>
           }
@@ -212,6 +137,14 @@
             <div>
               <label for="buyIn" class="form-label">Buy-in per player <small>(M gp)</small></label>
               <input id="buyIn" name="buyIn" type="number" min="0" class="form-control" [(ngModel)]="buyIn" />
+            </div>
+            <div>
+              <label for="flipMode" class="form-label">Flipping tiles</label>
+              <select id="flipMode" name="flipMode" class="form-control" [ngModel]="flipSetting" (ngModelChange)="setFlipSetting($event)">
+                <option value="off">Off</option>
+                <option value="all-or-nothing">On, all or nothing (fail = 0 points)</option>
+                <option value="keep">On, keep points (fail = keep the original points)</option>
+              </select>
             </div>
             <div>
               <label for="temple" class="form-label">TempleOSRS competition ID <small>(optional)</small></label>

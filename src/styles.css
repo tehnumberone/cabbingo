@@ -529,3 +529,7 @@ body {
   height: 12px;
   border: 1px solid black;
 }
+
+.tile-flipped {
+  outline: 2px solid #FF9933;
+}

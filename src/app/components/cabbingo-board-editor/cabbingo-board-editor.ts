@@ -2,10 +2,11 @@ import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Board, Tile, isEnded, validateBoard } from '../../models/bingo';
-import { DatabaseService, UploadedImage } from '../../services/database.service';
+import { Board, Tile, TileSide, isEnded, validateBoard } from '../../models/bingo';
+import { DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
 import { RulesEditor } from '../rules-editor/rules-editor';
+import { TileSideEditor } from '../tile-side-editor/tile-side-editor';
 
 interface TeamForm {
   id: string;
@@ -18,8 +19,6 @@ interface TeamForm {
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 const SIZES = [3, 4, 5, 6, 7, 8, 9, 10];
-const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']; // same list as the worker
-const MAX_IMAGE = 1024 * 1024;
 const DAY = 86_400_000;
 
 // <input type="datetime-local"> works in local time without a zone
@@ -31,7 +30,7 @@ const lines = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boo
 
 @Component({
   selector: 'app-cabbingo-board-editor',
-  imports: [DatePipe, FormsModule, RouterModule, RulesEditor],
+  imports: [DatePipe, FormsModule, RouterModule, RulesEditor, TileSideEditor],
   templateUrl: './cabbingo-board-editor.html',
 })
 export class CabbingoBoardEditor implements OnInit {
@@ -56,16 +55,14 @@ export class CabbingoBoardEditor implements OnInit {
   rowBonus = 5;
   columnBonus = 5;
   buyIn: number | null = null;
+  flipEnabled = false;
+  flipMode: Board['flipMode'] = 'all-or-nothing';
   donations: { name: string; amount: number }[] = [];
   teams: TeamForm[] = [];
   // Never trimmed while editing, so shrinking and growing the size again keeps the tiles; save sends size² of them.
   tiles: Tile[] = [];
   selectedTile = 0;
-  newItem = '';
-  uploading: Record<string, boolean> = {};
-  imageError = '';
-  pickingImage: 'tileImg' | 'bossSrc' | null = null;
-  library?: UploadedImage[];
+  private removedFlips: Record<string, TileSide> = {}; // kept until save so unticking the box is undoable
 
   constructor(
     private databaseService: DatabaseService,
@@ -141,9 +138,16 @@ export class CabbingoBoardEditor implements OnInit {
     this.rowBonus = board.rowBonus;
     this.columnBonus = board.columnBonus;
     this.buyIn = board.buyIn ?? null;
+    this.flipEnabled = board.flipEnabled;
+    this.flipMode = board.flipMode;
     this.donations = (board.donations ?? []).map((d) => ({ ...d }));
     this.teams = board.teams.map((t) => ({ id: t.id, name: t.name, players: [...t.players], captains: [...t.captains], newPlayer: '' }));
-    this.tiles = board.tiles.map((t) => ({ ...t, rules: [...t.rules], items: t.items && [...t.items] }));
+    this.tiles = board.tiles.map((t) => ({
+      ...t,
+      rules: [...t.rules],
+      items: t.items && [...t.items],
+      flip: t.flip && { ...t.flip, rules: [...t.flip.rules], items: t.flip.items && [...t.flip.items] },
+    }));
     this.selectedTile = 0;
     this.setSize(board.size);
   }
@@ -155,6 +159,31 @@ export class CabbingoBoardEditor implements OnInit {
       const n = this.tiles.length + 1;
       this.tiles.push({ id: crypto.randomUUID(), title: `Tile ${n}`, type: 'items', amount: 1, points: 1, rules: [], tileImg: '', bossSrc: '' });
     }
+  }
+
+  get flipSetting(): 'off' | Board['flipMode'] {
+    return this.flipEnabled ? this.flipMode : 'off';
+  }
+
+  setFlipSetting(value: 'off' | Board['flipMode']) {
+    this.flipEnabled = value !== 'off';
+    if (value !== 'off') this.flipMode = value;
+  }
+
+  toggleFlipSide(on: boolean) {
+    if (!on) {
+      this.removedFlips[this.tile.id] = this.tile.flip!;
+      this.tile.flip = undefined;
+      return;
+    }
+    this.tile.flip = this.removedFlips[this.tile.id] ?? {
+      title: this.tile.title,
+      type: 'items',
+      amount: 1,
+      rules: [],
+      tileImg: '',
+      bossSrc: '',
+    };
   }
 
   addTeam() {
@@ -205,67 +234,15 @@ export class CabbingoBoardEditor implements OnInit {
     return this.tiles[this.selectedTile];
   }
 
-  // Rules textarea keeps blank lines while typing; they are dropped on save.
-  get tileRules(): string {
-    return this.tile.rules.join('\n');
-  }
-
-  set tileRules(text: string) {
-    this.tile.rules = text.split('\n');
-  }
-
-  addItem() {
-    const name = this.newItem.trim();
-    const items = (this.tile.items ??= []);
-    if (name && !items.some((i) => sameName(i, name))) items.push(name);
-    this.newItem = '';
-  }
-
-  removeItem(item: string) {
-    this.tile.items = this.tile.items?.filter((i) => i !== item);
-  }
-
-  toggleLibrary(field: 'tileImg' | 'bossSrc') {
-    this.pickingImage = this.pickingImage === field ? null : field;
-    this.imageError = '';
-    if (this.pickingImage && !this.library) {
-      this.databaseService.listImages().subscribe({
-        next: (images) => (this.library = images),
-        error: () => {
-          this.pickingImage = null;
-          this.imageError = 'Could not load uploaded images, please try again.';
-        },
-      });
-    }
-  }
-
-  useImage(field: 'tileImg' | 'bossSrc', url: string) {
-    this.tile[field] = url;
-    this.pickingImage = null;
-  }
-
-  uploadImage(event: Event, field: 'tileImg' | 'bossSrc') {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    this.imageError = '';
-    if (!file) return;
-    if (!IMAGE_TYPES.includes(file.type)) return void (this.imageError = 'Only png, jpeg, gif or webp images.');
-    if (file.size > MAX_IMAGE) return void (this.imageError = 'Images must be under 1MB.');
-    const tile = this.tile;
-    this.uploading[field] = true;
-    // ponytail: replaced or unused uploads stay in the images table; add cleanup if the 500MB D1 limit gets close
-    this.databaseService.uploadImage(file).subscribe({
-      next: ({ url }) => {
-        tile[field] = url;
-        this.uploading[field] = false;
-        this.library = undefined; // reload next time so the new upload shows up
-      },
-      error: (e) => {
-        this.uploading[field] = false;
-        this.imageError = e?.error?.error ?? 'Upload failed, please try again.';
-      },
-    });
+  private cleanSide(side: TileSide): TileSide {
+    return {
+      ...side,
+      title: side.title.trim(),
+      rules: lines(side.rules.join('\n')),
+      amount: Number(side.amount) || 0,
+      items: side.type === 'items' && side.items?.length ? side.items : undefined,
+      criteria: side.type === 'custom' ? side.criteria?.trim() || undefined : undefined,
+    };
   }
 
   private toBoard(): Board {
@@ -281,6 +258,8 @@ export class CabbingoBoardEditor implements OnInit {
       rowBonus: Number(this.rowBonus) || 0,
       columnBonus: Number(this.columnBonus) || 0,
       buyIn: this.buyIn === null || (this.buyIn as unknown) === '' ? undefined : Number(this.buyIn),
+      flipEnabled: this.flipEnabled,
+      flipMode: this.flipMode,
       donations: this.donations.filter((d) => d.name.trim()).map((d) => ({ name: d.name.trim(), amount: Number(d.amount) || 0 })),
       teams: this.teams.map((t) => ({ id: t.id, name: t.name.trim(), players: t.players, captains: t.captains })),
       tiles: this.grid.map((t) => ({
@@ -290,6 +269,7 @@ export class CabbingoBoardEditor implements OnInit {
         amount: Number(t.amount) || 0,
         points: Number(t.points) || 0,
         items: t.type === 'items' && t.items?.length ? t.items : undefined,
+        flip: this.flipEnabled && t.flip ? this.cleanSide(t.flip) : undefined,
         criteria: t.type === 'custom' ? t.criteria?.trim() || undefined : undefined,
       })),
     };

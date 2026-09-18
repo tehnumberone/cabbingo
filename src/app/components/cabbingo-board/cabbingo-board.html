@@ -61,7 +61,7 @@
                     }
                     @for(tile of row; track tile.id){
                     <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" (mousemove)="onMouseMove($event)" (mouseenter)="onMouseEnter(tile.title)" (mouseleave)="onMouseLeave()"
-                     [ngClass]="{ 'tile-selected': tile === selectedTile,'tile-completed': isComplete(tile)}">
+                     [ngClass]="{ 'tile-selected': tile === selectedTile, 'tile-completed': scored(tile), 'tile-flipped': isFlipped(tile)}">
                         <div>
                             <div class="progress" style="height: 5px"
                                 [ngClass]="{ 'progress-bar-completed': isComplete(tile) }"
@@ -74,8 +74,8 @@
                                     <div style="width: 110px"></div>
                                 </div>
                             </div>
-                            @if(tile.tileImg){<img class="tile-image p-1" [src]="tile.tileImg" [alt]="tile.title" />}
-                            <p class="tile-text">{{ tile.title }}</p>
+                            @if(side(tile).tileImg){<img class="tile-image p-1" [src]="side(tile).tileImg" [alt]="side(tile).title" />}
+                            <p class="tile-text">{{ side(tile).title }}</p>
                         </div>
                     </button>
                     }
@@ -87,10 +87,15 @@
                     <div class="infobox osrs-border d-flex flex-column justify-content-between align-items-center"
                         style="min-height: 300px">
                         @if(selectedTile){
-                        <div>{{ selectedTile.description }}</div>
-                        @if(selectedTile.criteria){<div>{{ selectedTile.criteria }}</div>}
+                        @if(isFlipped(selectedTile)){
+                        <div class="text-warning">Flipped tile</div>
+                        }
+                        <div>{{ side(selectedTile).description }}</div>
+                        @if(side(selectedTile).criteria){<div>{{ side(selectedTile).criteria }}</div>}
                         <div>
-                            <img class="bossImage" [src]="selectedTile.bossSrc" [alt]="selectedTile.title" />
+                            @if(side(selectedTile).bossSrc){
+                            <img class="bossImage" [src]="side(selectedTile).bossSrc" [alt]="side(selectedTile).title" />
+                            }
                         </div>
                         <div class="d-flex flex-column align-items-center">
                             <div class="d-flex flex-row pt-3">
@@ -100,18 +105,21 @@
                                 </p>
                             </div>
                             <div [style.color]="isComplete(selectedTile) ? 'rgb(8, 255, 8)' : null">
-                                @if(selectedTile.type === 'custom'){
+                                @if(side(selectedTile).type === 'custom'){
                                 {{ isComplete(selectedTile) ? 'Completed' : 'Not completed' }}
                                 } @else {
-                                {{ obtained(selectedTile) }} / {{ selectedTile.amount }} Obtained
+                                {{ obtained(selectedTile) }} / {{ side(selectedTile).amount }} Obtained
                                 }
                             </div>
-                            @if(selectedTile.type === 'items' && selectedTile.items?.length){
+                            @if(side(selectedTile).type === 'items' && side(selectedTile).items?.length){
                             <ul class="list-unstyled m-0 mt-1">
-                                @for(item of selectedTile.items; track item){
+                                @for(item of side(selectedTile).items; track item){
                                 <li>{{ item }}: {{ itemCount(selectedTile, item) }}</li>
                                 }
                             </ul>
+                            }
+                            @if(board?.flipEnabled && selectedTile.flip && !isFlipped(selectedTile)){
+                            <div class="mt-1"><small>Can be flipped to: {{ selectedTile.flip.title }}</small></div>
                             }
                         </div>
                         } @else{
@@ -138,7 +146,7 @@
                             @if(!selectedTile?.rules || selectedTile?.rules?.length === 0){
                             There are no rules for this tile.
                             }@else{
-                            <app-rich-rules [rules]="selectedTile?.rules"></app-rich-rules>
+                            <app-rich-rules [rules]="side(selectedTile!).rules"></app-rich-rules>
                             }}
                             @else {
                             <app-rich-rules [rules]="board?.rules"></app-rich-rules>

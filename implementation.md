@@ -80,9 +80,9 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 
 - [x] Scoring: all-or-nothing (flipped side not done = 0 points) and keep (keeps original points); flipped side done = double points (`35730bc`)
 - [x] Worker: only completed tiles can be flipped, flipped tiles can't be unflipped except by owner/admin (`35730bc`)
-- [ ] Editor: board toggle for flipping, flip mode, flipped side for each tile
-- [ ] Edit page: flip button on completed tiles, progress for the flipped side
-- [ ] Board: show flipped tiles and their flipped side
+- [x] Settings: flipping off / all-or-nothing / keep points, and a flipped side per tile with all the same fields (title, type, amount, items, criteria, rules, images) (PHASE5)
+- [x] Progress page: "Flip tile" appears only once the front is done, warns what flipping costs and pays, then the row switches to the flipped side (PHASE5)
+- [x] Board: flipped tiles show the flipped side with an orange outline, the info box marks them, and scoring follows the flip mode (PHASE5)
 
 ## Cleanup and follow-ups
 

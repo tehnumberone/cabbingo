@@ -2,7 +2,7 @@ import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@a
 import { isPlatformBrowser, NgClass } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription, switchMap, timer } from 'rxjs';
-import { Board, Progress, Tile, sideDone, tilePoints, totalPoints } from '../../models/bingo';
+import { Board, Progress, Tile, TileSide, sideDone, tilePoints, totalPoints } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
 import { TempleOSService } from '../../services/templeos-service';
@@ -85,25 +85,45 @@ export class CabbingoBoard implements OnInit, OnDestroy {
     return (donated + this.participants.length * (this.board?.buyIn ?? 0)) * 1_000_000;
   }
 
+  // Once a team flips a tile, the flipped side is what counts and what is shown.
+  isFlipped(tile: Tile): boolean {
+    return !!tile.flip && !!this.tileProgress(tile)?.flipped;
+  }
+
+  side(tile: Tile): TileSide {
+    return this.isFlipped(tile) ? tile.flip! : tile;
+  }
+
+  private sideProgress(tile: Tile) {
+    const p = this.tileProgress(tile);
+    return this.isFlipped(tile) ? p?.flip : p?.front;
+  }
+
+  // Scores points right now: a flipped tile only counts again once its flipped side is done (all-or-nothing).
+  scored(tile: Tile): boolean {
+    return !!this.board && tilePoints(this.board, tile, this.tileProgress(tile)) > 0;
+  }
+
   tileProgress(tile: Tile): Progress | undefined {
     return this.team && this.progress[this.team.id]?.[tile.id];
   }
 
   obtained(tile: Tile): number {
-    return (this.tileProgress(tile)?.front.obtained ?? []).reduce((sum, o) => sum + (Number(o.obtained) || 0), 0);
+    return (this.sideProgress(tile)?.obtained ?? []).reduce((sum, o) => sum + (Number(o.obtained) || 0), 0);
   }
 
   itemCount(tile: Tile, item: string): number {
-    return Number(this.tileProgress(tile)?.front.obtained.find((o) => o.name === item)?.obtained) || 0;
+    return Number(this.sideProgress(tile)?.obtained.find((o) => o.name === item)?.obtained) || 0;
   }
 
   isComplete(tile: Tile): boolean {
-    return sideDone(tile, this.tileProgress(tile)?.front);
+    return sideDone(this.side(tile), this.sideProgress(tile));
   }
 
   progressPercent(tile: Tile): number {
-    if (tile.type === 'custom') return this.isComplete(tile) ? 100 : 0;
-    return Math.min(100, (this.obtained(tile) / tile.amount) * 100);
+    const side = this.side(tile);
+    if (side.type === 'custom') return this.isComplete(tile) ? 100 : 0;
+    return Math.min(100, (this.obtained(tile) / side.amount) * 100);
   }
 
   rowComplete(row: number): boolean {

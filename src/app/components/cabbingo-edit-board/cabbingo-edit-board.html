@@ -62,37 +62,45 @@
               </thead>
               <tbody>
                 @for(tile of board.tiles; track tile.id){
-                @let edit = edits[tile.id];
+                @let side = this.side(tile);
+                @let edit = this.edit(tile);
                 <tr>
-                  <td>{{ tile.title }}</td>
-                  <td>@if(tile.tileImg){<img class="tile-image" [src]="tile.tileImg" [alt]="tile.title" />}</td>
-                  <td>@if(tile.bossSrc){<img class="tile-image" [src]="tile.bossSrc" alt="" />}</td>
-                  <td>{{ tile.points }}</td>
-                  <td>{{ tile.description }}@if(tile.criteria){<br>{{ tile.criteria }}}</td>
-                  @if(tile.type === 'custom'){
-                  <td>Manual</td>
-                  <td><input type="checkbox" [(ngModel)]="edit.completed" [attr.aria-label]="'Completed ' + tile.title" /></td>
-                  } @else {
-                  <td>{{ tile.amount }}</td>
-                  @if(tile.items?.length){
                   <td>
-                    @for(item of tile.items; track item){
+                    {{ side.title }}
+                    @if(edits[tile.id].flipped){<br><small class="text-warning">Flipped</small>}
+                  </td>
+                  <td>@if(side.tileImg){<img class="tile-image" [src]="side.tileImg" [alt]="side.title" />}</td>
+                  <td>@if(side.bossSrc){<img class="tile-image" [src]="side.bossSrc" alt="" />}</td>
+                  <td>{{ tile.points }}</td>
+                  <td>{{ side.description }}@if(side.criteria){<br>{{ side.criteria }}}</td>
+                  @if(side.type === 'custom'){
+                  <td>Manual</td>
+                  <td><input type="checkbox" [(ngModel)]="edit.completed" [attr.aria-label]="'Completed ' + side.title" /></td>
+                  } @else {
+                  <td>{{ side.amount }}</td>
+                  @if(side.items?.length){
+                  <td>
+                    @for(item of side.items; track item){
                     <div class="d-flex align-items-center gap-2 mb-1">
                       <input class="form-control item-count" type="number" min="0" [(ngModel)]="edit.counts[item]"
-                        [attr.aria-label]="item + ' for ' + tile.title" />
+                        [attr.aria-label]="item + ' for ' + side.title" />
                       <span>{{ item }}</span>
                     </div>
                     }
-                    <small>Total: {{ total(tile) }} / {{ tile.amount }}</small>
+                    <small>Total: {{ total(tile) }} / {{ side.amount }}</small>
                   </td>
                   } @else {
                   <td><input class="form-control" type="number" min="0" [(ngModel)]="edit.obtained"
-                      [attr.aria-label]="'Obtained for ' + tile.title" /></td>
+                      [attr.aria-label]="'Obtained for ' + side.title" /></td>
                   }
                   }
                   <td>
                     <button class="btn custom-btn col-12" (click)="saveTile(tile)">Save</button>
-                    @if(edit.status){<small>{{ edit.status }}</small>}
+                    @if(canFlip(tile)){
+                    <button class="btn custom-btn col-12 mt-1" type="button" (click)="flip(tile)"
+                      [attr.aria-label]="'Flip ' + tile.title">Flip tile</button>
+                    }
+                    @if(edits[tile.id].status){<small>{{ edits[tile.id].status }}</small>}
                   </td>
                 </tr>
                 } @empty {
