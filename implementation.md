@@ -74,8 +74,8 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Rules render as text nodes, never as HTML, so nothing can be injected; unknown tags stay visible as plain text (`5de9423`)
 - [x] Toolbar above both rule boxes (colours, underline, strikethrough, list) that wraps the selection, with a live preview (`5de9423`)
 - [x] Season 3 rules converted to the new markup, so the board looks unchanged (`5de9423`)
-- [x] Every formatting button toggles: pressing it again removes the tag, and another colour swaps it (FORMAT)
-- [x] "Clear formatting" button (selection, or the current line when nothing is selected) and six colours: green, red, orange, yellow, cyan, purple (FORMAT)
+- [x] Every formatting button toggles: pressing it again removes the tag, and another colour swaps it (`78bacfe`)
+- [x] "Clear formatting" button (selection, or the current line when nothing is selected) and six colours: green, red, orange, yellow, cyan, purple (`78bacfe`)
 
 ## Phase 5: Flip tiles
 
@@ -96,5 +96,5 @@ Everything below in this group has to wait for that deploy, in this order:
 4. [ ] Revoke the Firebase admin key (`cabbingo-db-firebase-adminsdk-…json` in Downloads)
 
 - [ ] Assign captains to season 3 (archived, so an admin has to press "Edit archived board" first; optional)
-- [x] Login and register throttled: 10 attempts per IP, then a 15 minute cooldown with the time left in the message; a successful login clears the counter. Counted in D1, since Cloudflare's rate limit binding is a no-op on this plan (`a441771`, FORMAT)
+- [x] Login and register throttled: 10 attempts per IP, then a 15 minute cooldown with the time left in the message; a successful login clears the counter. Counted in D1, since Cloudflare's rate limit binding is a no-op on this plan (`a441771`, `78bacfe`)
 - [x] Team MVP and member names: use the username when TempleOSRS returns a dashed slug as the capitalised name (`a441771`)
