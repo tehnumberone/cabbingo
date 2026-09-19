@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AdminUser, DatabaseService } from '../../services/database.service';
 import { SessionService } from '../../services/session-service';
@@ -7,7 +8,7 @@ import { SessionService } from '../../services/session-service';
 // Admin view of every account, with the admin rights toggle.
 @Component({
   selector: 'app-admin-users',
-  imports: [RouterModule],
+  imports: [FormsModule, RouterModule],
   template: `
     <div class="page-wrap">
       <div class="w-100">
@@ -28,7 +29,10 @@ import { SessionService } from '../../services/session-service';
           } @else if(!users){
           <p class="m-0">Loading accounts...</p>
           } @else {
-          <p class="m-0">{{ users.length }} account{{ users.length === 1 ? '' : 's' }}. Admins can edit and delete every bingo.</p>
+          <p class="m-0">
+            {{ users.length }} account{{ users.length === 1 ? '' : 's' }}. Admins can edit and delete every bingo. Deleting an account
+            also removes its claimed names; an account that still owns bingos has to lose those first.
+          </p>
           @if(errorMessage){
           <p class="text-danger m-0" role="alert">{{ errorMessage }}</p>
           }
@@ -55,10 +59,23 @@ import { SessionService } from '../../services/session-service';
                   <td>
                     @if(user.id === sessionService.user!.id){
                     <small>That is you</small>
+                    } @else if(deleting === user){
+                    <div class="d-flex flex-column gap-1">
+                      <label [for]="'confirm' + user.id">Type <strong>{{ user.username }}</strong> to confirm</label>
+                      <input class="form-control" autocomplete="off" [id]="'confirm' + user.id" [(ngModel)]="confirmation" />
+                      <div class="d-flex gap-1">
+                        <button class="btn custom-btn text-danger" type="button" [disabled]="confirmation !== user.username"
+                          (click)="remove(user)">Delete permanently</button>
+                        <button class="btn custom-btn" type="button" (click)="deleting = undefined; confirmation = ''">Cancel</button>
+                      </div>
+                    </div>
                     } @else {
-                    <button class="btn custom-btn" type="button" [disabled]="saving[user.id]" (click)="toggleAdmin(user)">
-                      {{ saving[user.id] ? 'Saving...' : user.isAdmin ? 'Remove admin' : 'Make admin' }}
-                    </button>
+                    <div class="d-flex gap-1 flex-wrap">
+                      <button class="btn custom-btn" type="button" [disabled]="saving[user.id]" (click)="toggleAdmin(user)">
+                        {{ saving[user.id] ? 'Saving...' : user.isAdmin ? 'Remove admin' : 'Make admin' }}
+                      </button>
+                      <button class="btn custom-btn text-danger" type="button" (click)="startDelete(user)">Delete</button>
+                    </div>
                     }
                   </td>
                 </tr>
@@ -76,6 +93,8 @@ export class AdminUsers implements OnInit {
   users?: AdminUser[];
   errorMessage = '';
   saving: Record<number, boolean> = {};
+  deleting?: AdminUser;
+  confirmation = '';
 
   constructor(
     private databaseService: DatabaseService,
@@ -88,6 +107,26 @@ export class AdminUsers implements OnInit {
     this.databaseService.adminUsers().subscribe({
       next: (users) => (this.users = users),
       error: () => (this.errorMessage = 'Could not load accounts, please try again later.'),
+    });
+  }
+
+  startDelete(user: AdminUser) {
+    this.deleting = user;
+    this.confirmation = '';
+    this.errorMessage = '';
+  }
+
+  // Accounts that still own bingos are refused by the worker, so those get deleted or handed over first.
+  remove(user: AdminUser) {
+    if (this.confirmation !== user.username) return;
+    this.errorMessage = '';
+    this.databaseService.deleteUser(user.id, this.confirmation).subscribe({
+      next: () => {
+        this.users = this.users?.filter((u) => u !== user);
+        this.deleting = undefined;
+        this.confirmation = '';
+      },
+      error: (e) => (this.errorMessage = e?.error?.error ?? 'Could not delete that account, please try again.'),
     });
   }
 

@@ -136,6 +136,11 @@ export class DatabaseService {
     return this.http.put(`${API_URL}/admin/users/${id}/admin`, { isAdmin }, { headers: this.session.headers() });
   }
 
+  // The worker only deletes when the exact username is sent along.
+  deleteUser(id: number, username: string) {
+    return this.http.delete(`${API_URL}/admin/users/${id}`, { headers: this.session.headers(), body: { username } });
+  }
+
   adminRsns(): Observable<{ id: number; name: string; username: string; email: string | null }[]> {
     return this.http.get<{ id: number; name: string; username: string; email: string | null }[]>(`${API_URL}/admin/rsns`, {
       headers: this.session.headers(),

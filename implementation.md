@@ -33,8 +33,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] `/login` page; login kept across refreshes and re-checked on startup (`1771d10`)
 - [x] Team captains are accounts instead of team passwords; owner, admins and captains can update progress (`1771d10`)
 - [x] Banner: account button, "Edit progress" only for users who can edit (`1771d10`)
-- [ ] Admin page: list users, grant or revoke admin. Until then:
-      `npx wrangler d1 execute cabbingo --remote --command "UPDATE users SET is_admin=1 WHERE username='name'"`
+- [x] Admin page `/admin/users`: every account with email, claimed names and bingos owned; grant or remove admin, and delete an account by typing its username (not your own, and not while it still owns bingos) (ADMIN)
 
 ## Phase 2: Create and configure boards on the site
 
@@ -93,6 +92,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Captains are picked from the team's players; the account that claimed that name gets the spot (`8afe480`)
 - [x] Registration asks for an email and warns never to reuse a RuneScape/Jagex password (`8afe480`)
 - [x] Forgot password sends a reset link valid 15 minutes; using it signs that account out everywhere (`8afe480`)
+- [x] GitHub Pages serves 404.html (a copy of index.html) so deep links like the reset link work instead of 404ing (ADMIN)
 - [x] Admin page `/admin/names` lists every claimed name with its account, so a wrong claim can be removed (`8afe480`)
 - [ ] Email delivery needs a Brevo API key and a verified sender (see "Sending email" below)
 

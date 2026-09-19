@@ -220,6 +220,25 @@ async function route(req: Request, env: Env): Promise<Response> {
     return Response.json({ ok: true });
   }
 
+  if ((g = p.match(/^\/admin\/users\/(\d+)$/)) && m === 'DELETE') {
+    const s = await requireUser(req, env);
+    if (!s.is_admin) throw new HttpError(403, 'Admins only');
+    const id = Number(g[1]);
+    if (id === s.user_id) throw new HttpError(400, 'You cannot delete your own account');
+    const user = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(id).first<{ username: string }>();
+    if (!user) throw new HttpError(404, 'Account not found');
+    const { username } = await body(req);
+    if (username !== user.username) throw new HttpError(400, 'Type the exact username to delete the account');
+    const { count } = (await env.DB.prepare('SELECT count(*) AS count FROM boards WHERE owner_id = ?').bind(id).first<{ count: number }>())!;
+    if (count) throw new HttpError(400, `${user.username} still owns ${count} bingo${count === 1 ? '' : 's'}; delete those first`);
+    await env.DB.batch([
+      // their uploads stay, since other boards may use them; they move to the admin doing the delete
+      env.DB.prepare('UPDATE images SET owner_id = ? WHERE owner_id = ?').bind(s.user_id, id),
+      env.DB.prepare('DELETE FROM users WHERE id = ?').bind(id), // sessions, names and reset links cascade
+    ]);
+    return Response.json({ ok: true });
+  }
+
   // Admins see every claimed name with its owner, so a bogus claim can be removed
   if (p === '/admin/rsns' && m === 'GET') {
     const s = await requireUser(req, env);
