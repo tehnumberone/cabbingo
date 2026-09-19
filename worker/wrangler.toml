@@ -6,7 +6,7 @@ compatibility_date = "2026-09-01"
 ALLOWED_ORIGINS = "https://tehnumberone.github.io,http://localhost:4200"
 APP_URL = "https://tehnumberone.github.io/cabbingo/"
 # Sender must be a verified sender in Brevo; the API key is a secret (wrangler secret put BREVO_API_KEY)
-SENDER_EMAIL = ""
+SENDER_EMAIL = "cabbingomail@gmail.com"
 SENDER_NAME = "Cabbingo"
 
 [[d1_databases]]

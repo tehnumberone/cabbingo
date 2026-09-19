@@ -196,6 +196,30 @@ async function route(req: Request, env: Env): Promise<Response> {
     return Response.json(results);
   }
 
+  // Admin: who is registered, and who may edit every board
+  if (p === '/admin/users' && m === 'GET') {
+    const s = await requireUser(req, env);
+    if (!s.is_admin) throw new HttpError(403, 'Admins only');
+    const { results } = await env.DB.prepare(
+      `SELECT u.id, u.username, u.email, u.is_admin AS isAdmin,
+              (SELECT count(*) FROM rsns r WHERE r.user_id = u.id) AS rsns,
+              (SELECT count(*) FROM boards b WHERE b.owner_id = u.id) AS boards
+       FROM users u ORDER BY u.username`
+    ).all();
+    return Response.json(results);
+  }
+
+  if ((g = p.match(/^\/admin\/users\/(\d+)\/admin$/)) && m === 'PUT') {
+    const s = await requireUser(req, env);
+    if (!s.is_admin) throw new HttpError(403, 'Admins only');
+    const id = Number(g[1]);
+    if (id === s.user_id) throw new HttpError(400, 'You cannot change your own admin rights');
+    const { isAdmin } = await body(req);
+    const { meta } = await env.DB.prepare('UPDATE users SET is_admin = ? WHERE id = ?').bind(isAdmin ? 1 : 0, id).run();
+    if (!meta.changes) throw new HttpError(404, 'Account not found');
+    return Response.json({ ok: true });
+  }
+
   // Admins see every claimed name with its owner, so a bogus claim can be removed
   if (p === '/admin/rsns' && m === 'GET') {
     const s = await requireUser(req, env);

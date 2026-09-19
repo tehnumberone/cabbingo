@@ -28,6 +28,15 @@ export interface LibraryImage {
   owner?: string;
 }
 
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string | null;
+  isAdmin: number;
+  rsns: number;
+  boards: number;
+}
+
 export interface BoardData {
   board: Board;
   progress: Record<string, Record<string, Progress>>; // team id -> tile id -> progress
@@ -117,6 +126,14 @@ export class DatabaseService {
   // Every claimed RuneScape name with the account that owns it (suggestions and captain lookup).
   listRsns(): Observable<{ name: string; username: string }[]> {
     return this.http.get<{ name: string; username: string }[]>(`${API_URL}/rsns`, { headers: this.session.headers() });
+  }
+
+  adminUsers(): Observable<AdminUser[]> {
+    return this.http.get<AdminUser[]>(`${API_URL}/admin/users`, { headers: this.session.headers() });
+  }
+
+  setAdmin(id: number, isAdmin: boolean) {
+    return this.http.put(`${API_URL}/admin/users/${id}/admin`, { isAdmin }, { headers: this.session.headers() });
   }
 
   adminRsns(): Observable<{ id: number; name: string; username: string; email: string | null }[]> {
