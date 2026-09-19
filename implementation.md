@@ -88,12 +88,12 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 
 ## Accounts: RuneScape names, email and password reset
 
-- [x] Accounts hold several RuneScape names (own table, one owner per name), added, renamed and removed on the account page (ACCOUNTS)
-- [x] Board players are free text with the claimed names suggested while typing (ACCOUNTS)
-- [x] Captains are picked from the team's players; the account that claimed that name gets the spot (ACCOUNTS)
-- [x] Registration asks for an email and warns never to reuse a RuneScape/Jagex password (ACCOUNTS)
-- [x] Forgot password sends a reset link valid 15 minutes; using it signs that account out everywhere (ACCOUNTS)
-- [x] Admin page `/admin/names` lists every claimed name with its account, so a wrong claim can be removed (ACCOUNTS)
+- [x] Accounts hold several RuneScape names (own table, one owner per name), added, renamed and removed on the account page (`8afe480`)
+- [x] Board players are free text with the claimed names suggested while typing (`8afe480`)
+- [x] Captains are picked from the team's players; the account that claimed that name gets the spot (`8afe480`)
+- [x] Registration asks for an email and warns never to reuse a RuneScape/Jagex password (`8afe480`)
+- [x] Forgot password sends a reset link valid 15 minutes; using it signs that account out everywhere (`8afe480`)
+- [x] Admin page `/admin/names` lists every claimed name with its account, so a wrong claim can be removed (`8afe480`)
 - [ ] Email delivery needs a Brevo API key and a verified sender (see "Sending email" below)
 
 ### Sending email
