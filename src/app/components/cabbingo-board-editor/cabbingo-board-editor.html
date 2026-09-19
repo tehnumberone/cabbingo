@@ -35,6 +35,11 @@
         }
       </div>
       } @else {
+      <datalist id="claimedRsns">
+        @for(name of knownRsns; track name){
+        <option [value]="name"></option>
+        }
+      </datalist>
       <form class="d-flex flex-column gap-4" (ngSubmit)="save()">
         <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
           <h2 class="m-0">{{ boardId ? 'Board settings' : 'Create a bingo' }}</h2>
@@ -181,10 +186,12 @@
             <div>
               <label class="form-label" [for]="'newPlayer' + i">Players</label>
               <div class="d-flex gap-2">
-                <input class="form-control" placeholder="Player name" [id]="'newPlayer' + i" [name]="'newPlayer' + i"
-                  [(ngModel)]="team.newPlayer" (keydown.enter)="$event.preventDefault(); addPlayer(team)" />
+                <input class="form-control" placeholder="Player name" list="claimedRsns" maxlength="12"
+                  [id]="'newPlayer' + i" [name]="'newPlayer' + i" [(ngModel)]="team.newPlayer"
+                  (keydown.enter)="$event.preventDefault(); addPlayer(team)" />
                 <button class="btn custom-btn flex-shrink-0" type="button" (click)="addPlayer(team)">Add player</button>
               </div>
+              <small>Names people added to their account are suggested while you type.</small>
               <ul class="list-unstyled d-flex flex-wrap gap-2 mt-2 mb-0">
                 @for(player of team.players; track player){
                 <li class="osrs-border d-flex align-items-center gap-2 ps-2">
@@ -205,17 +212,20 @@
                 </summary>
                 <div class="captain-options osrs-border-darker p-2">
                   @for(player of captainOptions(team); track player){
-                  <label class="d-flex align-items-center gap-2">
-                    <input type="checkbox" [checked]="isCaptain(team, player)"
+                  <label class="d-flex align-items-center gap-2" [class.text-muted]="!rsnOwner(player)">
+                    <input type="checkbox" [checked]="isCaptain(team, player)" [disabled]="!rsnOwner(player)"
                       (change)="toggleCaptain(team, player, $any($event.target).checked)" />
-                    {{ player }}
+                    {{ captainLabel(player) }}
                   </label>
                   } @empty {
                   <small>Add players first.</small>
                   }
                 </div>
               </details>
-              <small>Captains can update this team's progress and need a Cabbingo account with the same name.</small>
+              <small>
+                Captains can update this team's progress. Only players whose name is on an account can be picked, and the account is
+                shown so you can check it is the right person.
+              </small>
             </div>
           </div>
           }

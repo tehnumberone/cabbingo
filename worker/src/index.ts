@@ -3,17 +3,26 @@ import { Board, Progress, SideProgress, Team, TileSide, emptyProgress, sideDone,
 interface Env {
   DB: D1Database;
   ALLOWED_ORIGINS: string;
+  APP_URL: string;
+  SENDER_EMAIL: string;
+  SENDER_NAME: string;
+  BREVO_API_KEY?: string; // wrangler secret put BREVO_API_KEY
 }
 
 type StoredTeam = Omit<Team, 'captains'> & { captainIds: number[] };
 type StoredBoard = Omit<Board, 'id' | 'ownerId' | 'teams'> & { teams: StoredTeam[] };
 type BoardRow = { id: number; owner_id: number; end_date: number; config: StoredBoard };
 type Session = { user_id: number; username: string; is_admin: number };
+type UserRow = { id: number; username: string; email: string | null; is_admin: number };
 
 const DAY = 86_400_000;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']; // no svg: it can carry scripts
 const MAX_IMAGE = 1024 * 1024; // D1 caps a row at 2MB
 const MAX_BODY = 512 * 1024;
+const RESET_WINDOW = 15 * 60_000; // password reset links live this long
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const RSN = /^[\w -]{1,12}$/; // RuneScape names: up to 12 letters, digits, spaces, - or _
+const MAX_RSNS = 10;
 const MAX_ATTEMPTS = 10; // failed login or register attempts per IP before the cooldown
 const ATTEMPT_COOLDOWN = 15 * 60_000;
 
@@ -74,21 +83,24 @@ async function route(req: Request, env: Env): Promise<Response> {
   }
 
   let attemptIp = '';
-  if ((p === '/auth/register' || p === '/auth/login') && m === 'POST') attemptIp = await throttle(env, req);
+  if (['/auth/register', '/auth/login', '/auth/forgot', '/auth/reset'].includes(p) && m === 'POST') attemptIp = await throttle(env, req);
 
   if (p === '/auth/register' && m === 'POST') {
-    const { username, password } = await body(req);
+    const { username, email, password } = await body(req);
     if (typeof username !== 'string' || !/^[\w -]{3,20}$/.test(username))
       throw new HttpError(400, 'Username must be 3-20 letters, numbers, spaces, - or _');
+    if (typeof email !== 'string' || !EMAIL.test(email.trim())) throw new HttpError(400, 'A valid email address is required');
     if (typeof password !== 'string' || password.length < 8 || password.length > 200)
       throw new HttpError(400, 'Password must be at least 8 characters');
-    let user: { id: number; username: string; is_admin: number } | null;
+    let user: UserRow | null;
     try {
-      user = await env.DB.prepare('INSERT INTO users (username, pw_hash) VALUES (?, ?) RETURNING id, username, is_admin')
-        .bind(username.trim(), await hashPassword(password))
+      user = await env.DB.prepare('INSERT INTO users (username, email, pw_hash) VALUES (?, ?, ?) RETURNING id, username, email, is_admin')
+        .bind(username.trim(), email.trim(), await hashPassword(password))
         .first();
     } catch (e) {
-      if (String(e).includes('UNIQUE')) throw new HttpError(409, 'Username is taken');
+      const message = String(e);
+      if (message.includes('users_email')) throw new HttpError(409, 'That email address already has an account');
+      if (message.includes('UNIQUE')) throw new HttpError(409, 'Username is taken');
       throw e;
     }
     await clearAttempts(env, attemptIp);
@@ -97,9 +109,9 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (p === '/auth/login' && m === 'POST') {
     const { username, password } = await body(req);
-    const user = await env.DB.prepare('SELECT id, username, is_admin, pw_hash FROM users WHERE username = ?')
+    const user = await env.DB.prepare('SELECT id, username, email, is_admin, pw_hash FROM users WHERE username = ?')
       .bind(String(username).trim())
-      .first<{ id: number; username: string; is_admin: number; pw_hash: string }>();
+      .first<UserRow & { pw_hash: string }>();
       if (!user || !(await verifyPassword(String(password), user.pw_hash))) throw new HttpError(401, 'Invalid username or password');
     await clearAttempts(env, attemptIp);
     return Response.json({ token: await newSession(env, user.id), user: toUser(user) });
@@ -113,7 +125,116 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (p === '/auth/me' && m === 'GET') {
     const s = await session(req, env);
-    return Response.json({ user: s ? { id: s.user_id, username: s.username, isAdmin: !!s.is_admin } : null });
+    if (!s) return Response.json({ user: null });
+    const [user, rsns] = await env.DB.batch([
+      env.DB.prepare('SELECT id, username, email, is_admin FROM users WHERE id = ?').bind(s.user_id),
+      env.DB.prepare('SELECT id, name FROM rsns WHERE user_id = ? ORDER BY name').bind(s.user_id),
+    ]);
+    return Response.json({ user: { ...toUser(user.results[0] as UserRow), rsns: rsns.results } });
+  }
+
+  if (p === '/account/email' && m === 'PUT') {
+    const s = await requireUser(req, env);
+    const { email } = await body(req);
+    if (typeof email !== 'string' || !EMAIL.test(email.trim())) throw new HttpError(400, 'A valid email address is required');
+    try {
+      await env.DB.prepare('UPDATE users SET email = ? WHERE id = ?').bind(email.trim(), s.user_id).run();
+    } catch (e) {
+      if (String(e).includes('users_email')) throw new HttpError(409, 'That email address already has an account');
+      throw e;
+    }
+    return Response.json({ ok: true });
+  }
+
+  // RuneScape names: one account owns a name, and it can be renamed or removed
+  if (p === '/account/rsns' && m === 'POST') {
+    const s = await requireUser(req, env);
+    const name = String((await body(req)).name ?? '').trim();
+    if (!RSN.test(name)) throw new HttpError(400, 'A RuneScape name is up to 12 letters, numbers, spaces, - or _');
+    const { count } = (await env.DB.prepare('SELECT count(*) AS count FROM rsns WHERE user_id = ?').bind(s.user_id).first<{ count: number }>())!;
+    if (count >= MAX_RSNS) throw new HttpError(400, `You can add at most ${MAX_RSNS} RuneScape names`);
+    try {
+      const rsn = await env.DB.prepare('INSERT INTO rsns (user_id, name) VALUES (?, ?) RETURNING id, name').bind(s.user_id, name).first();
+      return Response.json(rsn);
+    } catch (e) {
+      if (String(e).includes('UNIQUE')) throw new HttpError(409, 'That RuneScape name is already on an account');
+      throw e;
+    }
+  }
+
+  if ((g = p.match(/^\/account\/rsns\/(\d+)$/))) {
+    const s = await requireUser(req, env);
+    const id = Number(g[1]);
+    // admins can remove a name someone claimed that is not theirs
+    const owned = await env.DB.prepare(`SELECT id FROM rsns WHERE id = ?${s.is_admin ? '' : ' AND user_id = ?'}`)
+      .bind(...(s.is_admin ? [id] : [id, s.user_id]))
+      .first();
+    if (!owned) throw new HttpError(404, 'Not found');
+    if (m === 'PUT') {
+      const name = String((await body(req)).name ?? '').trim();
+      if (!RSN.test(name)) throw new HttpError(400, 'A RuneScape name is up to 12 letters, numbers, spaces, - or _');
+      try {
+        await env.DB.prepare('UPDATE rsns SET name = ? WHERE id = ?').bind(name, id).run();
+      } catch (e) {
+        if (String(e).includes('UNIQUE')) throw new HttpError(409, 'That RuneScape name is already on an account');
+        throw e;
+      }
+      return Response.json({ id, name });
+    }
+    if (m === 'DELETE') {
+      await env.DB.prepare('DELETE FROM rsns WHERE id = ?').bind(id).run();
+      return Response.json({ ok: true });
+    }
+  }
+
+  // Suggestions for the player list, and the owner of each name so captains can be resolved
+  if (p === '/rsns' && m === 'GET') {
+    await requireUser(req, env);
+    const { results } = await env.DB.prepare(
+      'SELECT r.name, u.username FROM rsns r JOIN users u ON u.id = r.user_id ORDER BY r.name'
+    ).all();
+    return Response.json(results);
+  }
+
+  // Admins see every claimed name with its owner, so a bogus claim can be removed
+  if (p === '/admin/rsns' && m === 'GET') {
+    const s = await requireUser(req, env);
+    if (!s.is_admin) throw new HttpError(403, 'Admins only');
+    const { results } = await env.DB.prepare(
+      'SELECT r.id, r.name, u.username, u.email FROM rsns r JOIN users u ON u.id = r.user_id ORDER BY r.name'
+    ).all();
+    return Response.json(results);
+  }
+
+  if (p === '/auth/forgot' && m === 'POST') {
+    const email = String((await body(req)).email ?? '').trim();
+    const user = await env.DB.prepare('SELECT id, username, email FROM users WHERE email = ?').bind(email).first<UserRow>();
+    if (user?.email) {
+      const token = randomToken();
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM resets WHERE user_id = ? OR expires < ?').bind(user.id, Date.now()),
+        env.DB.prepare('INSERT INTO resets (token, user_id, expires) VALUES (?, ?, ?)').bind(token, user.id, Date.now() + RESET_WINDOW),
+      ]);
+      await sendResetEmail(env, user, token);
+    }
+    // Always the same answer, so this cannot be used to find out which addresses have an account.
+    return Response.json({ ok: true });
+  }
+
+  if (p === '/auth/reset' && m === 'POST') {
+    const { token, password } = await body(req);
+    if (typeof password !== 'string' || password.length < 8 || password.length > 200)
+      throw new HttpError(400, 'Password must be at least 8 characters');
+    const row = await env.DB.prepare('SELECT user_id FROM resets WHERE token = ? AND expires > ?')
+      .bind(String(token ?? ''), Date.now())
+      .first<{ user_id: number }>();
+    if (!row) throw new HttpError(400, 'This reset link has expired or was already used');
+    await env.DB.batch([
+      env.DB.prepare('UPDATE users SET pw_hash = ? WHERE id = ?').bind(await hashPassword(password), row.user_id),
+      env.DB.prepare('DELETE FROM resets WHERE user_id = ?').bind(row.user_id),
+      env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(row.user_id), // signed out everywhere
+    ]);
+    return Response.json({ ok: true });
   }
 
   if (p === '/upload' && m === 'POST') {
@@ -335,7 +456,7 @@ async function getBoard(env: Env, id: number): Promise<BoardRow> {
   return { ...row, config: JSON.parse(row.config) };
 }
 
-// Whitelists fields and turns captain usernames into user ids.
+// Whitelists fields and turns captain names into user ids: a RuneScape name owned by an account, or an account name.
 async function cleanBoard(env: Env, input: any): Promise<StoredBoard> {
   const err = validateBoard(input);
   if (err) throw new HttpError(400, err);
@@ -345,13 +466,15 @@ async function cleanBoard(env: Env, input: any): Promise<StoredBoard> {
   if (wanted.length > 50) throw new HttpError(400, 'A board can have at most 50 captains'); // D1 binds max 100 params
   const found = new Map<string, number>();
   if (wanted.length) {
-    const users = await env.DB.prepare(`SELECT id, username FROM users WHERE username IN (${wanted.map(() => '?').join(',')})`)
-      .bind(...wanted)
-      .all<{ id: number; username: string }>();
-    for (const u of users.results) found.set(key(u.username), u.id);
+    const placeholders = wanted.map(() => '?').join(',');
+    const [byRsn, byUsername] = await env.DB.batch([
+      env.DB.prepare(`SELECT user_id AS id, name FROM rsns WHERE name COLLATE NOCASE IN (${placeholders})`).bind(...wanted),
+      env.DB.prepare(`SELECT id, username AS name FROM users WHERE username IN (${placeholders})`).bind(...wanted),
+    ]);
+    for (const row of [...byUsername.results, ...byRsn.results] as { id: number; name: string }[]) found.set(key(row.name), row.id);
   }
   const missing = wanted.filter((w) => !found.has(w));
-  if (missing.length) throw new HttpError(400, `No account found for captain: ${missing.join(', ')}`);
+  if (missing.length) throw new HttpError(400, `No account owns the RuneScape name: ${missing.join(', ')}`);
   return {
     title: b.title.trim(),
     description: String(b.description ?? ''),
@@ -386,7 +509,30 @@ function parseProgress(x: any): Progress {
   return { front: side(x?.front), flipped: !!x?.flipped, flip: x?.flip ? side(x.flip) : undefined };
 }
 
-const toUser = (u: { id: number; username: string; is_admin: number }) => ({ id: u.id, username: u.username, isAdmin: !!u.is_admin });
+const toUser = (u: UserRow) => ({ id: u.id, username: u.username, email: u.email, isAdmin: !!u.is_admin });
+
+const randomToken = () => b64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, '');
+
+// Brevo (free tier) sends the mail; without a key configured the reset link cannot be delivered.
+async function sendResetEmail(env: Env, user: UserRow, token: string) {
+  if (!env.BREVO_API_KEY || !env.SENDER_EMAIL) {
+    console.error('Password reset requested but no email sender is configured');
+    return;
+  }
+  const link = `${env.APP_URL}reset?token=${token}`;
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sender: { email: env.SENDER_EMAIL, name: env.SENDER_NAME },
+      to: [{ email: user.email }],
+      subject: 'Reset your Cabbingo password',
+      textContent: `Hi ${user.username},\n\nOpen this link within 15 minutes to choose a new password:\n${link}\n\nIf you did not ask for this, you can ignore this email; nothing changes until the link is used.`,
+      htmlContent: `<p>Hi ${user.username},</p><p>Open this link within 15 minutes to choose a new password:</p><p><a href="${link}">${link}</a></p><p>If you did not ask for this, you can ignore this email; nothing changes until the link is used.</p>`,
+    }),
+  });
+  if (!res.ok) console.error('Brevo rejected the reset email', res.status, await res.text());
+}
 
 const bearer = (req: Request) => req.headers.get('Authorization')?.match(/^Bearer (\S+)$/)?.[1];
 
@@ -409,7 +555,7 @@ async function requireUser(req: Request, env: Env): Promise<Session> {
 }
 
 async function newSession(env: Env, userId: number): Promise<string> {
-  const token = b64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, '');
+  const token = randomToken();
   await env.DB.batch([
     env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
     env.DB.prepare('DELETE FROM attempts WHERE reset < ?').bind(Date.now()),

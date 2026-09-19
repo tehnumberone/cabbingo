@@ -86,6 +86,21 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Progress page: "Flip tile" appears only once the front is done, warns what flipping costs and pays, then the row switches to the flipped side (`f76b7b4`)
 - [x] Board: flipped tiles show the flipped side with an orange outline, the info box marks them, and scoring follows the flip mode (`f76b7b4`)
 
+## Accounts: RuneScape names, email and password reset
+
+- [x] Accounts hold several RuneScape names (own table, one owner per name), added, renamed and removed on the account page (ACCOUNTS)
+- [x] Board players are free text with the claimed names suggested while typing (ACCOUNTS)
+- [x] Captains are picked from the team's players; the account that claimed that name gets the spot (ACCOUNTS)
+- [x] Registration asks for an email and warns never to reuse a RuneScape/Jagex password (ACCOUNTS)
+- [x] Forgot password sends a reset link valid 15 minutes; using it signs that account out everywhere (ACCOUNTS)
+- [x] Admin page `/admin/names` lists every claimed name with its account, so a wrong claim can be removed (ACCOUNTS)
+- [ ] Email delivery needs a Brevo API key and a verified sender (see "Sending email" below)
+
+### Sending email
+
+Claiming a name cannot be verified against Jagex, so a claim grants nothing on its own: only a board owner can hand out
+a captain spot, and the picker shows which account owns each name so that stays a deliberate choice.
+
 ## Cleanup and follow-ups
 
 Deploying is on hold (asked 2026-09-19): `experiment` is not merged, so the live site still runs the old Firebase build.
@@ -93,8 +108,8 @@ Everything below in this group has to wait for that deploy, in this order:
 
 1. [x] Merged into `main` and deployed on 2026-09-19. The 28 commits were rewritten so none touches `.github/workflows/` (GitHub refuses that without the `workflow` token scope); the workflow itself was updated through GitHub's web editor. Original history kept on the local `backup-before-rewrite` branch.
 2. [x] Old `steep-unit-c896` worker deleted; it returns 404 and nothing references it
-3. [ ] Remove the `FIREBASE_DETAILS` GitHub secret (main's workflow still reads it) and shut down the Firebase project
-4. [ ] Revoke the Firebase admin key (`cabbingo-db-firebase-adminsdk-…json` in Downloads)
+3. [x] Remove the `FIREBASE_DETAILS` GitHub secret (main's workflow still reads it) and shut down the Firebase project
+4. [x] Revoke the Firebase admin key (`cabbingo-db-firebase-adminsdk-…json` in Downloads)
 
 - [ ] Assign captains to season 3 (archived, so an admin has to press "Edit archived board" first; optional)
 - [x] Login and register throttled: 10 attempts per IP, then a 15 minute cooldown with the time left in the message; a successful login clears the counter. Counted in D1, since Cloudflare's rate limit binding is a no-op on this plan (`a498834`, `3c04270`)

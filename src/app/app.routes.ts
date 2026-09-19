@@ -5,6 +5,8 @@ import { CabbingoLogin } from './components/cabbingo-login/cabbingo-login';
 import { CabbingoBoards } from './components/cabbingo-boards/cabbingo-boards';
 import { CabbingoBoardEditor } from './components/cabbingo-board-editor/cabbingo-board-editor';
 import { AdminImages } from './components/admin-images/admin-images';
+import { AdminNames } from './components/admin-names/admin-names';
+import { CabbingoReset } from './components/cabbingo-reset/cabbingo-reset';
 
 export const routes: Routes = [
     { path: 'edit-board', component: CabbingoEditBoard },
@@ -12,6 +14,8 @@ export const routes: Routes = [
     { path: 'board', component: CabbingoBoard },
     { path: 'manage-board', component: CabbingoBoardEditor },
     { path: 'admin/images', component: AdminImages },
+    { path: 'admin/names', component: AdminNames },
+    { path: 'reset', component: CabbingoReset },
     { path: '', component: CabbingoBoards },
     { path: '**', redirectTo: '', pathMatch: 'full' }
 ];

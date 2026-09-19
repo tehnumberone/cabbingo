@@ -1,8 +1,27 @@
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  email TEXT, -- required for new accounts, missing on ones made before password resets existed
   pw_hash TEXT NOT NULL,
   is_admin INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email COLLATE NOCASE);
+
+-- RuneScape names owned by an account; used as bingo players and to find a team's captains
+CREATE TABLE IF NOT EXISTS rsns (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS rsns_name ON rsns(name COLLATE NOCASE);
+
+-- password reset links, valid 15 minutes
+CREATE TABLE IF NOT EXISTS resets (
+  token TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS sessions (

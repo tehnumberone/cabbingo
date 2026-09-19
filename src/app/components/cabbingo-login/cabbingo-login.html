@@ -3,47 +3,130 @@
   <div class="d-flex justify-content-center">
     <div class="osrs-border-thick-login px-5 py-4 mb-5 d-flex flex-column" style="height:auto">
       @if(sessionService.user; as user){
-      <div style="width:500px; max-width:100%;">
-        <h2>Welcome {{ user.username }}!</h2>
-        <p>
-          You are logged in{{ user.isAdmin ? ' as an admin' : '' }}.
-          With an account you can create and manage your own bingo boards.
-        </p>
-        <div class="d-flex justify-content-between gap-2">
+      <div class="d-flex flex-column gap-3" style="width:560px; max-width:100%;">
+        <div>
+          <h2 class="m-0">Welcome {{ user.username }}!</h2>
+          <p class="m-0">
+            You are logged in{{ user.isAdmin ? ' as an admin' : '' }}. With an account you can create and manage your own bingo boards.
+          </p>
+        </div>
+
+        <section>
+          <h3>Email</h3>
+          @if(!accountEmail){
+          <p class="text-warning m-0">Add an email address, otherwise you cannot reset your password if you forget it.</p>
+          }
+          <div class="d-flex gap-2 align-items-end">
+            <div class="flex-grow-1">
+              <label for="accountEmail" class="form-label">Email address</label>
+              <input class="form-control" type="email" id="accountEmail" name="accountEmail" autocomplete="email"
+                [(ngModel)]="accountEmail" />
+            </div>
+            <button class="btn custom-btn flex-shrink-0" type="button" (click)="saveEmail()">Save email</button>
+          </div>
+        </section>
+
+        <section>
+          <h3>RuneScape names</h3>
+          <p class="m-0">
+            Add the names you play on. Board owners pick players by name, and a name on your account lets you be that team's captain.
+          </p>
+          <div class="d-flex gap-2 mt-2">
+            <input class="form-control" placeholder="RuneScape name" name="newRsn" maxlength="12" [(ngModel)]="newRsn"
+              (keydown.enter)="$event.preventDefault(); addRsn()" />
+            <button class="btn custom-btn flex-shrink-0" type="button" (click)="addRsn()">Add name</button>
+          </div>
+          <ul class="list-unstyled d-flex flex-column gap-2 mt-2 mb-0">
+            @for(rsn of rsns; track rsn.id){
+            <li class="osrs-border-darker p-2 d-flex gap-2 align-items-center">
+              @if(editingRsn === rsn){
+              <input class="form-control" maxlength="12" name="editedName" [(ngModel)]="editedName"
+                (keydown.enter)="$event.preventDefault(); saveEdit()" />
+              <button class="btn custom-btn flex-shrink-0" type="button" (click)="saveEdit()">Save</button>
+              <button class="btn custom-btn flex-shrink-0" type="button" (click)="editingRsn = undefined">Cancel</button>
+              } @else {
+              <span class="flex-grow-1">{{ rsn.name }}</span>
+              <button class="btn custom-btn flex-shrink-0" type="button" (click)="startEdit(rsn)">Edit</button>
+              <button class="btn custom-btn flex-shrink-0 text-danger" type="button" (click)="removeRsn(rsn)">Remove</button>
+              }
+            </li>
+            } @empty {
+            <li><small>No names added yet.</small></li>
+            }
+          </ul>
+        </section>
+
+        @if(accountError){
+        <div class="text-danger" role="alert">{{ accountError }}</div>
+        }
+        @if(accountStatus){
+        <div class="text-success" role="status">{{ accountStatus }}</div>
+        }
+
+        <div class="d-flex justify-content-between gap-2 flex-wrap">
           <button class="btn custom-btn" type="button" (click)="logout()">Log out</button>
           @if(user.isAdmin){
           <a class="btn custom-btn" [routerLink]="['/admin/images']">Manage uploaded images</a>
+          <a class="btn custom-btn" [routerLink]="['/admin/names']">Manage claimed names</a>
           }
           <a class="btn custom-btn" [routerLink]="['']">All boards</a>
         </div>
       </div>
       } @else {
       <form style="width:500px; max-width:100%;" (ngSubmit)="submit()">
-        <h2>{{ mode === 'login' ? 'Log in' : 'Create an account' }}</h2>
+        <h2>{{ mode === 'login' ? 'Log in' : mode === 'register' ? 'Create an account' : 'Forgot your password?' }}</h2>
+
+        @if(mode === 'forgot'){
+        <p>Enter your email address and we send you a link to choose a new password. The link works for 15 minutes.</p>
+        } @else {
         <div class="col-12 mb-3">
           <label for="username" class="form-label">Username</label>
-          <input class="form-control" id="username" name="username" autocomplete="username" required
-            [(ngModel)]="username" />
+          <input class="form-control" id="username" name="username" autocomplete="username" required [(ngModel)]="username" />
         </div>
+        }
+
+        @if(mode !== 'login'){
+        <div class="col-12 mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input class="form-control" type="email" id="email" name="email" autocomplete="email" required [(ngModel)]="email" />
+          @if(mode === 'register'){
+          <small>Used only to reset your password.</small>
+          }
+        </div>
+        }
+
+        @if(mode !== 'forgot'){
         <div class="col-12">
           <label for="password" class="form-label">Password</label>
           <input class="form-control" type="password" id="password" name="password" required
             [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
             [class.is-invalid]="errorMessage !== ''" [(ngModel)]="password" />
           @if(mode === 'register'){
+          <small class="text-warning d-block">
+            Never use your RuneScape or Jagex password here. Pick a different one you do not use anywhere else.
+          </small>
           <small>At least 8 characters.</small>
           }
         </div>
+        }
+
         @if(errorMessage){
         <div class="text-danger mt-2" role="alert">{{ errorMessage }}</div>
-        } @else {<br />}
-        <div class="d-flex justify-content-between gap-2 mt-2">
+        }
+        @if(status){
+        <div class="text-success mt-2" role="status">{{ status }}</div>
+        }
+
+        <div class="d-flex justify-content-between gap-2 mt-3 flex-wrap">
           <button class="btn custom-btn" type="submit" [disabled]="busy">
-            {{ mode === 'login' ? 'Log in' : 'Register' }}
+            {{ mode === 'login' ? 'Log in' : mode === 'register' ? 'Register' : 'Send reset link' }}
           </button>
-          <button class="btn custom-btn" type="button" (click)="switchMode()">
-            {{ mode === 'login' ? 'No account? Register' : 'Have an account? Log in' }}
-          </button>
+          @if(mode === 'login'){
+          <button class="btn custom-btn" type="button" (click)="switchMode('register')">No account? Register</button>
+          <button class="btn custom-btn" type="button" (click)="switchMode('forgot')">Forgot password?</button>
+          } @else {
+          <button class="btn custom-btn" type="button" (click)="switchMode('login')">Back to log in</button>
+          }
           <a class="btn custom-btn" [routerLink]="['']">All boards</a>
         </div>
       </form>

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
 import { Board, Progress } from '../models/bingo';
-import { SessionService, User } from './session-service';
+import { Rsn, SessionService, User } from './session-service';
 
 export const API_URL = 'https://cabbingo.tehnumberone87.workers.dev';
 
@@ -82,16 +82,55 @@ export class DatabaseService {
     );
   }
 
-  async account(mode: 'login' | 'register', username: string, password: string): Promise<string | null> {
+  async account(mode: 'login' | 'register', username: string, password: string, email?: string): Promise<string | null> {
     try {
       const { token, user } = await firstValueFrom(
-        this.http.post<{ token: string; user: User }>(`${API_URL}/auth/${mode}`, { username, password })
+        this.http.post<{ token: string; user: User }>(`${API_URL}/auth/${mode}`, { username, password, email })
       );
       this.session.setUser({ ...user, token });
       return null;
     } catch (e: any) {
       return e?.error?.error ?? 'Something went wrong, please try again.';
     }
+  }
+
+  me(): Observable<{ user: User | null }> {
+    return this.http.get<{ user: User | null }>(`${API_URL}/auth/me`, { headers: this.session.headers() });
+  }
+
+  setEmail(email: string) {
+    return this.http.put(`${API_URL}/account/email`, { email }, { headers: this.session.headers() });
+  }
+
+  addRsn(name: string): Observable<Rsn> {
+    return this.http.post<Rsn>(`${API_URL}/account/rsns`, { name }, { headers: this.session.headers() });
+  }
+
+  renameRsn(id: number, name: string): Observable<Rsn> {
+    return this.http.put<Rsn>(`${API_URL}/account/rsns/${id}`, { name }, { headers: this.session.headers() });
+  }
+
+  deleteRsn(id: number) {
+    return this.http.delete(`${API_URL}/account/rsns/${id}`, { headers: this.session.headers() });
+  }
+
+  // Every claimed RuneScape name with the account that owns it (suggestions and captain lookup).
+  listRsns(): Observable<{ name: string; username: string }[]> {
+    return this.http.get<{ name: string; username: string }[]>(`${API_URL}/rsns`, { headers: this.session.headers() });
+  }
+
+  adminRsns(): Observable<{ id: number; name: string; username: string; email: string | null }[]> {
+    return this.http.get<{ id: number; name: string; username: string; email: string | null }[]>(`${API_URL}/admin/rsns`, {
+      headers: this.session.headers(),
+    });
+  }
+
+  forgotPassword(email: string) {
+    return firstValueFrom(this.http.post(`${API_URL}/auth/forgot`, { email }));
+  }
+
+  resetPassword(token: string, password: string) {
+    return firstValueFrom(this.http.post(`${API_URL}/auth/reset`, { token, password }));
   }
 
   // Drops a stored login whose token expired and picks up admin changes.

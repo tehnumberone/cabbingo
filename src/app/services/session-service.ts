@@ -2,10 +2,17 @@ import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Board, isEnded } from '../models/bingo';
 
+export interface Rsn {
+    id: number;
+    name: string;
+}
+
 export interface User {
     id: number;
     username: string;
+    email: string | null;
     isAdmin: boolean;
+    rsns?: Rsn[]; // only filled in by /auth/me
 }
 
 const USER_KEY = 'cabbingo-user';

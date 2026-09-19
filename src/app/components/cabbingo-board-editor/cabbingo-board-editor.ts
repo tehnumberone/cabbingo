@@ -63,6 +63,9 @@ export class CabbingoBoardEditor implements OnInit {
   tiles: Tile[] = [];
   selectedTile = 0;
   private removedFlips: Record<string, TileSide> = {}; // kept until save so unticking the box is undoable
+  // every claimed RuneScape name -> the account that owns it; only those players can be captains
+  private rsnOwners = new Map<string, string>();
+  knownRsns: string[] = []; // as claimed, for the suggestion list
 
   constructor(
     private databaseService: DatabaseService,
@@ -74,8 +77,18 @@ export class CabbingoBoardEditor implements OnInit {
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    this.databaseService.listRsns().subscribe({
+      next: (rsns) => {
+        this.rsnOwners = new Map(rsns.map((r) => [r.name.toLowerCase(), r.username]));
+        this.knownRsns = rsns.map((r) => r.name);
+      },
+      error: () => { }, // suggestions are a convenience; the worker checks captains anyway
+    });
     const id = Number(this.route.snapshot.queryParamMap.get('board'));
-    if (!id) return this.fill(this.newBoard());
+    if (!id) {
+      this.fill(this.newBoard());
+      return;
+    }
     this.boardId = id;
     this.loading = true;
     this.databaseService.getBoard(id).subscribe({
@@ -201,17 +214,31 @@ export class CabbingoBoardEditor implements OnInit {
     team.captains = team.captains.filter((c) => !sameName(c, player));
   }
 
+  // The account that claimed this RuneScape name, if any.
+  rsnOwner(player: string): string | undefined {
+    return this.rsnOwners.get(player.trim().toLowerCase());
+  }
+
+  captainLabel(player: string): string {
+    const owner = this.rsnOwner(player);
+    return owner ? `${player} — account: ${owner}` : `${player} — no account has this name`;
+  }
+
   // Players, plus captains saved earlier that aren't in the player list, so they can still be unticked.
   captainOptions(team: TeamForm): string[] {
     return [...team.players, ...team.captains.filter((c) => !team.players.some((p) => sameName(p, c)))];
   }
 
+  // Captains come back from the worker as account names, so a player counts when their name belongs to that account.
   isCaptain(team: TeamForm, player: string): boolean {
-    return team.captains.some((c) => sameName(c, player));
+    const owner = this.rsnOwner(player);
+    return team.captains.some((c) => sameName(c, player) || (!!owner && sameName(c, owner)));
   }
 
   toggleCaptain(team: TeamForm, player: string, checked: boolean) {
-    team.captains = checked ? [...team.captains, player] : team.captains.filter((c) => !sameName(c, player));
+    const owner = this.rsnOwner(player);
+    const without = team.captains.filter((c) => !sameName(c, player) && !(!!owner && sameName(c, owner)));
+    team.captains = checked ? [...without, player] : without;
   }
 
   removeTeam(team: TeamForm) {
