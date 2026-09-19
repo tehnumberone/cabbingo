@@ -23,21 +23,14 @@ jobs:
         with:
           node-version: '22.12'
           cache: 'npm'
-      - run: node server.js
-        env: 
-          FIREBASE_DETAILS: '${{ secrets.FIREBASE_DETAILS }}'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Move env files
-        run: |
-          cp src/app/environments/environment.prod.ts src/app/environments/environment.ts
-
       - name: Build Angular app
         run: |
           npm run build -- --configuration=production --base-href="/cabbingo/"
-          
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'
