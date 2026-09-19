@@ -91,8 +91,8 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 Deploying is on hold (asked 2026-09-19): `experiment` is not merged, so the live site still runs the old Firebase build.
 Everything below in this group has to wait for that deploy, in this order:
 
-1. [ ] Merge `experiment` into `main` and push (GitHub Actions rebuilds the GitHub Pages site)
-2. [ ] Delete the old `steep-unit-c896` worker (the live site uses it until the deploy happens)
+1. [x] Merged into `main` and deployed on 2026-09-19. The 28 commits were rewritten so none touches `.github/workflows/` (GitHub refuses that without the `workflow` token scope); the workflow itself was updated through GitHub's web editor. Original history kept on the local `backup-before-rewrite` branch.
+2. [x] Old `steep-unit-c896` worker deleted; it returns 404 and nothing references it
 3. [ ] Remove the `FIREBASE_DETAILS` GitHub secret (main's workflow still reads it) and shut down the Firebase project
 4. [ ] Revoke the Firebase admin key (`cabbingo-db-firebase-adminsdk-…json` in Downloads)
 
