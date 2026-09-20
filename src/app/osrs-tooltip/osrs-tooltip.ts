@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, Input, Renderer2 } from '@angular/core';
+import { Component, HostListener, Input, Renderer2 } from '@angular/core';
 
 @Component({
   selector: 'app-osrs-tooltip',
@@ -13,24 +13,12 @@ export class OsrsTooltip {
   constructor(private renderer: Renderer2) { }
 
 
-  @HostListener('touchstart')
-  onTouchStart() {
-    this.showTooltip();
-
-    // Auto-hide after 2 seconds (adjust as needed)
-    setTimeout(() => this.hideTooltip(), 2000);
-  }
-
-  @HostListener('document:touchmove')
-  onTouchMove() {
-    this.hideTooltip(); // Hide on scroll/drag
-  }
-
-  @HostListener('document:touchend')
-  onTouchEnd() {
-    this.hideTooltip(); // Hide on tap elsewhere
-  }
-
+  /*
+   * There is deliberately no touch path. The host element renders empty and zero-sized at
+   * the end of the board, so the touch handlers that used to live here listened on nothing
+   * a finger could reach — tiles bind mouse and focus events only. The tooltip says
+   * "Open <tile>", which tapping the tile already does, so touch needs no substitute.
+   */
   @HostListener('mouseenter')
   onMouseEnter() {
     this.showTooltip();
@@ -51,10 +39,7 @@ export class OsrsTooltip {
 
   @HostListener('mouseleave')
   onMouseLeave() {
-    if (this.tooltipElement) {
-      this.renderer.removeChild(document.body, this.tooltipElement);
-      this.tooltipElement = null!;
-    }
+    this.hideTooltip();
   }
 
   private showTooltip() {

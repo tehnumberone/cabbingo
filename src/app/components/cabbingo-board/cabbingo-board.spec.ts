@@ -116,8 +116,14 @@ describe('CabbingoBoard', () => {
           expect(box.height).toBeCloseTo(tileH, 0);
         }
 
-        // Column headers line up with the tiles they label.
+        // Column headers line up with the tiles they label — same width, and sitting
+        // directly above them. Width alone missed an 8px drift across the whole header row.
         expect(headers[0].getBoundingClientRect().width).toBeCloseTo(tileW, 0);
+        const firstRowTiles = Array.from(rows[0].querySelectorAll('.tile')) as HTMLElement[];
+        for (const [i, header] of headers.entries()) {
+          expect(header.getBoundingClientRect().left)
+            .toBeCloseTo(firstRowTiles[i].getBoundingClientRect().left, 0);
+        }
 
         // Rows stay stacked: a long tile title never covers the row underneath it.
         for (let r = 1; r < rows.length; r++) {

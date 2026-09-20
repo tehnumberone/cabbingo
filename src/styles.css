@@ -95,7 +95,8 @@ html, body {
 .board-page {
   --n: 5;
   --avail: 98vw; /* overridable so the layout can be measured at a fixed width in tests */
-  --tile: clamp(60px, calc((var(--avail) - 375px) / var(--n) - 8px), 125px);
+  --chrome: 375px; /* the 54+16+45+2+8+250 above; the mobile block drops the info column from it */
+  --tile: clamp(60px, calc((var(--avail) - var(--chrome)) / var(--n) - 8px), 125px);
 }
 
 .page-wrap {
@@ -218,11 +219,19 @@ body {
   background-color: rgb(72, 62, 51);
 }
 
-.tile:active,
-.tile:hover {
-  transition: all 0.5s ease-in-out;
-  background-color: rgb(100, 85, 70);
-  color: gold !important;
+/*
+ * Gated on a real pointer. A finger has no hover, and dragging the page under one lights
+ * up every tile it passes over — `:active` fires while scrolling, and `:hover` sticks to
+ * the last tile touched. On a touch screen the only tile that should stand out is the
+ * selected one (.tile-selected below).
+ */
+@media (hover: hover) {
+  .tile:active,
+  .tile:hover {
+    transition: all 0.5s ease-in-out;
+    background-color: rgb(100, 85, 70);
+    color: gold !important;
+  }
 }
 .rules-btn,
 .row-tile,
@@ -247,8 +256,10 @@ body {
   width:45px;
 }
 
-.tile:hover {
-  filter: drop-shadow(0px 0px .5mm gold);
+@media (hover: hover) {
+  .tile:hover {
+    filter: drop-shadow(0px 0px .5mm gold);
+  }
 }
 
 .tile-selected {
@@ -260,9 +271,11 @@ body {
   background: #364732;
 }
 
-.tile-completed:hover {
-  transition: all 0.5s ease-in-out;
-  background: #475e42;
+@media (hover: hover) {
+  .tile-completed:hover {
+    transition: all 0.5s ease-in-out;
+    background: #475e42;
+  }
 }
 
 /*
@@ -437,20 +450,175 @@ input {
   z-index: 1050;
 }
 
-/* On very small screens, slightly reduce the button to avoid covering the center logo */
-@media (max-width: 420px) {
-  .edit-btn {
-    transform: scale(0.85);
-    transform-origin: top left;
-    left: 6px;
-    top: 6px;
+/*
+ * Phone layout. One breakpoint, bootstrap's `md`, to match the col-md-* the templates
+ * already use. The old block here scaled the pinned buttons to 0.85 instead, which never
+ * worked: `transform` does not shrink a layout box, so 243+243 still overlapped in a
+ * 390px banner and the board still overflowed.
+ */
+@media (max-width: 767.98px) {
+  /*
+   * Everything that is not a tile, re-budgeted for a phone: 22 frame (px-2 + 3px border)
+   * + 2 tiles border + 24 row label + 4 label gap. The info column is gone from the row
+   * (see .board-row) and the label shrank to "R1" (see the template), which together buy
+   * back 93px of the desktop 117. Gaps are gap-1, so the per-tile subtraction is 4, not 8.
+   * At 390px this is a 62px tile where the first pass gave 45.
+   */
+  .board-page {
+    --chrome: 52px;
+    /* 20px comes off for the gutter below, so the frame's own border is inside it. */
+    --avail: calc(98vw - 20px);
+    --tile: clamp(44px, calc((var(--avail) - var(--chrome)) / var(--n) - 4px), 125px);
   }
 
+  /*
+   * The frame is `min-width: 100%` of this, so with no gutter it sat flush at x=0: its
+   * 3px border landed on the viewport edge and its 6px outline was drawn off-screen,
+   * which is why the board looked open on the left and right.
+   */
+  .page-wrap {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /*
+   * "R1"/"C1" instead of "Row 1"/"Column 1". The Rulez tabs share .row-tile but pin
+   * their own width inline, so they are unaffected. Width only: the row label still
+   * stretches to the height of the tiles beside it, exactly as it does on desktop.
+   */
+  .row-tile {
+    width: 24px;
+  }
+
+  /* The desktop ratio floors at 9px once a tile is this small, which is unreadable and
+     left the header box shorter than everything beside it. */
+  .column-tile {
+    font-size: clamp(11px, calc(var(--tile, 125px) * 0.2), 16px);
+    align-content: center;
+  }
+
+  /*
+   * Tile internals. No room for a title next to an icon at this size, so the icon
+   * carries it: bootstrap's .btn padding comes off so the progress bar spans the full
+   * tile as it does on desktop, the tile goes square, and the icon centres in what is
+   * left via `margin: auto`.
+   */
+  .tile {
+    padding: 0;
+    height: var(--tile, 125px);
+  }
+
+  .tile > div {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .tile-image {
+    height: auto;
+    max-height: calc(var(--tile, 125px) * 0.62);
+    max-width: 100%;
+    margin: auto; /* centres in both axes against the progress bar above it */
+  }
+
+  /* Only when there is an icon to replace it — an icon-less tile still needs its name. */
+  .tile-image + .tile-text {
+    display: none;
+  }
+
+  .tile-text {
+    font-size: clamp(10px, calc(var(--tile, 125px) * 0.19), 14px);
+  }
+
+  /*
+   * Team buttons share a row instead of stacking full-width. bootstrap's `.row > *`
+   * forces width:100% and flex-shrink:0, which is what stacked them; `.teams .button`
+   * outranks it. The artwork stretches to whatever width the flex split gives.
+   */
+  .teams {
+    --bs-gutter-x: 0;
+    gap: 8px;
+  }
+
+  .teams .button {
+    flex: 1 1 140px;
+    width: auto;
+    min-width: 0;
+    height: 44px;
+    background-size: 100% 100%;
+    --btn-text-w: 146px;
+    font-size: min(20px, calc(var(--btn-text-w) / (var(--len) * var(--avg-advance))));
+  }
+
+  .board-row {
+    flex-wrap: wrap;
+  }
+
+  .infoArea,
+  .infobox,
+  .rulesbox {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /*
+   * ponytail: 8x8 and up still overflow at the 44px floor (10 tiles + gaps is ~512px),
+   * so the grid scrolls sideways instead of the page. Drop the row labels or lower the
+   * floor if that ever needs to fit outright.
+   */
+  .tiles {
+    max-width: 100%;
+    overflow-x: auto;
+    align-items: flex-start; /* centering a row wider than the box clips its left edge */
+  }
+
+  /*
+   * Un-pin the banner buttons so they flow under the logo in a wrap-friendly row
+   * instead of overlapping it and each other. padding-top reserves the logo's strip.
+   */
+  .banner {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 96px;
+    padding-bottom: 8px;
+    background-size: auto 88px;
+    background-position: top center;
+  }
+
+  .edit-btn,
   .login-btn {
-    transform: scale(0.85);
-    transform-origin: top right;
-    right: 6px;
-    top: 6px;
+    position: static;
+  }
+
+  /*
+   * Banner only: the team buttons keep the artwork's native 243x54. The box is 44px
+   * tall for the tap target with the 180x39 artwork centred in it; --btn-text-w is the
+   * new width minus bootstrap .btn's 12px side padding.
+   */
+  .banner .button {
+    width: 180px;
+    height: 44px;
+    background-size: 180px 39px;
+    background-position: center;
+    --btn-text-w: 156px;
+    font-size: min(18px, calc(var(--btn-text-w) / (var(--len) * var(--avg-advance))));
+  }
+
+  /*
+   * 16x16 icon, 44px tap target. An overlay rather than padding + a negative margin:
+   * the negative margin shrank the button's margin box, which pulled the icon left
+   * through the title's gap until the two touched. This costs no layout space at all.
+   */
+  .info-btn {
+    position: relative;
+  }
+
+  .info-btn::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
   }
 }
 

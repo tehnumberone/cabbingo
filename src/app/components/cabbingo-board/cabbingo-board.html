@@ -20,7 +20,7 @@
             </a>
         </div>
     </div>
-    <div class="osrs-border-thick px-4 py-2 mb-4">
+    <div class="osrs-border-thick px-2 px-md-4 py-2 mb-4">
         @if(board){
         <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
             <h2 class="m-0">{{ board.title }}</h2>
@@ -37,28 +37,38 @@
             </button>
             }
         </div>
-        <div class="gap-2 d-flex justify-content-center">
-            <div class="tiles osrs-border column col-auto">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="d-flex align-items-center mx-2 me-0 row-tile">.</div>
+        <div class="board-row gap-2 d-flex justify-content-center">
+            <div class="tiles column col-auto">
+                <!-- stretch below md so the column headers take the corner placeholder's
+                     height instead of shrinking to their own smaller text. -->
+                <div class="d-flex align-items-stretch align-items-md-center gap-1 gap-md-2 mb-1">
+                    <!-- ms-*, not mx-* + me-0: .mx-md-2 sits in bootstrap's min-width:768px block,
+                         which comes after .me-0 in the base utilities and re-applies the right
+                         margin, shifting every column header 8px off its tile. -->
+                    <div class="d-flex align-items-center ms-0 ms-md-2 row-tile">.</div>
                     @for(i of columns; track i){
+                    <!-- The label shrinks to "C1" on a phone so the header strip costs 24px, not 45. -->
                     @if(columnComplete(i)){
-                    <div class="d-flex justify-content-center gap-2 column-tile text-success">Column {{ i + 1 }} <i
-                            class="bi bi-check-circle-fill"></i></div>
+                    <div class="d-flex justify-content-center gap-2 column-tile text-success"><span
+                            class="d-none d-md-inline">Column {{ i + 1 }}</span><span class="d-md-none">C{{ i + 1
+                            }}</span> <i class="bi bi-check-circle-fill"></i></div>
                     }
                     @else{
-                    <div class="d-flex justify-content-center gap-2 column-tile">Column {{ i + 1 }}</div>
+                    <div class="d-flex justify-content-center gap-2 column-tile"><span class="d-none d-md-inline">Column
+                            {{ i + 1 }}</span><span class="d-md-none">C{{ i + 1 }}</span></div>
                     }
                     }
                 </div>
                 @for(row of rows; track rowIndex; let rowIndex = $index){
-                <div class="d-flex justify-content-left px-2 py-1 gap-2">
+                <div class="d-flex justify-content-left px-0 px-md-2 py-1 gap-1 gap-md-2">
                     @if(rowComplete(rowIndex)){
-                    <div class="d-flex align-items-center row-tile text-success">Row {{ rowIndex + 1 }} <i
+                    <div class="d-flex align-items-center row-tile text-success"><span class="d-none d-md-inline">Row {{
+                            rowIndex + 1 }}</span><span class="d-md-none">R{{ rowIndex + 1 }}</span> <i
                             class="bi bi-check-circle-fill"></i></div>
                     }
                     @else{
-                    <div class="d-flex align-items-center row-tile">Row {{ rowIndex + 1 }}</div>
+                    <div class="d-flex align-items-center row-tile"><span class="d-none d-md-inline">Row {{ rowIndex + 1
+                            }}</span><span class="d-md-none">R{{ rowIndex + 1 }}</span></div>
                     }
                     @for(tile of row; track tile.id){
                     <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" (mousemove)="onMouseMove($event)" (mouseenter)="onMouseEnter(tile.title)" (mouseleave)="onMouseLeave()"
@@ -165,7 +175,7 @@
         </div>
     </div>
     @if(templeTeams[currentTeam]){
-    <div class="osrs-border-thick px-4 py-2 mb-4 d-flex flex-column justify-content-between">
+    <div class="osrs-border-thick px-2 px-md-4 py-2 mb-4 d-flex flex-column justify-content-between">
         <app-cabbingo-stats [teams]="templeTeams" [participants]="participants" [currentTeam]="currentTeam"
             [endDatetime]="info.end_date" [donations]="donations" [prizePool]="prizePool"></app-cabbingo-stats>
     </div>}
