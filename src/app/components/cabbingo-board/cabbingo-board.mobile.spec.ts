@@ -19,7 +19,15 @@ const TILE_IMG =
   'data:image/svg+xml,' +
   encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="red"/></svg>');
 
-function boardOfSize(size: number, tileImg: string): Board {
+// Long enough to widen a shrink-to-fit box, short enough to stay readable in a diff.
+const LONG_RULES = [
+  'The obtained legs can be duplicates. All pantaloons are allowed:',
+  "Ahrim's robeskirt",
+  "Dharok's platelegs",
+  "Guthan's chainskirt",
+];
+
+function boardOfSize(size: number, tileImg: string, rules: string[] = []): Board {
   return {
     id: 1,
     title: `${size}x${size}`,
@@ -37,7 +45,7 @@ function boardOfSize(size: number, tileImg: string): Board {
       title: `Tile ${i + 1} with a deliberately long name`,
       type: 'custom' as const,
       amount: 1,
-      rules: [],
+      rules,
       tileImg,
       bossSrc: '',
       points: 1,
@@ -83,8 +91,8 @@ describe('CabbingoBoard on a phone', () => {
     }
   });
 
-  async function render(size: number, tileImg: string): Promise<ComponentFixture<CabbingoBoard>> {
-    const board = boardOfSize(size, tileImg);
+  async function render(size: number, tileImg: string, rules: string[] = []): Promise<ComponentFixture<CabbingoBoard>> {
+    const board = boardOfSize(size, tileImg, rules);
     await TestBed.resetTestingModule()
       .configureTestingModule({
         imports: [CabbingoBoard],
@@ -206,6 +214,30 @@ describe('CabbingoBoard on a phone', () => {
 
     expect(h(el.querySelectorAll('.row-tile')[1])).toBeCloseTo(tile, 0);
     fixture.nativeElement.remove();
+  });
+
+  // .infoArea centres its children, so the unclassed wrapper holding the info box was
+  // shrink-to-fit and every tile got a box sized to its own rules: 256px for a short one
+  // against 334px for a long one. The box is the same for every tile, at the full column.
+  it('keeps the info box at full width whatever the selected tile says', async () => {
+    const measured: number[] = [];
+
+    for (const rules of [['Only certain uniques count'], LONG_RULES]) {
+      const fixture = await render(5, TILE_IMG, rules);
+      const el: HTMLElement = fixture.nativeElement;
+      (el.querySelector('.tile') as HTMLElement).click();
+      fixture.componentInstance.bingoRulesOpened = false; // show the tile's own rules
+      fixture.detectChanges();
+      await new Promise((r) => setTimeout(r, 60));
+
+      const column = (el.querySelector('.infoArea') as HTMLElement).getBoundingClientRect().width;
+      const box = (el.querySelector('.infobox') as HTMLElement).getBoundingClientRect().width;
+      expect(box).toBeCloseTo(column, 0);
+      measured.push(box);
+      el.remove();
+    }
+
+    expect(measured[0]).toBeCloseTo(measured[1], 0);
   });
 
   // The 44px tap target on the 16px info icon is an overlay, not padding + a negative

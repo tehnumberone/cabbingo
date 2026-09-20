@@ -563,6 +563,18 @@ input {
   }
 
   /*
+   * .infoArea centres its children, so this unclassed wrapper around the infobox and the
+   * rules box was shrink-to-fit: `width: 100%` on them resolved against the wrapper's
+   * content width, not the column's. A tile with long rules got a full-width box and one
+   * with short rules got a narrow one. Pin the wrapper so every tile gets the same box.
+   * :first-child, not every child — the sibling holding the total-points button has to
+   * stay shrink-to-fit or .infoArea's centring stops applying to it.
+   */
+  .infoArea > div:first-child {
+    width: 100%;
+  }
+
+  /*
    * ponytail: 8x8 and up still overflow at the 44px floor (10 tiles + gaps is ~512px),
    * so the grid scrolls sideways instead of the page. Drop the row labels or lower the
    * floor if that ever needs to fit outright.
