@@ -94,7 +94,7 @@ Tick a box when a step is done and note the commit. Work happens on `experiment`
 - [x] Forgot password sends a reset link valid 15 minutes; using it signs that account out everywhere (`8afe480`)
 - [x] GitHub Pages serves 404.html (a copy of index.html) so deep links like the reset link work instead of 404ing (`ffab161`)
 - [x] Admin page `/admin/names` lists every claimed name with its account, so a wrong claim can be removed (`8afe480`)
-- [ ] Email delivery needs a Brevo API key and a verified sender (see "Sending email" below)
+- [x] Email delivery needs a Brevo API key and a verified sender (see "Sending email" below)
 
 ### Sending email
 

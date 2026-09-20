@@ -364,6 +364,11 @@ body {
   color: gold !important;
 }
 
+/* After :hover, so hovering the active tab keeps the gold border. */
+.custom-btn.selected {
+  border-color: gold;
+}
+
 .custom-scrollbar {
   height:300px;
   overflow-y: scroll;
@@ -506,11 +511,6 @@ body {
 
 .tile-picker-item.selected {
   border: 2px solid gold;
-}
-
-/* Same "this one is active" cue as the tile picker, on the board settings tabs. */
-.custom-btn.selected {
-  border-color: gold;
 }
 
 .item-count {

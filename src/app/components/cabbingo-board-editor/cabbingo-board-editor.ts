@@ -35,7 +35,6 @@ const lines = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boo
 })
 export class CabbingoBoardEditor implements OnInit {
   readonly sizes = SIZES;
-  // The form is long enough that scrolling it is a chore, so each fieldset is its own panel.
   // Saving reads these component fields, not the form controls, so a hidden panel costs nothing.
   readonly tabs = ['General', 'Tiles', 'Scoring', 'Teams'];
   tab = this.tabs[0];

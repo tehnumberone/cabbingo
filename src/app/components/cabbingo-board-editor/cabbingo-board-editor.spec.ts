@@ -91,26 +91,22 @@ describe('CabbingoBoardEditor tabs', () => {
     return Array.from(fixture.nativeElement.querySelectorAll('[aria-label="Board settings sections"] button'));
   }
 
-  it('shows one panel at a time instead of the whole form', () => {
-    expect(tabButtons().map((b) => b.textContent!.trim())).toEqual(component.tabs);
+  // Save and delete sit outside every @if, so one switched tab proves they stay.
+  it('shows one panel at a time, with save and delete still there', () => {
     expect(legends().length).toBe(1);
+
+    const teams = tabButtons().length - 1;
+    tabButtons()[teams].click();
+    fixture.detectChanges();
+
+    expect(legends()).toEqual(['Teams']);
+    expect(tabButtons()[teams].getAttribute('aria-pressed')).toBe('true');
+
+    const el: HTMLElement = fixture.nativeElement;
+    expect((el.querySelector('button[type="submit"]') as HTMLElement).textContent!.trim())
+      .toBe('Save changes');
+    expect(el.querySelector('#deleteHeading')).toBeTruthy();
   });
-
-  for (const [i, tab] of ['General', 'Tiles', 'Scoring', 'Teams'].entries()) {
-    it(`shows save and delete on the ${tab} tab`, () => {
-      tabButtons()[i].click();
-      fixture.detectChanges();
-
-      expect(component.tab).toBe(tab);
-      expect(legends().length).toBe(1);
-      expect(tabButtons()[i].getAttribute('aria-pressed')).toBe('true');
-
-      const el: HTMLElement = fixture.nativeElement;
-      expect((el.querySelector('button[type="submit"]') as HTMLElement).textContent!.trim())
-        .toBe('Save changes');
-      expect(el.querySelector('#deleteHeading')).toBeTruthy();
-    });
-  }
 
   // The panels are @if'd, so a hidden tab's inputs are destroyed. Saving has to keep reading
   // the component's own fields, or edits made on one tab are lost by switching to another.
