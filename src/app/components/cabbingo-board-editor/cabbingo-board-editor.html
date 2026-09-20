@@ -51,6 +51,14 @@
         <p class="text-warning m-0">You are editing an archived bingo. Saving changes its final result.</p>
         }
 
+        <div class="d-flex gap-2 flex-wrap" role="group" aria-label="Board settings sections">
+          @for(t of tabs; track t){
+          <button type="button" class="btn custom-btn" [class.selected]="tab === t"
+            [attr.aria-pressed]="tab === t" (click)="tab = t">{{ t }}</button>
+          }
+        </div>
+
+        @if(tab === 'General'){
         <fieldset class="d-flex flex-column gap-2">
           <legend>General</legend>
           <div>
@@ -83,7 +91,9 @@
             </div>
           </div>
         </fieldset>
+        }
 
+        @if(tab === 'Tiles'){
         <fieldset class="d-flex flex-column gap-3">
           <legend>Tiles</legend>
           <div class="tile-picker" [style.grid-template-columns]="'repeat(' + size + ', minmax(0, 1fr))'" role="group"
@@ -127,7 +137,9 @@
           </div>
           }
         </fieldset>
+        }
 
+        @if(tab === 'Scoring'){
         <fieldset class="d-flex flex-column gap-2">
           <legend>Scoring and prize pool</legend>
           <div class="d-flex gap-3 flex-wrap">
@@ -171,7 +183,9 @@
             <button class="btn custom-btn" type="button" (click)="addDonation()">Add donation</button>
           </div>
         </fieldset>
+        }
 
+        @if(tab === 'Teams'){
         <fieldset class="d-flex flex-column gap-3">
           <legend>Teams</legend>
           @for(team of teams; track team.id; let i = $index){
@@ -233,6 +247,7 @@
             <button class="btn custom-btn" type="button" (click)="addTeam()">Add team</button>
           </div>
         </fieldset>
+        }
 
         @if(errorMessage){
         <div class="text-danger" role="alert">{{ errorMessage }}</div>

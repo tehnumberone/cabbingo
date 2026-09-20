@@ -508,6 +508,11 @@ body {
   border: 2px solid gold;
 }
 
+/* Same "this one is active" cue as the tile picker, on the board settings tabs. */
+.custom-btn.selected {
+  border-color: gold;
+}
+
 .item-count {
   width: 80px;
 }
