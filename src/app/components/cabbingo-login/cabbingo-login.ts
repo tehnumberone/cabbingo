@@ -24,6 +24,7 @@ export class CabbingoLogin implements OnInit {
   editingRsn?: Rsn;
   editedName = '';
   accountEmail = '';
+  accountPassword = '';
   accountError = '';
   accountStatus = '';
 
@@ -75,9 +76,10 @@ export class CabbingoLogin implements OnInit {
   saveEmail() {
     this.accountError = '';
     this.accountStatus = '';
-    this.databaseService.setEmail(this.accountEmail).subscribe({
+    this.databaseService.setEmail(this.accountEmail, this.accountPassword).subscribe({
       next: () => {
         this.accountStatus = 'Email saved.';
+        this.accountPassword = '';
         if (this.sessionService.user) this.sessionService.setUser({ ...this.sessionService.user, email: this.accountEmail });
       },
       error: (e) => (this.accountError = e?.error?.error ?? 'Could not save your email, please try again.'),

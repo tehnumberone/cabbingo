@@ -84,11 +84,18 @@ export function totalPoints(board: Board, progress: Record<string, Progress>): n
   return total;
 }
 
+// An image link may be empty, an https: URL, or a path inside this app. Anything else --
+// data:, javascript:, plain http:, or //another.host -- is refused. Note this still allows
+// any https host: it stops the dangerous schemes, not third-party hosting.
+export const imageLinkOk = (u: unknown): boolean =>
+  typeof u === 'string' && (u === '' || u.startsWith('https://') || (!u.includes(':') && !u.startsWith('//')));
+
 const validSide = (s: TileSide) =>
   typeof s?.title === 'string' &&
   (s.type === 'items' || s.type === 'custom') &&
   Number.isFinite(s.amount) &&
   Array.isArray(s.rules) &&
+  s.rules.every((r) => typeof r === 'string') &&
   (s.items === undefined || (Array.isArray(s.items) && s.items.every((i) => typeof i === 'string')));
 
 export function validateBoard(b: Board): string | null {
@@ -97,6 +104,10 @@ export function validateBoard(b: Board): string | null {
   if (!Array.isArray(b.tiles) || b.tiles.length !== b.size * b.size) return `Board needs exactly ${b.size * b.size} tiles`;
   const bad = b.tiles.findIndex((t) => !validSide(t) || !Number.isFinite(t.points) || (t.flip && !validSide(t.flip)));
   if (bad >= 0) return `Tile ${bad + 1} is incomplete`;
+  const badLink = b.tiles.findIndex((t) =>
+    [t as TileSide, t.flip].some((s) => s && (!imageLinkOk(s.tileImg) || !imageLinkOk(s.bossSrc)))
+  );
+  if (badLink >= 0) return `Tile ${badLink + 1}: image links must start with https:// or be a path in this app`;
   if (new Set(b.tiles.map((t) => t.id)).size !== b.tiles.length || b.tiles.some((t) => typeof t.id !== 'string' || !t.id))
     return 'Tile ids must be unique';
   if (!Array.isArray(b.teams) || !b.teams.length) return 'At least one team is required';

@@ -16,14 +16,20 @@
           @if(!accountEmail){
           <p class="text-warning m-0">Add an email address, otherwise you cannot reset your password if you forget it.</p>
           }
-          <div class="d-flex gap-2 align-items-end">
+          <div class="d-flex gap-2 align-items-end flex-wrap">
             <div class="flex-grow-1">
               <label for="accountEmail" class="form-label">Email address</label>
               <input class="form-control" type="email" id="accountEmail" name="accountEmail" autocomplete="email"
                 [(ngModel)]="accountEmail" />
             </div>
+            <div class="flex-grow-1">
+              <label for="accountPassword" class="form-label">Your password</label>
+              <input class="form-control" type="password" id="accountPassword" name="accountPassword"
+                autocomplete="current-password" [(ngModel)]="accountPassword" />
+            </div>
             <button class="btn custom-btn flex-shrink-0" type="button" (click)="saveEmail()">Save email</button>
           </div>
+          <p class="form-text m-0">The reset link goes to this address, so changing it needs your password.</p>
         </section>
 
         <section>

@@ -50,7 +50,7 @@
                 <td>{{ board.owner }}</td>
                 <td>{{ board.startDate | date: 'd MMM y' }} – {{ board.endDate | date: 'd MMM y' }}</td>
                 <td>
-                  @if(canManage(board)){
+                  @if(sessionService.canManage(board)){
                   <a class="btn custom-btn btn-sm" [routerLink]="['/manage-board']" [queryParams]="{ board: board.id }">Settings</a>
                   }
                 </td>

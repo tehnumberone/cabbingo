@@ -48,7 +48,8 @@ export class SessionService {
     }
 
     // Owner or admin: may change board settings and every team's progress. The worker enforces the same rules.
-    canManage(board?: Board): boolean {
+    // Takes anything carrying an ownerId, so the board list and the settings page share one answer.
+    canManage(board?: { ownerId?: number }): boolean {
         return !!board && !!this.user && (this.user.isAdmin || this.user.id === board.ownerId);
     }
 

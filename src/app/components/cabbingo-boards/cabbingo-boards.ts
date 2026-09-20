@@ -35,10 +35,4 @@ export class CabbingoBoards implements OnInit {
       { title: 'Archive', empty: 'No finished bingos yet.', boards: boards.filter((b) => b.archived) },
     ];
   }
-
-  // The list only has the owner's username; the board settings page re-checks with the owner id.
-  canManage(board: BoardSummary): boolean {
-    const user = this.sessionService.user;
-    return !!user && (user.isAdmin || user.username.toLowerCase() === board.owner.toLowerCase());
-  }
 }
