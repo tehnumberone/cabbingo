@@ -38,9 +38,14 @@ export class OsrsTooltip {
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
+    this.positionAt(event.clientX, event.clientY);
+  }
+
+  // Keyboard focus has no cursor to follow, so callers position from the tile's rect.
+  positionAt(x: number, y: number) {
     if (this.tooltipElement) {
-      this.renderer.setStyle(this.tooltipElement, 'top', `${event.clientY + 10}px`);
-      this.renderer.setStyle(this.tooltipElement, 'left', `${event.clientX + 10}px`);
+      this.renderer.setStyle(this.tooltipElement, 'top', `${y + 10}px`);
+      this.renderer.setStyle(this.tooltipElement, 'left', `${x + 10}px`);
     }
   }
 

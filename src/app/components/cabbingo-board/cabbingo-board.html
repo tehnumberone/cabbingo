@@ -62,6 +62,7 @@
                     }
                     @for(tile of row; track tile.id){
                     <button class="btn tile d-flex flex-column" (click)="onTileClick(tile)" (mousemove)="onMouseMove($event)" (mouseenter)="onMouseEnter(tile.title)" (mouseleave)="onMouseLeave()"
+                     (focus)="onFocus(tile.title, $event)" (blur)="onMouseLeave()"
                      [ngClass]="{ 'tile-selected': tile === selectedTile, 'tile-completed': scored(tile), 'tile-flipped': isFlipped(tile)}">
                         <div>
                             <div class="progress" style="height: 5px"

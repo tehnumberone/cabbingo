@@ -180,4 +180,12 @@ export class CabbingoBoard implements OnInit, OnDestroy {
   onMouseMove(event: MouseEvent) {
     this.tooltip.onMouseMove(event);
   }
+
+  // Tiles are buttons, so they take keyboard focus; without this the tooltip was
+  // mouse-only. Anchored under the tile since there is no cursor to follow.
+  onFocus(tileText: string, event: FocusEvent) {
+    this.onMouseEnter(tileText);
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    this.tooltip.positionAt(rect.left, rect.bottom);
+  }
 }

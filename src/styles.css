@@ -26,8 +26,10 @@
 .osrs-border {
   border: 1px solid rgb(66, 67, 65);
   outline: 1px solid rgb(14, 14, 12);
-  background-color: rgb(57, 50, 40);
-  background: url(assets/tiles-backdrop.png) repeat top center;
+  /* Color goes inside the shorthand: as a separate background-color above it, the
+     shorthand reset it to transparent, so these frames fell through to the black
+     body whenever the texture PNG was slow or failed to load. */
+  background: rgb(57, 50, 40) url(assets/tiles-backdrop.png) repeat top center;
   background-size: 700px;
 }
 .osrs-border-brighter {
@@ -47,11 +49,15 @@
 .osrs-border-thick {
   border: 3px solid rgb(66, 67, 65);
   outline: 6px solid rgb(14, 14, 12);
-  background-color: rgb(57, 50, 40);
-  background: url(assets/tiles-backdrop.png) repeat top center;
+  /* Color goes inside the shorthand: as a separate background-color above it, the
+     shorthand reset it to transparent, so these frames fell through to the black
+     body whenever the texture PNG was slow or failed to load. */
+  background: rgb(57, 50, 40) url(assets/tiles-backdrop.png) repeat top center;
   background-size: 700px;
   width: fit-content;
-  min-width: 1175px;
+  /* The 1175px floor holds the desktop layout, but on a phone it forced the whole
+     page to scroll sideways. min() keeps the floor only while it actually fits. */
+  min-width: min(1175px, 100%);
   /* Grows past 1175px only for boards too wide to fit it (see --tile). */
   max-width: max(1175px, calc(375px + (var(--tile, 125px) + 8px) * var(--n, 5)));
 }
@@ -59,8 +65,10 @@
 .osrs-border-thick-login {
   border: 3px solid rgb(66, 67, 65);
   outline: 6px solid rgb(14, 14, 12);
-  background-color: rgb(57, 50, 40);
-  background: url(assets/tiles-backdrop.png) repeat top center;
+  /* Color goes inside the shorthand: as a separate background-color above it, the
+     shorthand reset it to transparent, so these frames fell through to the black
+     body whenever the texture PNG was slow or failed to load. */
+  background: rgb(57, 50, 40) url(assets/tiles-backdrop.png) repeat top center;
   background-size: 700px;
   width: fit-content;
 }
@@ -164,7 +172,6 @@ body {
   flex-wrap: nowrap;
   justify-content: flex-end;
   margin-top: 30px;
-  max-height: auto;
   height: 650px;
 }
 
@@ -199,6 +206,7 @@ body {
 
 .tile {
   transition: all 0.5s ease-in-out;
+  position: relative; /* anchor for the .tile-completed check badge */
   width: var(--tile, 125px);
   height: calc(var(--tile, 125px) * 0.84);
   flex: 0 0 auto; /* never squash a tile; --tile already accounts for board size */
@@ -210,7 +218,6 @@ body {
   background-color: rgb(72, 62, 51);
 }
 
-.tile:focus-visible,
 .tile:active,
 .tile:hover {
   transition: all 0.5s ease-in-out;
@@ -258,6 +265,24 @@ body {
   background: #475e42;
 }
 
+/*
+ * Completion used to be carried by background hue alone (1.05:1 against a plain tile),
+ * which is no signal at all for red-green colorblind users. Same glyph the completed
+ * row/column markers use. Absolute so it does not become a flex item of .tile.
+ */
+.tile-completed::after {
+  content: "\f26a"; /* bi-check-circle-fill */
+  font-family: bootstrap-icons;
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 12px;
+  line-height: 1;
+  color: #7ddb8a;
+  text-shadow: black 1px 1px 2px;
+  pointer-events: none;
+}
+
 .progress-bar-completed{
   transition: all 0.5s ease-in-out;
   background-color:transparent!important
@@ -266,7 +291,6 @@ body {
 .rules-btn-selected {
   border: gold 2px solid;
 }
-.rules-btn:focus-visible,
 .rules-btn:active,
 .rules-btn:hover {
   background-color: rgb(100, 85, 70);
@@ -313,8 +337,29 @@ body {
 }
 /* infobox area end */
 
+/*
+ * index.html sets data-bs-theme="dark", which fixes --bs-secondary-color (.form-text,
+ * .text-muted) and the form/table surfaces. It does NOT touch --bs-*-rgb, so the
+ * .text-success/.text-danger utilities keep their light-theme colors: both 2.3:1 on a
+ * tile. Retune the two that carry body text. Values chosen for >=4.5:1 against the
+ * worst case background, rgb(72,62,51).
+ */
+:root {
+  --bs-success-rgb: 125, 219, 138; /* #7ddb8a, 6.15:1 on a tile */
+  --bs-danger-rgb: 255, 154, 154;  /* #ff9a9a, 5.14:1 on a tile */
+}
+
+/* body's text-shadow is inherited by form controls, which sit on their own
+   background: dark text with a black shadow behind it. Only the OSRS chrome wants it. */
+.form-control,
+.form-select,
+.form-check-input,
+textarea,
+input {
+  text-shadow: none;
+}
+
 .btn {
-  --bs-btn-color: var(white) !important;
   color: white !important;
   text-shadow: black 2px 2px 2px;
 }
@@ -356,7 +401,6 @@ body {
   border: 2px solid rgb(14, 14, 12);
 }
 
-.custom-btn:focus-visible,
 .custom-btn:active,
 .custom-btn:hover {
   border: 2px solid rgb(14, 14, 12);
@@ -429,7 +473,6 @@ body {
 .captain-picker summary {
   cursor: pointer;
   list-style: none;
-  text-shadow: none;
 }
 
 .captain-picker summary::after {
@@ -454,8 +497,7 @@ body {
   cursor: pointer;
 }
 
-.info-btn:hover img,
-.info-btn:focus-visible img {
+.info-btn:hover img {
   filter: drop-shadow(0 0 1mm gold);
 }
 
@@ -504,8 +546,7 @@ body {
   white-space: nowrap;
 }
 
-.tile-picker-item:hover,
-.tile-picker-item:focus-visible {
+.tile-picker-item:hover {
   background-color: rgb(100, 85, 70);
 }
 
@@ -540,8 +581,7 @@ body {
   object-fit: contain;
 }
 
-.image-library-item:hover,
-.image-library-item:focus-visible {
+.image-library-item:hover {
   background-color: rgb(100, 85, 70);
 }
 
@@ -575,4 +615,23 @@ body {
 
 .tile-flipped {
   outline: 2px solid #FF9933;
+}
+
+/*
+ * Last in the file on purpose: .tile, .row-tile and friends set their own `outline`
+ * at the same specificity as :focus-visible, so the ring only wins from here.
+ * Hover and focus used to be styled identically, leaving keyboard focus invisible.
+ */
+:focus-visible {
+  outline: 2px solid gold;
+  outline-offset: 2px;
+}
+
+/* Bootstrap's own `.btn:focus-visible{outline:0}` is more specific than the rule
+   above and killed the ring on every tile and button, which are all .btn. Match its
+   specificity to win on source order, and drop its blue glow. */
+.btn:focus-visible {
+  outline: 2px solid gold;
+  outline-offset: 2px;
+  box-shadow: none;
 }
