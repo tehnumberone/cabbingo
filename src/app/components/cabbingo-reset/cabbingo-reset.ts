@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DatabaseService } from '../../services/database.service';
 
 // Opened from the link in the reset email: /reset?token=...
@@ -52,12 +52,16 @@ export class CabbingoReset implements OnInit {
   constructor(
     private databaseService: DatabaseService,
     private route: ActivatedRoute,
+    private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     this.token = this.route.snapshot.queryParamMap.get('token') ?? '';
+    // Held in memory from here on, and taken back out of the address bar so it does not sit
+    // in browser history on a shared machine.
+    if (this.token) this.router.navigate([], { queryParams: {}, replaceUrl: true });
   }
 
   async submit() {

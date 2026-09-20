@@ -23,6 +23,10 @@ const RESET_WINDOW = 15 * 60_000; // password reset links live this long
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const RSN = /^[\w -]{1,12}$/; // RuneScape names: up to 12 letters, digits, spaces, - or _
 const MAX_RSNS = 10;
+// Ceilings per account, so one logged-in user cannot fill D1 and take the app down with it.
+// Admins are exempt. Raise these if a real season needs more.
+const MAX_UPLOADS = 200;
+const MAX_BOARDS = 20;
 const MAX_ATTEMPTS = 10; // failed login or register attempts per IP before the cooldown
 const ATTEMPT_COOLDOWN = 15 * 60_000;
 
@@ -64,10 +68,17 @@ async function route(req: Request, env: Env): Promise<Response> {
   const m = req.method;
   let g: RegExpMatchArray | null;
 
-  // TempleOSRS proxy (browser CORS workaround)
+  // TempleOSRS proxy (browser CORS workaround). The response type is pinned rather than echoed,
+  // so an upstream HTML error page is not served as HTML from this origin.
+  // ponytail: stays open, because public board pages call it while logged out. Abuse ceiling is
+  // someone spending this worker's request quota on data TempleOSRS already serves publicly;
+  // if that ever shows up in the logs, gate it on a session and have the client send one.
   if (p.startsWith('/templeosrs/') && m === 'GET') {
     const r = await fetch('https://templeosrs.com' + p.slice('/templeosrs'.length) + url.search);
-    return new Response(r.body, { status: r.status, headers: { 'Content-Type': r.headers.get('Content-Type') ?? 'application/json' } });
+    return new Response(r.body, {
+      status: r.status,
+      headers: { 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' },
+    });
   }
 
   if ((g = p.match(/^\/img\/([\w-]+)$/)) && m === 'GET') {
@@ -99,7 +110,11 @@ async function route(req: Request, env: Env): Promise<Response> {
         .first();
     } catch (e) {
       const message = String(e);
-      if (message.includes('users_email')) throw new HttpError(409, 'That email address already has an account');
+      // Usernames are public anyway (every board lists its owner), so "taken" is safe to say.
+      // An email collision gets the vaguer answer, to match /auth/forgot not confirming which
+      // addresses have accounts. It narrows rather than closes that: the complete fix is to
+      // accept the registration and mail the existing address instead of answering here.
+      if (message.includes('users_email')) throw new HttpError(409, 'That username or email address is already in use');
       if (message.includes('UNIQUE')) throw new HttpError(409, 'Username is taken');
       throw e;
     }
@@ -112,7 +127,10 @@ async function route(req: Request, env: Env): Promise<Response> {
     const user = await env.DB.prepare('SELECT id, username, email, is_admin, pw_hash FROM users WHERE username = ?')
       .bind(String(username).trim())
       .first<UserRow & { pw_hash: string }>();
-      if (!user || !(await verifyPassword(String(password), user.pw_hash))) throw new HttpError(401, 'Invalid username or password');
+    // Verify against a throwaway hash when there is no such user, so both answers cost one
+    // PBKDF2 and the response time does not say whether the account exists.
+    const ok = await verifyPassword(String(password), user?.pw_hash ?? DUMMY_HASH);
+    if (!user || !ok) throw new HttpError(401, 'Invalid username or password');
     await clearAttempts(env, attemptIp);
     return Response.json({ token: await newSession(env, user.id), user: toUser(user) });
   }
@@ -135,12 +153,16 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (p === '/account/email' && m === 'PUT') {
     const s = await requireUser(req, env);
-    const { email } = await body(req);
+    const { email, password } = await body(req);
     if (typeof email !== 'string' || !EMAIL.test(email.trim())) throw new HttpError(400, 'A valid email address is required');
+    // The current password is required because the reset link goes to whatever address is on
+    // the account: without this, a borrowed session turns into permanent ownership of it.
+    const me = await env.DB.prepare('SELECT pw_hash FROM users WHERE id = ?').bind(s.user_id).first<{ pw_hash: string }>();
+    if (!(await verifyPassword(String(password ?? ''), me?.pw_hash))) throw new HttpError(403, 'That password is not right');
     try {
       await env.DB.prepare('UPDATE users SET email = ? WHERE id = ?').bind(email.trim(), s.user_id).run();
     } catch (e) {
-      if (String(e).includes('users_email')) throw new HttpError(409, 'That email address already has an account');
+      if (String(e).includes('users_email')) throw new HttpError(409, 'That email address cannot be used');
       throw e;
     }
     return Response.json({ ok: true });
@@ -287,6 +309,7 @@ async function route(req: Request, env: Env): Promise<Response> {
     if (Number(req.headers.get('Content-Length')) > MAX_IMAGE) throw new HttpError(413, 'Image must be under 1MB');
     const data = await req.arrayBuffer();
     if (data.byteLength > MAX_IMAGE) throw new HttpError(413, 'Image must be under 1MB');
+    await checkQuota(env, s, 'images', MAX_UPLOADS, `You can store at most ${MAX_UPLOADS} images; delete some first`);
     const key = crypto.randomUUID();
     await env.DB.prepare('INSERT INTO images (id, owner_id, type, data, created) VALUES (?, ?, ?, ?, ?)')
       .bind(key, s.user_id, type, data, Date.now())
@@ -347,18 +370,19 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (p === '/boards' && m === 'GET') {
     const { results } = await env.DB.prepare(
-      `SELECT b.id, b.end_date, u.username AS owner,
+      `SELECT b.id, b.end_date, b.owner_id AS ownerId, u.username AS owner,
               json_extract(b.config, '$.title') AS title,
               json_extract(b.config, '$.description') AS description,
               json_extract(b.config, '$.startDate') AS startDate
        FROM boards b JOIN users u ON u.id = b.owner_id
        ORDER BY b.end_date DESC`
-    ).all<{ id: number; end_date: number; owner: string; title: string; description: string; startDate: string }>();
+    ).all<{ id: number; end_date: number; ownerId: number; owner: string; title: string; description: string; startDate: string }>();
     return Response.json(
       results.map((r) => ({
         id: r.id,
         title: r.title,
         description: r.description ?? '',
+        ownerId: r.ownerId,
         owner: r.owner,
         startDate: r.startDate,
         endDate: new Date(r.end_date).toISOString(),
@@ -369,6 +393,7 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (p === '/boards' && m === 'POST') {
     const s = await requireUser(req, env);
+    await checkQuota(env, s, 'boards', MAX_BOARDS, `You can own at most ${MAX_BOARDS} bingos; delete one first`);
     const board = await cleanBoard(env, await body(req));
     const row = await env.DB.prepare('INSERT INTO boards (owner_id, end_date, config) VALUES (?, ?, ?) RETURNING id')
       .bind(s.user_id, Date.parse(board.endDate), JSON.stringify(board))
@@ -481,6 +506,14 @@ async function throttle(env: Env, req: Request): Promise<string> {
 // A successful login or registration clears the counter, so normal use never hits the cooldown.
 const clearAttempts = (env: Env, ip: string) => env.DB.prepare('DELETE FROM attempts WHERE ip = ?').bind(ip).run();
 
+// Both quota tables are owner_id keyed, so one query shape covers them. The table name is a
+// literal from the call site, never user input.
+async function checkQuota(env: Env, s: Session, table: 'images' | 'boards', max: number, message: string) {
+  if (s.is_admin) return;
+  const row = await env.DB.prepare(`SELECT count(*) AS count FROM ${table} WHERE owner_id = ?`).bind(s.user_id).first<{ count: number }>();
+  if ((row?.count ?? 0) >= max) throw new HttpError(400, message);
+}
+
 async function body(req: Request): Promise<any> {
   const text = await req.text();
   if (text.length > MAX_BODY) throw new HttpError(413, 'Request too large');
@@ -498,6 +531,25 @@ async function getBoard(env: Env, id: number): Promise<BoardRow> {
   if (!row) throw new HttpError(404, 'Board not found');
   return { ...row, config: JSON.parse(row.config) };
 }
+
+// Every string a board stores is capped, because the only other bound on them is MAX_BODY:
+// without these a single board can park half a megabyte of text in one config blob.
+const text = (v: unknown, max = 2000) => String(v ?? '').slice(0, max);
+const optional = (v: unknown, max = 2000) => (v === undefined ? undefined : text(v, max));
+
+// Tiles arrive from the client as free-form JSON, so they are rebuilt field by field rather
+// than stored as sent. Anything not named here does not reach the database.
+const cleanSide = (s: TileSide): TileSide => ({
+  title: text(s.title, 200),
+  description: optional(s.description),
+  type: s.type === 'custom' ? 'custom' : 'items',
+  amount: Number(s.amount) || 0,
+  criteria: optional(s.criteria),
+  items: s.items?.slice(0, 200).map((i) => text(i, 200)),
+  rules: s.rules.slice(0, 100).map((r) => text(r)),
+  tileImg: text(s.tileImg, 500),
+  bossSrc: text(s.bossSrc, 500),
+});
 
 // Whitelists fields and turns captain names into user ids: a RuneScape name owned by an account, or an account name.
 async function cleanBoard(env: Env, input: any): Promise<StoredBoard> {
@@ -519,24 +571,26 @@ async function cleanBoard(env: Env, input: any): Promise<StoredBoard> {
   const missing = wanted.filter((w) => !found.has(w));
   if (missing.length) throw new HttpError(400, `No account owns the RuneScape name: ${missing.join(', ')}`);
   return {
-    title: b.title.trim(),
-    description: String(b.description ?? ''),
-    rules: Array.isArray(b.rules) ? b.rules.map(String) : [],
+    title: text(b.title.trim(), 200),
+    description: text(b.description),
+    rules: Array.isArray(b.rules) ? b.rules.slice(0, 100).map((r) => text(r)) : [],
     size: b.size,
     startDate: new Date(b.startDate).toISOString(),
     endDate: new Date(b.endDate).toISOString(),
-    templeosCompetitionId: b.templeosCompetitionId ? String(b.templeosCompetitionId) : undefined,
+    templeosCompetitionId: b.templeosCompetitionId ? text(b.templeosCompetitionId, 50) : undefined,
     rowBonus: Number(b.rowBonus) || 0,
     columnBonus: Number(b.columnBonus) || 0,
     flipEnabled: !!b.flipEnabled,
     flipMode: b.flipMode,
-    tiles: b.tiles,
-    donations: Array.isArray(b.donations) ? b.donations.map((d) => ({ name: String(d?.name), amount: Number(d?.amount) || 0 })) : undefined,
+    tiles: b.tiles.map((t) => ({ ...cleanSide(t), id: text(t.id, 100), points: Number(t.points) || 0, flip: t.flip ? cleanSide(t.flip) : undefined })),
+    donations: Array.isArray(b.donations)
+      ? b.donations.slice(0, 200).map((d) => ({ name: text(d?.name, 100), amount: Number(d?.amount) || 0 }))
+      : undefined,
     buyIn: b.buyIn === undefined ? undefined : Number(b.buyIn) || 0,
-    teams: b.teams.map((t) => ({
-      id: t.id,
-      name: String(t.name),
-      players: Array.isArray(t.players) ? t.players.map(String) : [],
+    teams: b.teams.slice(0, 50).map((t) => ({
+      id: text(t.id, 100),
+      name: text(t.name, 100),
+      players: Array.isArray(t.players) ? t.players.slice(0, 500).map((p) => text(p, 100)) : [],
       captainIds: [...new Set(t.captains.map((c) => found.get(key(c))!))],
     })),
   };
@@ -554,7 +608,8 @@ function parseProgress(x: any): Progress {
 
 const toUser = (u: UserRow) => ({ id: u.id, username: u.username, email: u.email, isAdmin: !!u.is_admin });
 
-const randomToken = () => b64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, '');
+// 32 random bytes as base64url, so the token is URL-safe without dropping any of them.
+const randomToken = () => b64(crypto.getRandomValues(new Uint8Array(32))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 // Brevo (free tier) sends the mail; without a key configured the reset link cannot be delivered.
 async function sendResetEmail(env: Env, user: UserRow, token: string) {
@@ -623,6 +678,9 @@ async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   return `${PBKDF2_ITERATIONS}:${b64(salt)}:${b64(await pbkdf2(password, salt, PBKDF2_ITERATIONS))}`;
 }
+
+// Well-formed but unmatchable, for the login path to verify against when the user does not exist.
+const DUMMY_HASH = `${PBKDF2_ITERATIONS}:${b64(new Uint8Array(16))}:${b64(new Uint8Array(32))}`;
 
 async function verifyPassword(password: string, stored?: string): Promise<boolean> {
   if (!stored) return false;

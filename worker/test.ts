@@ -1,6 +1,6 @@
 // node --experimental-strip-types test.ts
 import assert from 'node:assert/strict';
-import { type Board, type Tile, sideDone, tilePoints, totalPoints, validateBoard } from '../src/app/models/bingo.ts';
+import { type Board, type Tile, imageLinkOk, sideDone, tilePoints, totalPoints, validateBoard } from '../src/app/models/bingo.ts';
 import { isBullet, parseLine, parseRules, stripBullet, stripTags } from '../src/app/models/rich-text.ts';
 
 const tile = (points: number, id: string): Tile => ({
@@ -59,5 +59,23 @@ assert.deepEqual(coloured[0].lines, [[seg('one', 'green')], [seg('two', 'red')]]
 assert.equal(isBullet('[u]* x[/u]'), true);
 assert.equal(stripBullet('[u]* x[/u]'), '[u]x[/u]');
 assert.equal(isBullet('no marker'), false);
+
+// image links: the schemes that would fetch from somewhere unexpected are refused
+for (const ok of ['', 'https://oldschool.runescape.wiki/x.png', 'assets/coins.png', 'img/abc-123'])
+  assert.equal(imageLinkOk(ok), true, `should allow ${ok}`);
+for (const bad of ['data:text/html,<script>', 'javascript:alert(1)', 'http://plain.example/x.png', '//other.host/x.png', 42])
+  assert.equal(imageLinkOk(bad), false, `should refuse ${bad}`);
+
+const withLink = (link: string) => ({ ...board, tiles: board.tiles.map((t) => ({ ...t, tileImg: link })) });
+assert.equal(validateBoard(withLink('https://oldschool.runescape.wiki/x.png')), null);
+assert.match(validateBoard(withLink('data:text/html,<script>'))!, /image links/);
+assert.match(validateBoard(withLink('javascript:alert(1)'))!, /image links/);
+// a bad link on the flip side counts too
+assert.match(
+  validateBoard({ ...board, tiles: board.tiles.map((t) => ({ ...t, flip: { ...t.flip!, bossSrc: 'http://x.example/y.png' } })) })!,
+  /image links/
+);
+// rules must be strings, not arbitrary JSON smuggled through the array check
+assert.match(validateBoard({ ...board, tiles: board.tiles.map((t) => ({ ...t, rules: [{ evil: 1 }] as any })) })!, /Tile 1/);
 
 console.log('ok');

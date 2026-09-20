@@ -10,7 +10,8 @@ export interface BoardSummary {
   id: number;
   title: string;
   description: string;
-  owner: string;
+  ownerId: number;
+  owner: string; // username, for display; ownerId is what decides who may edit
   startDate: string;
   endDate: string;
   archived: boolean;
@@ -107,8 +108,8 @@ export class DatabaseService {
     return this.http.get<{ user: User | null }>(`${API_URL}/auth/me`, { headers: this.session.headers() });
   }
 
-  setEmail(email: string) {
-    return this.http.put(`${API_URL}/account/email`, { email }, { headers: this.session.headers() });
+  setEmail(email: string, password: string) {
+    return this.http.put(`${API_URL}/account/email`, { email, password }, { headers: this.session.headers() });
   }
 
   addRsn(name: string): Observable<Rsn> {
