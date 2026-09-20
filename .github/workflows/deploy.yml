@@ -6,13 +6,13 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  contents: write
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: github-pages
+    environment: github-pages    
+    # Only this job pushes to gh-pages, and pull_request builds do not reach that step.
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
