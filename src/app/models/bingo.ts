@@ -101,6 +101,9 @@ export function validateBoard(b: Board): string | null {
     return 'Tile ids must be unique';
   if (!Array.isArray(b.teams) || !b.teams.length) return 'At least one team is required';
   if (b.teams.some((t) => typeof t?.id !== 'string' || !t.name)) return 'Every team needs a name';
+  // Longer than this and the name no longer fits its button legibly. 24 rather than the
+  // username cap of 20, so boards with an existing 23-character team name still save.
+  if (b.teams.some((t) => t.name.length > 24)) return 'Team names must be 24 characters or fewer';
   if (b.teams.some((t) => !Array.isArray(t.captains) || t.captains.some((c) => typeof c !== 'string' || !c.trim())))
     return 'Captains must be usernames';
   if (new Set(b.teams.map((t) => t.id)).size !== b.teams.length) return 'Team ids must be unique';

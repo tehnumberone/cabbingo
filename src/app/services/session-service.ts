@@ -38,6 +38,11 @@ export class SessionService {
         } catch { }
     }
 
+    // Shown on every page's login button.
+    get label(): string {
+        return this.user ? this.user.username + (this.user.isAdmin ? ' (admin)' : '') : 'Log in / Register';
+    }
+
     headers(): Record<string, string> {
         return this.user ? { Authorization: `Bearer ${this.user.token}` } : {};
     }

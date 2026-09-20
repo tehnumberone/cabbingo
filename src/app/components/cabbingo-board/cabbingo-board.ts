@@ -138,6 +138,10 @@ export class CabbingoBoard implements OnInit, OnDestroy {
     return this.board && this.team ? totalPoints(this.board, this.progress[this.team.id] ?? {}) : 0;
   }
 
+  get totalPointsLabel(): string {
+    return `Total points: ${this.getTotalPoints()}`;
+  }
+
   onTileClick(tile: Tile): void {
     this.selectedTile = tile;
     this.bingoRulesOpened = false;

@@ -52,7 +52,8 @@
   background-size: 700px;
   width: fit-content;
   min-width: 1175px;
-  max-width: 1175px;
+  /* Grows past 1175px only for boards too wide to fit it (see --tile). */
+  max-width: max(1175px, calc(375px + (var(--tile, 125px) + 8px) * var(--n, 5)));
 }
 
 .osrs-border-thick-login {
@@ -74,6 +75,19 @@
 /* Site background */
 html, body {
   width: 100%;
+}
+
+/*
+ * Board sizing. 375px is everything in a board row that isn't a tile:
+ * frame border+padding (54) + row padding (16) + row label (45) + tiles border (2)
+ * + gap to the info column (8) + info column (250).
+ * Tiles keep their 125px until the board is too wide for the viewport, then all
+ * sizes shrink together instead of the flex row squashing them individually.
+ */
+.board-page {
+  --n: 5;
+  --avail: 98vw; /* overridable so the layout can be measured at a fixed width in tests */
+  --tile: clamp(60px, calc((var(--avail) - 375px) / var(--n) - 8px), 125px);
 }
 
 .page-wrap {
@@ -112,13 +126,30 @@ body {
 /* Site background end */
 
 /* UI elements */
+/*
+ * button.png is 243x52 — exactly the box — so there is no room for a second line, and
+ * bootstrap 5 dropped `.btn { white-space: nowrap }`. Labels that hold user text (team
+ * names, usernames, the points total) bind --len and are scaled down to fit on one line.
+ *
+ * ponytail: character count is a rough proxy for width. Measured against Runescape-Bold,
+ * real labels run ~0.40-0.49 em/char ("franklin whaddup widdit" 0.43, "WidditWhaddupX" 0.49),
+ * so --avg-advance is calibrated to the realistic worst case, not to a pathological one
+ * ("WWWW..." is 0.94 em/char). An all-caps-W name is clipped by the ellipsis rather than
+ * shrunk to fit; swap in a measured fit (canvas measureText) if that ever matters.
+ */
 .button {
   background: url(assets/button.png) no-repeat top center;
   position: relative;
   width: 243px;
   height: 54px;
   font-family: 'Runescape-Bold';
-  font-size: 27px;
+  --len: 1;            /* label length in characters, bound from the template */
+  --btn-text-w: 219px; /* 243px box minus bootstrap .btn's 12px side padding */
+  --avg-advance: 0.5;  /* Runescape-Bold advance width per character, in em */
+  font-size: min(27px, calc(var(--btn-text-w) / (var(--len) * var(--avg-advance))));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   align-content: center;
   text-align: center;
 }
@@ -147,7 +178,7 @@ body {
 }
 
 .tile-image {
-  height: 55px;
+  height: calc(var(--tile, 125px) * 0.44);
   object-fit: contain;
   filter: drop-shadow(3px 4px 2px #000000);
   z-index: 0
@@ -155,9 +186,9 @@ body {
 
 .tile-text {
   color: #FF9933;
-  font-size: 16px;
-  height: 16px;
-  max-width: 120px;
+  font-size: clamp(9px, calc(var(--tile, 125px) * 0.128), 16px);
+  height: auto;
+  max-width: var(--tile, 125px);
   white-space: wrap;
   word-break: break-word;
   z-index: 1;
@@ -168,8 +199,10 @@ body {
 
 .tile {
   transition: all 0.5s ease-in-out;
-  width: 125px;
-  height: 105px;
+  width: var(--tile, 125px);
+  height: calc(var(--tile, 125px) * 0.84);
+  flex: 0 0 auto; /* never squash a tile; --tile already accounts for board size */
+  overflow: hidden; /* a long title is clipped instead of spilling onto the next row */
   flex-wrap: nowrap;
   justify-content: space-between;
   border: 1px solid rgb(46, 43, 35);
@@ -191,9 +224,14 @@ body {
   text-align: center;
   border-radius: 4px;
   height:auto;
-  width: 125px;
+  width: var(--tile, 125px);
+  flex: 0 0 auto;
   border: 1px solid rgb(66, 67, 65);
   outline: 1px solid rgb(14, 14, 12);
+}
+.column-tile{
+  font-size: clamp(9px, calc(var(--tile, 125px) * 0.128), 16px);
+  overflow: hidden;
 }
 .rules-btn,
 .row-tile{

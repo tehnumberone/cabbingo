@@ -1,4 +1,4 @@
-<div class="page-wrap">
+<div class="page-wrap board-page" [style.--n]="board?.size ?? 5">
     <div class="w-100">
         <div class="d-flex justify-content-center align-items-center w-100 banner">
             <div class="edit-btn d-flex flex-column gap-1">
@@ -14,8 +14,9 @@
                 </a>
                 }
             </div>
-            <a class="btn button login-btn" [routerLink]="['/login']">
-                {{ sessionService.user ? sessionService.user.username + (sessionService.user.isAdmin ? ' (admin)' : '') : 'Log in / Register' }}
+            <a class="btn button login-btn" [style.--len]="sessionService.label.length"
+                [routerLink]="['/login']">
+                {{ sessionService.label }}
             </a>
         </div>
     </div>
@@ -30,7 +31,7 @@
         }
         <div class="row teams mb-2">
             @for(t of board?.teams; track t.id; let i = $index){
-            <button class="button btn col-md-5" (click)="switchTeam(i)"
+            <button class="button btn col-md-5" (click)="switchTeam(i)" [style.--len]="t.name.length"
                 [ngClass]="currentTeam === i ? 'btn selected-team' : ''">
                 {{ t.name }}
             </button>
@@ -155,8 +156,8 @@
                     </div>
                 </div>
                 <div class="mt-2">
-                    <button class="btn button disabled float-bottom">
-                        Total points: {{ getTotalPoints() }}
+                    <button class="btn button disabled float-bottom" [style.--len]="totalPointsLabel.length">
+                        {{ totalPointsLabel }}
                     </button>
                 </div>
             </div>
