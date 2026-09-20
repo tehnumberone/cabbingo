@@ -30,9 +30,14 @@ export class CabbingoBoards implements OnInit {
 
   get sections() {
     const boards = this.boards ?? [];
+    const active = boards.filter((b) => !b.archived).reverse();
+    const archive = boards.filter((b) => b.archived);
+    // Only worth an Actions column if some row in that table actually gets a link; a
+    // logged-out visitor was seeing an empty strip down the side of every table.
+    const hasActions = (list: BoardSummary[]) => list.some((b) => this.sessionService.canManage(b));
     return [
-      { title: 'Active bingos', empty: 'No bingos are running right now.', boards: boards.filter((b) => !b.archived).reverse() },
-      { title: 'Archive', empty: 'No finished bingos yet.', boards: boards.filter((b) => b.archived) },
+      { title: 'Active bingos', empty: 'No bingos are running right now.', boards: active, hasActions: hasActions(active) },
+      { title: 'Archive', empty: 'No finished bingos yet.', boards: archive, hasActions: hasActions(archive) },
     ];
   }
 }

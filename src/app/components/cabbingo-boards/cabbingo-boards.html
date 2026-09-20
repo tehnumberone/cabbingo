@@ -33,7 +33,9 @@
                 <th>Bingo</th>
                 <th>Created by</th>
                 <th>Dates</th>
+                @if(section.hasActions){
                 <th><span class="visually-hidden">Actions</span></th>
+                }
               </tr>
             </thead>
             <tbody>
@@ -49,11 +51,14 @@
                 </td>
                 <td>{{ board.owner }}</td>
                 <td>{{ board.startDate | date: 'd MMM y' }} – {{ board.endDate | date: 'd MMM y' }}</td>
+                @if(section.hasActions){
                 <td>
+                  <!-- Still per-row: an owner manages their own boards but not everyone's. -->
                   @if(sessionService.canManage(board)){
                   <a class="btn custom-btn btn-sm" [routerLink]="['/manage-board']" [queryParams]="{ board: board.id }">Settings</a>
                   }
                 </td>
+                }
               </tr>
               }
             </tbody>
