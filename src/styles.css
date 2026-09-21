@@ -71,6 +71,10 @@
   background: rgb(57, 50, 40) url(assets/tiles-backdrop.png) repeat top center;
   background-size: 700px;
   width: fit-content;
+  /* Most pages get away without this because an inner div carries max-width:100%, but
+     /edit-board has no such guard, so its 8-column table's min-content pushed the whole
+     page sideways instead of scrolling the table. */
+  max-width: 100%;
 }
 
 /* Center the main board container without affecting inner layout */
@@ -482,6 +486,71 @@ input {
   }
 
   /*
+   * px-5 is 48px a side, 96px of a 390px screen — a quarter of the viewport spent on
+   * padding, which is why every non-board page looked squeezed. All eight page frames
+   * carry these same two classes, so override the utility here rather than editing eight
+   * class lists. !important because bootstrap's spacing utilities are; the two-class
+   * selector outranks plain .px-5. info-popout uses p-4, so it is untouched.
+   */
+  .osrs-border-thick-login.px-5 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* .btn's padding puts this at ~38px; every ordinary button on the site is one. */
+  .custom-btn {
+    min-height: 40px;
+  }
+
+  /*
+   * Stacked table: each row becomes a card with its column name in front of each value.
+   * Beats a second template — the desktop table is untouched and there is one source of
+   * truth for the cells. Labels come from data-label on each <td>.
+   */
+  .stacked-table thead {
+    display: none;
+  }
+
+  .stacked-table,
+  .stacked-table tbody,
+  .stacked-table tr,
+  .stacked-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .stacked-table tr {
+    margin-bottom: 8px;
+    border: 1px solid rgb(14, 14, 12);
+  }
+
+  .stacked-table td {
+    border: 0;
+  }
+
+  .stacked-table td::before {
+    content: attr(data-label) ": ";
+    color: #FF9933;
+  }
+
+  /* An empty cell would otherwise render as a lone dangling label. */
+  .stacked-table td:empty {
+    display: none;
+  }
+
+  /* Cards scroll with the page; a nested 600px scroll box on a ~740px screen is a trap. */
+  .stacked-table-wrap {
+    max-height: none !important;
+  }
+
+  /* A captain's main control on /edit-board, and natively ~16px. */
+  .stacked-table input[type='checkbox'] {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+  }
+
+  /*
    * "R1"/"C1" instead of "Row 1"/"Column 1". The Rulez tabs share .row-tile but pin
    * their own width inline, so they are unaffected. Width only: the row label still
    * stretches to the height of the tiles beside it, exactly as it does on desktop.
@@ -793,8 +862,27 @@ input {
   border: 1px solid black;
 }
 
-.tile-flipped {
-  outline: 2px solid #FF9933;
+/*
+ * Flip used to be an orange `outline`, which collided with .tile-selected's gold border
+ * and was wiped out entirely by the :focus-visible ring below (same property, same
+ * specificity, focus wins on source order). The perimeter is already carrying base
+ * chrome + selection + focus, so flip moved inside the tile as a shape instead.
+ * A folded page corner: light flap toward the corner, dark crease along the hypotenuse.
+ * ::after is the completed check, and a tile can be flipped and completed at once.
+ */
+.tile-flipped::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: clamp(10px, calc(var(--tile, 125px) * 0.18), 22px);
+  height: clamp(10px, calc(var(--tile, 125px) * 0.18), 22px);
+  background: linear-gradient(to top left, #8a7a63 0 46%, #1a1712 46% 50%, transparent 50%);
+  filter: drop-shadow(-1px -1px 1px #0008);
+  /* .tile-text is z-index 1 and .tile-image z-index 0 (both flex items on mobile, so those
+     apply). ::after rides above the art for free by being last; ::before has to ask. */
+  z-index: 2;
+  pointer-events: none;
 }
 
 /*

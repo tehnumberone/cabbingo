@@ -37,14 +37,16 @@
           <p class="m-0">
             Add the names you play on. Board owners pick players by name, and a name on your account lets you be that team's captain.
           </p>
-          <div class="d-flex gap-2 mt-2">
+          <div class="d-flex flex-wrap gap-2 mt-2">
             <input class="form-control" placeholder="RuneScape name" name="newRsn" maxlength="12" [(ngModel)]="newRsn"
               (keydown.enter)="$event.preventDefault(); addRsn()" />
             <button class="btn custom-btn flex-shrink-0" type="button" (click)="addRsn()">Add name</button>
           </div>
           <ul class="list-unstyled d-flex flex-column gap-2 mt-2 mb-0">
             @for(rsn of rsns; track rsn.id){
-            <li class="osrs-border-darker p-2 d-flex gap-2 align-items-center">
+            <!-- flex-wrap: the editing state is an input plus Save plus Cancel, all
+                 flex-shrink-0, which needs ~329px against 250px on a phone. -->
+            <li class="osrs-border-darker p-2 d-flex flex-wrap gap-2 align-items-center">
               @if(editingRsn === rsn){
               <input class="form-control" maxlength="12" name="editedName" [(ngModel)]="editedName"
                 (keydown.enter)="$event.preventDefault(); saveEdit()" />
@@ -69,7 +71,9 @@
         <div class="text-success" role="status">{{ accountStatus }}</div>
         }
 
-        <div class="d-flex justify-content-between gap-2 flex-wrap">
+        <!-- justify-content-between on a wrapped row pushes pairs to opposite edges and leaves
+             a hole in the middle; only spread them once they fit on one line. -->
+        <div class="d-flex justify-content-start justify-content-md-between gap-2 flex-wrap">
           <button class="btn custom-btn" type="button" (click)="logout()">Log out</button>
           @if(user.isAdmin){
           <a class="btn custom-btn" [routerLink]="['/admin/images']">Manage uploaded images</a>
@@ -124,7 +128,7 @@
         <div class="text-success mt-2" role="status">{{ status }}</div>
         }
 
-        <div class="d-flex justify-content-between gap-2 mt-3 flex-wrap">
+        <div class="d-flex justify-content-start justify-content-md-between gap-2 mt-3 flex-wrap">
           <button class="btn custom-btn" type="submit" [disabled]="busy">
             {{ mode === 'login' ? 'Log in' : mode === 'register' ? 'Register' : 'Send reset link' }}
           </button>

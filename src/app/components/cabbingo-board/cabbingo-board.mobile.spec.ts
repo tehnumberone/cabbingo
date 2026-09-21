@@ -6,13 +6,10 @@ import { of } from 'rxjs';
 import { CabbingoBoard } from './cabbingo-board';
 import { Board } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
+import { PHONE_WIDTH as PHONE, usePhoneViewport } from '../../testing/phone-viewport';
 
-// The sibling spec fakes width per element, which cannot exercise a media query. This one
-// narrows karma's own context iframe instead: styles inside an iframe resolve against the
-// iframe's viewport, so `max-width: 767.98px` really fires. Headless chrome clamps
-// --window-size at roughly 470px, which is why the browser window itself is no good here.
-const PHONE = 390;
-const BOOTSTRAP_CSS = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css';
+// The sibling spec fakes width per element, which cannot exercise a media query; this one
+// runs at a real 390px. See testing/phone-viewport.ts for how and why.
 
 // A 1x1 red square, inline so karma does not have to serve it.
 const TILE_IMG =
@@ -58,38 +55,14 @@ function boardOfSize(size: number, tileImg: string, rules: string[] = []): Board
 }
 
 describe('CabbingoBoard on a phone', () => {
-  let frame: HTMLElement | null;
-  let restoreWidth: string;
+  let restoreViewport: () => void;
 
   beforeAll(async () => {
-    if (!document.querySelector(`link[href="${BOOTSTRAP_CSS}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = BOOTSTRAP_CSS;
-      document.head.appendChild(link);
-      await new Promise((resolve, reject) => {
-        link.onload = resolve;
-        link.onerror = () => reject(new Error(`could not load ${BOOTSTRAP_CSS}`));
-      });
-    }
-    await document.fonts.ready;
-
-    frame = window.frameElement as HTMLElement | null;
-    restoreWidth = frame?.style.width ?? '';
-    if (frame) {
-      frame.style.width = `${PHONE}px`;
-      frame.style.minWidth = `${PHONE}px`;
-    }
-    await new Promise((r) => setTimeout(r, 100));
+    restoreViewport = await usePhoneViewport();
   });
 
   // Every other spec measures at desktop width, so this must not leak.
-  afterAll(() => {
-    if (frame) {
-      frame.style.width = restoreWidth;
-      frame.style.minWidth = '';
-    }
-  });
+  afterAll(() => restoreViewport());
 
   async function render(size: number, tileImg: string, rules: string[] = []): Promise<ComponentFixture<CabbingoBoard>> {
     const board = boardOfSize(size, tileImg, rules);
@@ -238,6 +211,38 @@ describe('CabbingoBoard on a phone', () => {
     }
 
     expect(measured[0]).toBeCloseTo(measured[1], 0);
+  });
+
+  /*
+   * Tapping a tile focuses it on Android, which fired the keyboard tooltip path: the box
+   * appeared on tap and then hung there while the page scrolled under it. Headless chrome
+   * reports itself as hover-capable whatever the viewport, so the media query is stubbed
+   * here — that is the only part of the guard a spec can drive.
+   */
+  it('shows no tooltip when a tile is focused on a device with no hover', async () => {
+    const fixture = await render(5, TILE_IMG);
+    const tile = (fixture.nativeElement as HTMLElement).querySelector('.tile') as HTMLElement;
+    const real = window.matchMedia.bind(window);
+    spyOn(window, 'matchMedia').and.callFake((q: string) =>
+      q === '(hover: none)' ? ({ matches: true } as MediaQueryList) : real(q),
+    );
+
+    fixture.componentInstance.onFocus('Tile 1', { target: tile } as unknown as FocusEvent);
+
+    expect(fixture.componentInstance.tooltip.tooltipElement).toBeFalsy();
+    fixture.nativeElement.remove();
+  });
+
+  // ...and the pointer path is untouched, so desktop keyboard focus still gets its label.
+  it('still shows a tooltip when the device has hover', async () => {
+    const fixture = await render(5, TILE_IMG);
+    const tile = (fixture.nativeElement as HTMLElement).querySelector('.tile') as HTMLElement;
+
+    fixture.componentInstance.onFocus('Tile 1', { target: tile } as unknown as FocusEvent);
+
+    expect(fixture.componentInstance.tooltip.tooltipElement).toBeTruthy();
+    fixture.componentInstance.onMouseLeave();
+    fixture.nativeElement.remove();
   });
 
   // The 44px tap target on the 16px info icon is an overlay, not padding + a negative

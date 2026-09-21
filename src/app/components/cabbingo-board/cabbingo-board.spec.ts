@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { CabbingoBoard } from './cabbingo-board';
-import { Board } from '../../models/bingo';
+import { Board, Progress } from '../../models/bingo';
 import { DatabaseService } from '../../services/database.service';
 
 const SIZES = [3, 4, 5, 6, 7, 8, 9, 10];
@@ -133,6 +133,85 @@ describe('CabbingoBoard', () => {
       });
     }
   }
+});
+
+// Flip and completion are drawn as CSS pseudo-elements (.tile-flipped::before, the folded
+// corner, and .tile-completed::after, the check), which screen readers skip entirely. The
+// button's aria-label is the only place those states are announced.
+describe('CabbingoBoard tile labels', () => {
+  let fixture: ComponentFixture<CabbingoBoard>;
+  let component: CabbingoBoard;
+  let board: Board;
+
+  const FRONT = 'Tile 1 with a deliberately long name';
+  const FLIP = 'The other side';
+
+  beforeEach(async () => {
+    board = boardOfSize(3);
+    board.flipEnabled = true;
+    board.tiles[0].flip = {
+      title: FLIP,
+      type: 'custom',
+      amount: 1,
+      rules: [],
+      tileImg: '',
+      bossSrc: '',
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [CabbingoBoard],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        { provide: DatabaseService, useValue: { getBoard: () => of({ board, progress: {} }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(CabbingoBoard);
+    component = fixture.componentInstance;
+    component.board = board;
+  });
+
+  // Team 'a' is the only team on boardOfSize, and currentTeam defaults to 0.
+  function setProgress(p: Progress): void {
+    component.progress = { a: { t0: p } };
+  }
+
+  it('is just the title when the tile is untouched', () => {
+    expect(component.tileLabel(board.tiles[0])).toBe(FRONT);
+  });
+
+  // side() switches once the tile is flipped, so the label has to follow it — announcing
+  // the front title on a flipped tile would name an objective that no longer applies.
+  it('names the flipped side, not the front, once flipped', () => {
+    setProgress({ front: { obtained: [], completed: false }, flipped: true });
+    expect(component.tileLabel(board.tiles[0])).toBe(`${FLIP}, flipped`);
+  });
+
+  it('reports both states when a flipped tile has scored', () => {
+    setProgress({
+      front: { obtained: [], completed: true },
+      flipped: true,
+      flip: { obtained: [], completed: true },
+    });
+    expect(component.tileLabel(board.tiles[0])).toBe(`${FLIP}, flipped, completed`);
+  });
+
+  it('reports completion on an unflipped tile', () => {
+    setProgress({ front: { obtained: [], completed: true }, flipped: false });
+    expect(component.tileLabel(board.tiles[0])).toBe(`${FRONT}, completed`);
+  });
+
+  // The label is useless if it never reaches the DOM. Also guards the mobile case, where
+  // `.tile-image + .tile-text { display: none }` drops the visible title out of the a11y
+  // tree and aria-label becomes the button's only accessible name.
+  it('lands on the tile button', () => {
+    setProgress({ front: { obtained: [], completed: false }, flipped: true });
+    fixture.detectChanges();
+
+    const tile = fixture.nativeElement.querySelector('.tile') as HTMLElement;
+    expect(tile.getAttribute('aria-label')).toBe(`${FLIP}, flipped`);
+  });
 });
 
 // .button is a fixed 243x54 box painted with button.png, which is 243x52 — there is no room

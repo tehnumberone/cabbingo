@@ -50,7 +50,12 @@
                   </div>
                 </td>
                 <td>{{ board.owner }}</td>
-                <td>{{ board.startDate | date: 'd MMM y' }} – {{ board.endDate | date: 'd MMM y' }}</td>
+                <!-- Nowrap per date, so a narrow column breaks between them rather than
+                     mid-date into five lines. -->
+                <td>
+                  <span class="text-nowrap">{{ board.startDate | date: 'd MMM y' }}</span> –
+                  <span class="text-nowrap">{{ board.endDate | date: 'd MMM y' }}</span>
+                </td>
                 @if(section.hasActions){
                 <td>
                   <!-- Still per-row: an owner manages their own boards but not everyone's. -->

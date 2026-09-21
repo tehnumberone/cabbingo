@@ -171,7 +171,7 @@
           <div>
             <span class="form-label d-block">Donations <small>(M gp)</small></span>
             @for(donation of donations; track $index; let i = $index){
-            <div class="d-flex gap-2 mb-2">
+            <div class="d-flex flex-wrap gap-2 mb-2">
               <input class="form-control" placeholder="Name" [name]="'donationName' + i" [attr.aria-label]="'Donor ' + (i + 1)"
                 [(ngModel)]="donation.name" />
               <input class="form-control w-25" type="number" min="0" [name]="'donationAmount' + i"
@@ -190,7 +190,7 @@
           <legend>Teams</legend>
           @for(team of teams; track team.id; let i = $index){
           <div class="osrs-border-darker p-3 d-flex flex-column gap-2">
-            <div class="d-flex gap-2 align-items-end">
+            <div class="d-flex flex-wrap gap-2 align-items-end">
               <div class="flex-grow-1">
                 <label class="form-label" [for]="'teamName' + i">Team name</label>
                 <input class="form-control" required maxlength="24" [id]="'teamName' + i" [name]="'teamName' + i" [(ngModel)]="team.name" />
@@ -199,7 +199,7 @@
             </div>
             <div>
               <label class="form-label" [for]="'newPlayer' + i">Players</label>
-              <div class="d-flex gap-2">
+              <div class="d-flex flex-wrap gap-2">
                 <input class="form-control" placeholder="Player name" list="claimedRsns" maxlength="12"
                   [id]="'newPlayer' + i" [name]="'newPlayer' + i" [(ngModel)]="team.newPlayer"
                   (keydown.enter)="$event.preventDefault(); addPlayer(team)" />
@@ -275,7 +275,7 @@
         @if(readOnly && errorMessage){
         <div class="text-danger" role="alert">{{ errorMessage }}</div>
         }
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
           <button class="btn custom-btn text-danger" type="button" [disabled]="!canDelete" (click)="delete()">Delete permanently</button>
           <button class="btn custom-btn" type="button" (click)="confirmingDelete = false; deleteConfirmation = ''">Cancel</button>
         </div>

@@ -1,4 +1,6 @@
+import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { CabbingoEditBoard } from './cabbingo-edit-board';
 
@@ -8,7 +10,9 @@ describe('CabbingoEditBoard', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CabbingoEditBoard]
+      imports: [CabbingoEditBoard],
+      // No ?board= query param, so ngOnInit redirects home and never hits the network.
+      providers: [provideRouter([]), provideHttpClient()],
     })
     .compileComponents();
 

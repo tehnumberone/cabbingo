@@ -104,6 +104,16 @@ export class CabbingoBoard implements OnInit, OnDestroy {
     return !!this.board && tilePoints(this.board, tile, this.tileProgress(tile)) > 0;
   }
 
+  // Flip and completion are drawn as CSS pseudo-elements, which screen readers skip.
+  // Without this a tile's accessible name is just its title, so the board can only be
+  // scanned by clicking each tile and reading the info panel.
+  tileLabel(tile: Tile): string {
+    const parts = [this.side(tile).title];
+    if (this.isFlipped(tile)) parts.push('flipped');
+    if (this.scored(tile)) parts.push('completed');
+    return parts.join(', ');
+  }
+
   tileProgress(tile: Tile): Progress | undefined {
     return this.team && this.progress[this.team.id]?.[tile.id];
   }
@@ -184,6 +194,7 @@ export class CabbingoBoard implements OnInit, OnDestroy {
   // Tiles are buttons, so they take keyboard focus; without this the tooltip was
   // mouse-only. Anchored under the tile since there is no cursor to follow.
   onFocus(tileText: string, event: FocusEvent) {
+    // Touch is filtered inside OsrsTooltip.showTooltip, which every caller routes through.
     this.onMouseEnter(tileText);
     const rect = (event.target as HTMLElement).getBoundingClientRect();
     this.tooltip.positionAt(rect.left, rect.bottom);

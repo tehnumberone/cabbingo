@@ -31,7 +31,7 @@ import { DatabaseService } from '../../services/database.service';
             @if(errorMessage){
             <div class="text-danger mt-2" role="alert">{{ errorMessage }}</div>
             }
-            <div class="d-flex justify-content-between gap-2 mt-3">
+            <div class="d-flex flex-wrap justify-content-start justify-content-md-between gap-2 mt-3">
               <button class="btn custom-btn" type="submit" [disabled]="busy">Change password</button>
               <a class="btn custom-btn" [routerLink]="['']">All boards</a>
             </div>

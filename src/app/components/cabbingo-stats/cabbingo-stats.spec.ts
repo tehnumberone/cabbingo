@@ -14,6 +14,9 @@ describe('CabbingoStats', () => {
 
     fixture = TestBed.createComponent(CabbingoStats);
     component = fixture.componentInstance;
+    // The board only renders stats once templeTeams[currentTeam] exists, and the template
+    // reads teams[currentTeam].members unguarded, so the test has to supply a team too.
+    component.teams = [{ members: [] }];
     fixture.detectChanges();
   });
 

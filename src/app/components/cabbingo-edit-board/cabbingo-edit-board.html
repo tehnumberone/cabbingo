@@ -32,7 +32,7 @@
           @if(ended){
           <p class="text-warning">You are editing an archived bingo. Every save changes its final result.</p>
           }
-          <div class="d-flex flex-row justify-content-between align-items-center gap-3">
+          <div class="d-flex flex-row flex-wrap justify-content-between align-items-center gap-3">
             @if(teams.length === 1){
             <h2>Welcome {{ teams[0].name }}!</h2>
             } @else {
@@ -46,8 +46,8 @@
             <p class="m-0">This is where you can edit your board!</p>
             <a class="btn custom-btn" [routerLink]="['/board']" [queryParams]="{ board: board.id }">Return to board</a>
           </div>
-          <div style="max-height: 600px;" class="mt-2 overflow-auto">
-            <table class="table osrs-table table-bordered">
+          <div style="max-height: 600px;" class="stacked-table-wrap mt-2 overflow-auto">
+            <table class="table osrs-table table-bordered stacked-table">
               <thead>
                 <tr class="sticky-top" style="top: -1px; box-shadow: black 0px 1px 0px 0px;">
                   <th>Tile title</th>
@@ -65,21 +65,21 @@
                 @let side = this.side(tile);
                 @let edit = this.edit(tile);
                 <tr>
-                  <td>
+                  <td data-label="Tile title">
                     {{ side.title }}
                     @if(edits[tile.id].flipped){<br><small class="text-warning">Flipped</small>}
                   </td>
-                  <td>@if(side.tileImg){<img class="tile-image" [src]="side.tileImg" [alt]="side.title" />}</td>
-                  <td>@if(side.bossSrc){<img class="tile-image" [src]="side.bossSrc" alt="" />}</td>
-                  <td>{{ tile.points }}</td>
-                  <td>{{ side.description }}@if(side.criteria){<br>{{ side.criteria }}}</td>
+                  <td data-label="Image">@if(side.tileImg){<img class="tile-image" [src]="side.tileImg" [alt]="side.title" />}</td>
+                  <td data-label="Boss image">@if(side.bossSrc){<img class="tile-image" [src]="side.bossSrc" alt="" />}</td>
+                  <td data-label="Points">{{ tile.points }}</td>
+                  <td data-label="Description">{{ side.description }}@if(side.criteria){<br>{{ side.criteria }}}</td>
                   @if(side.type === 'custom'){
-                  <td>Manual</td>
-                  <td><input type="checkbox" [(ngModel)]="edit.completed" [attr.aria-label]="'Completed ' + side.title" /></td>
+                  <td data-label="Required">Manual</td>
+                  <td data-label="Obtained"><input type="checkbox" [(ngModel)]="edit.completed" [attr.aria-label]="'Completed ' + side.title" /></td>
                   } @else {
-                  <td>{{ side.amount }}</td>
+                  <td data-label="Required">{{ side.amount }}</td>
                   @if(side.items?.length){
-                  <td>
+                  <td data-label="Obtained">
                     @for(item of side.items; track item){
                     <div class="d-flex align-items-center gap-2 mb-1">
                       <input class="form-control item-count" type="number" min="0" [(ngModel)]="edit.counts[item]"
@@ -90,11 +90,11 @@
                     <small>Total: {{ total(tile) }} / {{ side.amount }}</small>
                   </td>
                   } @else {
-                  <td><input class="form-control" type="number" min="0" [(ngModel)]="edit.obtained"
+                  <td data-label="Obtained"><input class="form-control" type="number" min="0" [(ngModel)]="edit.obtained"
                       [attr.aria-label]="'Obtained for ' + side.title" /></td>
                   }
                   }
-                  <td>
+                  <td data-label="Actions">
                     <button class="btn custom-btn col-12" (click)="saveTile(tile)">Save</button>
                     @if(canFlip(tile)){
                     <button class="btn custom-btn col-12 mt-1" type="button" (click)="flip(tile)"
